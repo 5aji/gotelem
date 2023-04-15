@@ -21,14 +21,15 @@ type CanSocket struct {
 //internal frame structure for socketcan with padding
 
 type stdFrame struct {
-	ID          uint32
-	Len         uint8
+	ID  uint32
+	Len uint8
+	//lint:ignore U1000 these are to make serialization easier
 	_pad, _res1 uint8 // padding
 	Dlc         uint8
 	Data        [8]uint8
 }
 
-func marshalSocketCan(f can.Frame) (*bytes.Buffer, error) {
+func socketCanMarshal(f can.Frame) (*bytes.Buffer, error) {
 
 	if len(f.Data) > 8 && f.Kind == can.SFF {
 		return nil, errors.New("data too large for std frame")
@@ -67,7 +68,7 @@ func marshalSocketCan(f can.Frame) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func unmarshalSocketCan(f *can.Frame, buf *bytes.Buffer) error {
+func Unmarshal(f *Frame, buf *bytes.Buffer) error {
 
 	return nil
 }
@@ -128,7 +129,7 @@ func (sck *CanSocket) Name() string {
 	return sck.iface.Name
 }
 
-// should we log errors?
+// Sets if error packets should be sent upstream
 func (sck *CanSocket) SetErrFilter(shouldFilter bool) error {
 
 	var err error
@@ -144,6 +145,7 @@ func (sck *CanSocket) SetErrFilter(shouldFilter bool) error {
 	return nil
 }
 
+// set the filters for the can device.
 func (sck *CanSocket) SetFilters(filters []unix.CanFilter) error {
 	return unix.SetsockoptCanRawFilter(sck.fd, unix.SOL_CAN_RAW, unix.CAN_RAW_FILTER, filters)
 
@@ -152,7 +154,7 @@ func (sck *CanSocket) SetFilters(filters []unix.CanFilter) error {
 func (sck *CanSocket) Send(msg can.Frame) error {
 	// convert our abstract frame into a real unix frame and then push it.
 	// check return value to raise errors.
-	buf, err := marshalSocketCan(msg)
+	buf, err := socketCanMarshal(msg)
 
 	if err != nil {
 		return fmt.Errorf("error sending frame: %w", err)
@@ -172,5 +174,12 @@ func (sck *CanSocket) Send(msg can.Frame) error {
 }
 
 func (sck *CanSocket) Recv() (*can.Frame, error) {
+
+	// todo: support extended frames.
+	buf := make([]byte, standardFrameSize)
+	unix.Read(sck.fd, buf)
+
+	stdF := &stdFrame{}
+	binary.Read(bytes.NewBuffer(buf), binary.LittleEndian, stdF)
 	return nil, errors.New("not implemented")
 }

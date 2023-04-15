@@ -23,5 +23,5 @@ type CanSink interface {
 }
 
 type CanSource interface {
-	Recv(Frame) error
+	Recv() (*Frame, error)
 }
