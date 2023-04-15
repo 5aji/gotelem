@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/kschamplin/gotelem/can"
 	"golang.org/x/sys/unix"
 )
 
@@ -15,12 +16,6 @@ type CanSocket struct {
 	iface *net.Interface
 	addr  *unix.SockaddrCAN
 	fd    int
-}
-
-type Frame struct {
-	ID   uint32
-	Data []uint8
-	Kind Kind
 }
 
 //internal frame structure for socketcan with padding
@@ -33,21 +28,21 @@ type stdFrame struct {
 	Data        [8]uint8
 }
 
-func Marshal(f Frame) (*bytes.Buffer, error) {
+func marshalSocketCan(f can.Frame) (*bytes.Buffer, error) {
 
-	if len(f.Data) > 8 && f.Kind == SFF {
+	if len(f.Data) > 8 && f.Kind == can.SFF {
 		return nil, errors.New("data too large for std frame")
 	}
-	if len(f.Data) > 64 && f.Kind == EFF {
+	if len(f.Data) > 64 && f.Kind == can.EFF {
 		return nil, errors.New("data too large for extended frame")
 	}
 
 	var idflags uint32 = f.ID
-	if f.Kind == EFF {
+	if f.Kind == can.EFF {
 		idflags = idflags | unix.CAN_EFF_FLAG
-	} else if f.Kind == RTR {
+	} else if f.Kind == can.RTR {
 		idflags = idflags | unix.CAN_RTR_FLAG
-	} else if f.Kind == ERR {
+	} else if f.Kind == can.ERR {
 		idflags = idflags | unix.CAN_ERR_FLAG
 	}
 
@@ -72,20 +67,10 @@ func Marshal(f Frame) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func Unmarshal(f *Frame, buf *bytes.Buffer) error {
+func unmarshalSocketCan(f *can.Frame, buf *bytes.Buffer) error {
 
 	return nil
 }
-
-//go:generate stringer -output=frame_kind.go -type Kind
-type Kind uint8
-
-const (
-	SFF Kind = iota // Standard Frame Format
-	EFF             // Extended Frame
-	RTR             // remote transmission requests
-	ERR             // Error frame.
-)
 
 // helper function to make a filter.
 // id and mask are straightforward, if inverted is true, the filter
@@ -164,10 +149,10 @@ func (sck *CanSocket) SetFilters(filters []unix.CanFilter) error {
 
 }
 
-func (sck *CanSocket) Send(msg Frame) error {
+func (sck *CanSocket) Send(msg can.Frame) error {
 	// convert our abstract frame into a real unix frame and then push it.
 	// check return value to raise errors.
-	buf, err := Marshal(msg)
+	buf, err := marshalSocketCan(msg)
 
 	if err != nil {
 		return fmt.Errorf("error sending frame: %w", err)
@@ -186,6 +171,6 @@ func (sck *CanSocket) Send(msg Frame) error {
 	return nil
 }
 
-func (sck *CanSocket) Recv() (*Frame, error) {
+func (sck *CanSocket) Recv() (*can.Frame, error) {
 	return nil, errors.New("not implemented")
 }
