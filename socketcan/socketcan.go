@@ -1,4 +1,4 @@
-package can
+package socketcan
 
 import (
 	"bytes"
@@ -70,6 +70,11 @@ func Marshal(f Frame) (*bytes.Buffer, error) {
 	}
 
 	return buf, nil
+}
+
+func Unmarshal(f *Frame, buf *bytes.Buffer) error {
+
+	return nil
 }
 
 //go:generate stringer -output=frame_kind.go -type Kind
