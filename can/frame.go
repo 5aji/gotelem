@@ -1,8 +1,8 @@
 package can
 
 type Frame struct {
-	ID   uint32
-	Data []uint8
+	Id   uint32
+	Data []byte
 	Kind Kind
 }
 
@@ -10,16 +10,20 @@ type Frame struct {
 type Kind uint8
 
 const (
-	SFF Kind = iota // Standard Frame Format
-	EFF             // Extended Frame
-	RTR             // remote transmission requests
-	ERR             // Error frame.
+	SFF Kind = iota // Standard ID Frame
+	EFF             // Extended ID Frame
+	RTR             // Remote Transmission Request Frame
+	ERR             // Error Frame
 )
 
-// for routing flexibility
+type CanFilter struct {
+	Id       uint32
+	Mask     uint32
+	Inverted bool
+}
 
 type CanSink interface {
-	Send(Frame) error
+	Send(*Frame) error
 }
 
 type CanSource interface {
