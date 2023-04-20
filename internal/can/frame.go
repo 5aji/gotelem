@@ -29,3 +29,8 @@ type CanSink interface {
 type CanSource interface {
 	Recv() (*Frame, error)
 }
+
+type CanTransciever interface {
+	CanSink
+	CanSource
+}

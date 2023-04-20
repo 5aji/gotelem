@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/kschamplin/gotelem/can"
+	"github.com/kschamplin/gotelem/internal/can"
 	"golang.org/x/sys/unix"
 )
 
