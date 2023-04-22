@@ -1,3 +1,8 @@
+// Package xbee implements xbee API encoding and decoding.
+
+// It encodes and decodes
+// API frames from io.Writer and io.Reader by providing a WriteFrame function and
+// a scanner.split function. It also includes
 package xbee
 
 import (
@@ -46,27 +51,6 @@ func WriteFrame(w io.Writer, cmd Frameable) (n int, err error) {
 
 	frame[len(frame)-1] = chk
 	return w.Write(frame)
-}
-
-func makeXbeeApiFrame(cmd Frameable) ([]byte, error) {
-	dataBuf, _ := cmd.Bytes()
-	frameBuf := make([]byte, len(dataBuf)+4)
-
-	// move data and construct the frame
-
-	frameBuf[0] = 0x7E // start delimiter
-
-	// length
-	// todo: check endiannes (0x7e, msb lsb)
-	binary.BigEndian.PutUint16(frameBuf[1:3], uint16(len(dataBuf)))
-
-	copy(frameBuf[3:], dataBuf)
-
-	chksum := calculateChecksum(dataBuf)
-
-	frameBuf[len(frameBuf)-1] = chksum
-
-	return frameBuf, nil
 }
 
 // now we can describe frames in other files that implement Frameable.

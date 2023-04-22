@@ -9,6 +9,8 @@ require (
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/jmoiron/sqlx v1.3.5 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
