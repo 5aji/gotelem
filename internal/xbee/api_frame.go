@@ -8,8 +8,10 @@ package xbee
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
+	"sync"
 )
 
 // the frames have an outer shell - we will make a function that takes
@@ -24,6 +26,10 @@ type Frameable interface {
 	// encodes this frame correctly.
 	Bytes() ([]byte, error)
 }
+
+// we also need a way of tracking frame IDs - this is a uint8
+// it uses a sync.Map
+
 
 // now we can describe our function that takes a framable and contains it + calculates checksums.
 func calculateChecksum(data []byte) byte {
@@ -84,104 +90,6 @@ const (
 
 // AT commands are hard, so let's write out all the major ones here
 
-type ATCmdFrame struct {
-	Id     byte
-	Cmd    string
-	Param  []byte
-	Queued bool
-}
-
-// implement the frame stuff for us.
-func (atFrame *ATCmdFrame) Bytes() ([]byte, error) {
-	buf := new(bytes.Buffer)
-
-	if atFrame.Queued {
-		// queued (batched) at comamnds have different Frame type
-		buf.WriteByte(byte(ATCmdQueue))
-
-	} else {
-		// normal frame type
-		buf.WriteByte(byte(ATCmd))
-
-	}
-
-	buf.WriteByte(atFrame.Id)
-
-	// write cmd, if it's the right length.
-	if cmdLen := len(atFrame.Cmd); cmdLen != 2 {
-		return nil, fmt.Errorf("AT command incorrect length: %d", cmdLen)
-	}
-	buf.Write([]byte(atFrame.Cmd))
-
-	// write param.
-	buf.Write(atFrame.Param)
-	return buf.Bytes(), nil
-}
-
-// transmissions to this address are instead broadcast
-const BroadcastAddr = 0xFFFF
-
-type TxFrame struct {
-	Id          byte
-	Destination uint64
-	BCastRadius uint8
-	Options     uint8
-	Payload     []byte
-}
-
-func (txFrame *TxFrame) Bytes() ([]byte, error) {
-	buf := new(bytes.Buffer)
-
-	buf.WriteByte(byte(TxReq))
-
-	buf.WriteByte(txFrame.Id)
-
-	a := make([]byte, 8)
-	binary.LittleEndian.PutUint64(a, txFrame.Destination)
-	buf.Write(a)
-
-	// write the reserved part.
-	buf.Write([]byte{0xFF, 0xFE})
-
-	// write the radius
-	buf.WriteByte(txFrame.BCastRadius)
-
-	buf.WriteByte(txFrame.Options)
-
-	buf.Write(txFrame.Payload)
-
-	return buf.Bytes(), nil
-}
-
-type RemoteATCmdReq struct {
-	ATCmdFrame
-	Destination uint64
-	Options     uint8
-}
-
-func (remoteAT *RemoteATCmdReq) Bytes() ([]byte, error) {
-	buf := new(bytes.Buffer)
-	buf.WriteByte(byte(RemoteCmdReq))
-
-	buf.WriteByte(remoteAT.Id)
-
-	a := make([]byte, 8)
-	binary.LittleEndian.PutUint64(a, remoteAT.Destination)
-	buf.Write(a)
-
-	// write the reserved part.
-	buf.Write([]byte{0xFF, 0xFE})
-	// write options
-	buf.WriteByte(remoteAT.Options)
-
-	// now, write the AT command and the data.
-	buf.Write([]byte(remoteAT.Cmd))
-
-	buf.Write(remoteAT.Param)
-
-	return buf.Bytes(), nil
-
-}
 
 // Now we will implement receiving packets from a character stream.
 // we first need to make a thing that produces frames from a stream using a scanner.
