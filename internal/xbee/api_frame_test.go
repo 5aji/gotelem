@@ -69,6 +69,26 @@ func Test_xbeeFrameSplit(t *testing.T) {
 			wantToken:   []byte{0x7E, 0x00, 0x02, 0x23, 0x11, 0xCB},
 			wantErr:     false,
 		},
+		{
+			name: "trailing start delimiter",
+			args: args{
+				data:  []byte{0x53, 0x00, 0x02, 0x23, 0x11, 0x7E},
+				atEOF: false,
+			},
+			wantAdvance: 5,
+			wantToken:   nil,
+			wantErr:     false,
+		},
+		{
+			name: "incomplete length value",
+			args: args{
+				data:  []byte{0x53, 0x00, 0x02, 0x23, 0x11, 0x7E, 0x00},
+				atEOF: false,
+			},
+			wantAdvance: 5,
+			wantToken:   nil,
+			wantErr:     false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

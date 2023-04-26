@@ -2,16 +2,16 @@
 
 // It encodes and decodes
 // API frames from io.Writer and io.Reader by providing a WriteFrame function and
-// a scanner.split function. It also includes
+// a scanner.split function. It also includes internal packets for using the API.
+// For end-users, it provides a simple net.Conn-like interface that can write
+// and read arbitrary bytes (to be used by a higher level protocol)
 package xbee
 
 import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
-	"sync"
 )
 
 // the frames have an outer shell - we will make a function that takes
@@ -27,11 +27,10 @@ type Frameable interface {
 	Bytes() ([]byte, error)
 }
 
-// we also need a way of tracking frame IDs - this is a uint8
-// it uses a sync.Map
 
 
-// now we can describe our function that takes a framable and contains it + calculates checksums.
+// calculateChecksum is a helper function to calculate the 1-byte checksum of a data range.
+// the data range does not include the start delimiter, or the length uint16 (only the frame payload)
 func calculateChecksum(data []byte) byte {
 	var sum byte
 	for _, v := range data {
@@ -40,6 +39,7 @@ func calculateChecksum(data []byte) byte {
 	return 0xFF - sum
 }
 
+// WriteFrame takes a frameable and writes it out to the given writer. 
 func WriteFrame(w io.Writer, cmd Frameable) (n int, err error) {
 	frame_data, err := cmd.Bytes()
 
@@ -90,7 +90,6 @@ const (
 
 // AT commands are hard, so let's write out all the major ones here
 
-
 // Now we will implement receiving packets from a character stream.
 // we first need to make a thing that produces frames from a stream using a scanner.
 
@@ -109,9 +108,13 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 	}
 
 	if startIdx := bytes.IndexByte(data, 0x7E); startIdx >= 0 {
-		// we have a start character. get the length.
+		// we have a start character. see if we can get the length.
 		// we add 4 since start delimiter (1) + length (2) + checksum (1).
 		// the length inside the packet represents the frame data only.
+		if len(data[startIdx:]) < 3 {
+			return startIdx, nil, nil
+		}
+		// FIXME: add bounds checking! this can panic.
 		var frameLen = binary.BigEndian.Uint16(data[startIdx+1:startIdx+3]) + 4
 		if len(data[startIdx:]) < int(frameLen) {
 			// we got the length, but there's not enough data for the frame. we can trim the
@@ -124,4 +127,30 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 	}
 	// we didn't find a start character in our data, so request more. trash everythign given to us
 	return len(data), nil, nil
+}
+
+
+func parseFrame(frame []byte) ([]byte, error) {
+	if frame[0] != 0x7E {
+		return nil, errors.New("incorrect start delimiter")
+	}
+	fsize := len(frame)
+	if calculateChecksum(frame[3:fsize - 1]) != frame[fsize] {
+		return nil, errors.New("checksum mismatch")
+	}
+	return frame[3:fsize - 1], nil
+}
+
+
+// stackup
+// low level readwriter (serial or IP socket)
+// XBee library layer (frame encoding/decoding to/from structs)
+// xbee conn-like layer (ReadWriter + custom control functions)
+// application marshalling format (msgpack or json or gob)
+// application 
+
+
+type XBeeConn interface {
+	io.ReadWriter
+	WriteFrame(Frameable, bool) Frameable
 }
