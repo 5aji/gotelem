@@ -29,19 +29,13 @@ var serveCmd = &cli.Command{
 	},
 }
 
-type session struct {
-	conn net.Conn
-	send chan gotelem.Body
-	recv chan gotelem.Body
-	quit chan bool
-}
-
 func serve() {
 
 	broker := NewBroker(3)
 	// start the can listener
 	go vcanTest()
 	go canHandler(broker)
+	go broker.Start()
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Printf("Error listening: %v\n", err)
@@ -91,7 +85,7 @@ func handleCon(conn net.Conn, broker *Broker) {
 		case rxBody := <-rxPkts:
 			// do nothing for now.
 			fmt.Printf("got a body %v\n", rxBody)
-		case <-time.NewTimer(1 * time.Second).C: // time out.
+		case <-time.After(1 * time.Second): // time out.
 			fmt.Printf("timeout\n")
 			data := gotelem.StatusBody{
 				BatteryPct: 1.2,
