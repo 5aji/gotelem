@@ -22,12 +22,9 @@ import (
 
 type Frameable interface {
 	// returns the API identifier for this frame.
-	GetId() byte
 	// encodes this frame correctly.
-	Bytes() ([]byte, error)
+	Bytes() []byte
 }
-
-
 
 // calculateChecksum is a helper function to calculate the 1-byte checksum of a data range.
 // the data range does not include the start delimiter, or the length uint16 (only the frame payload)
@@ -39,21 +36,20 @@ func calculateChecksum(data []byte) byte {
 	return 0xFF - sum
 }
 
-// WriteFrame takes a frameable and writes it out to the given writer. 
-func WriteFrame(w io.Writer, cmd Frameable) (n int, err error) {
-	frame_data, err := cmd.Bytes()
+// writeXBeeFrame takes some bytes and wraps it in an XBee frame.
+//
+// An XBee frame has a start delimiter, followed by the length of the payload,
+// then the payload itself, and finally a checksum.
+func writeXBeeFrame(w io.Writer, data []byte) (n int, err error) {
 
-	if err != nil {
-		return
-	}
-	frame := make([]byte, len(frame_data)+4)
+	frame := make([]byte, len(data)+4)
 	frame[0] = 0x7E
 
-	binary.BigEndian.PutUint16(frame[1:], uint16(len(frame_data)))
+	binary.BigEndian.PutUint16(frame[1:], uint16(len(data)))
 
-	copy(frame[3:], frame_data)
+	copy(frame[3:], data)
 
-	chk := calculateChecksum(frame_data)
+	chk := calculateChecksum(data)
 
 	frame[len(frame)-1] = chk
 	return w.Write(frame)
@@ -69,23 +65,23 @@ type XBeeCmd byte
 const (
 	// commands sent to the xbee s3b
 
-	ATCmd        XBeeCmd = 0x08 // AT Command
-	ATCmdQueue   XBeeCmd = 0x09 // AT Command - Queue Parameter Value
-	TxReq        XBeeCmd = 0x10 // TX Request
-	TxReqExpl    XBeeCmd = 0x11 // Explicit TX Request
-	RemoteCmdReq XBeeCmd = 0x17 // Remote Command Request
+	ATCmdType        XBeeCmd = 0x08 // AT Command
+	ATCmdQueueType   XBeeCmd = 0x09 // AT Command - Queue Parameter Value
+	TxReqType        XBeeCmd = 0x10 // TX Request
+	TxReqExplType    XBeeCmd = 0x11 // Explicit TX Request
+	RemoteCmdReqType XBeeCmd = 0x17 // Remote Command Request
 	// commands recieved from the xbee
 
-	ATCmdResponse XBeeCmd = 0x88 // AT Command Response
-	ModemStatus   XBeeCmd = 0x8A // Modem Status
-	TxStatus      XBeeCmd = 0x8B // Transmit Status
-	RouteInfoPkt  XBeeCmd = 0x8D // Route information packet
-	AddrUpdate    XBeeCmd = 0x8E // Aggregate Addressing Update
-	RxPkt         XBeeCmd = 0x90 // RX Indicator (AO=0)
-	RxPktExpl     XBeeCmd = 0x91 // Explicit RX Indicator (AO=1)
-	IOSample      XBeeCmd = 0x92 // Data Sample RX Indicator
-	NodeId        XBeeCmd = 0x95 // Note Identification Indicator
-	RemoteCmdResp XBeeCmd = 0x97 // Remote Command Response
+	ATCmdResponseType XBeeCmd = 0x88 // AT Command Response
+	ModemStatusType   XBeeCmd = 0x8A // Modem Status
+	TxStatusType      XBeeCmd = 0x8B // Transmit Status
+	RouteInfoType     XBeeCmd = 0x8D // Route information packet
+	AddrUpdateType    XBeeCmd = 0x8E // Aggregate Addressing Update
+	RxPktType         XBeeCmd = 0x90 // RX Indicator (AO=0)
+	RxPktExplType     XBeeCmd = 0x91 // Explicit RX Indicator (AO=1)
+	IOSampleType      XBeeCmd = 0x92 // Data Sample RX Indicator
+	NodeIdType        XBeeCmd = 0x95 // Note Identification Indicator
+	RemoteCmdRespType XBeeCmd = 0x97 // Remote Command Response
 )
 
 // AT commands are hard, so let's write out all the major ones here
@@ -115,42 +111,34 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 			return startIdx, nil, nil
 		}
 		// FIXME: add bounds checking! this can panic.
-		var frameLen = binary.BigEndian.Uint16(data[startIdx+1:startIdx+3]) + 4
-		if len(data[startIdx:]) < int(frameLen) {
+		var frameLen = int(binary.BigEndian.Uint16(data[startIdx+1:startIdx+3])) + 4
+		if len(data[startIdx:]) < frameLen {
 			// we got the length, but there's not enough data for the frame. we can trim the
 			// data that came before the start, but not return a token.
 			return startIdx, nil, nil
 		}
 		// there is enough data to pull a frame.
 		// todo: check checksum here? we can return an error.
-		return startIdx + int(frameLen), data[startIdx : startIdx+int(frameLen)], nil
+		return startIdx + frameLen, data[startIdx : startIdx+frameLen], nil
 	}
 	// we didn't find a start character in our data, so request more. trash everythign given to us
 	return len(data), nil, nil
 }
-
 
 func parseFrame(frame []byte) ([]byte, error) {
 	if frame[0] != 0x7E {
 		return nil, errors.New("incorrect start delimiter")
 	}
 	fsize := len(frame)
-	if calculateChecksum(frame[3:fsize - 1]) != frame[fsize] {
+	if calculateChecksum(frame[3:fsize-1]) != frame[fsize] {
 		return nil, errors.New("checksum mismatch")
 	}
-	return frame[3:fsize - 1], nil
+	return frame[3 : fsize-1], nil
 }
-
 
 // stackup
 // low level readwriter (serial or IP socket)
 // XBee library layer (frame encoding/decoding to/from structs)
 // xbee conn-like layer (ReadWriter + custom control functions)
 // application marshalling format (msgpack or json or gob)
-// application 
-
-
-type XBeeConn interface {
-	io.ReadWriter
-	WriteFrame(Frameable, bool) Frameable
-}
+// application

@@ -17,7 +17,7 @@ func ParseRxFrame(data []byte) (*RxFrame, error) {
 	// i.e it excludes start delimiter, length, and checksum.
 
 	// check the frame type (data[0])
-	if data[0] != byte(RxPkt) && data[0] != byte(RxPktExpl) {
+	if data[0] != byte(RxPktType) {
 		return nil, fmt.Errorf("incorrect frame type 0x%x", data[0])
 	}
 

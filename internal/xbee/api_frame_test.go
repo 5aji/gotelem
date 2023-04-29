@@ -1,7 +1,6 @@
 package xbee
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 )
@@ -107,32 +106,35 @@ func Test_xbeeFrameSplit(t *testing.T) {
 	}
 }
 
-func TestWriteFrame(t *testing.T) {
+func Test_parseFrame(t *testing.T) {
 	type args struct {
-		cmd Frameable
+		frame []byte
 	}
 	tests := []struct {
 		name    string
 		args    args
-		wantN   int
-		wantW   string
+		want    []byte
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{
+			name: "missing start delimiter",
+			args: args{
+				frame: []byte{0x00, 0x02, 0x03, 0x00, 0x3},
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := &bytes.Buffer{}
-			gotN, err := WriteFrame(w, tt.args.cmd)
+			got, err := parseFrame(tt.args.frame)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("WriteFrame() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("parseFrame() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotN != tt.wantN {
-				t.Errorf("WriteFrame() = %v, want %v", gotN, tt.wantN)
-			}
-			if gotW := w.String(); gotW != tt.wantW {
-				t.Errorf("WriteFrame() = %v, want %v", gotW, tt.wantW)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseFrame() = %v, want %v", got, tt.want)
 			}
 		})
 	}
