@@ -24,18 +24,21 @@ var serveCmd = &cli.Command{
 		&cli.BoolFlag{Name: "xbee", Aliases: []string{"x"}, Usage: "Find and connect to an XBee"},
 	},
 	Action: func(ctx *cli.Context) error {
-		serve()
+		serve(ctx.Bool("xbee"))
 		return nil
 	},
 }
 
-func serve() {
+func serve(useXbee bool) {
 
 	broker := NewBroker(3)
 	// start the can listener
 	go vcanTest()
 	go canHandler(broker)
 	go broker.Start()
+	if useXbee {
+		go xbeeSvc()
+	}
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Printf("Error listening: %v\n", err)
@@ -54,6 +57,7 @@ func serve() {
 func handleCon(conn net.Conn, broker *Broker) {
 	//	reader := msgp.NewReader(conn)
 	rxPkts := make(chan gotelem.Data)
+	done := make(chan bool)
 	go func() {
 		// setpu our msgp reader.
 		scann := msgp.NewReader(conn)
@@ -66,14 +70,15 @@ func handleCon(conn net.Conn, broker *Broker) {
 			rxPkts <- data
 		}
 
+		done <- true // if we got here, it means the connction was closed.
 	}()
 
 	// subscribe to can packets
 	// TODO: make this unique since remote addr could be non-unique
 	canCh := broker.Subscribe(conn.RemoteAddr().String())
 	writer := msgp.NewWriter(conn)
+mainloop:
 	for {
-
 		select {
 		case canFrame := <-canCh:
 			cf := gotelem.CanBody{
@@ -86,24 +91,24 @@ func handleCon(conn net.Conn, broker *Broker) {
 			// do nothing for now.
 			fmt.Printf("got a body %v\n", rxBody)
 		case <-time.After(1 * time.Second): // time out.
-			fmt.Printf("timeout\n")
-			data := gotelem.StatusBody{
-				BatteryPct: 1.2,
-				ErrCode:    0,
-			}
-			data.EncodeMsg(writer)
 			writer.Flush()
+		case <-done:
+			break mainloop
 		}
 	}
+	// unsubscribe and close the conn.
+	broker.Unsubscribe(conn.RemoteAddr().String())
+	conn.Close()
 }
 
-func xbeeSvc(packets <-chan can.Frame, device string, quit <-chan struct{}) {
+func xbeeSvc(b *Broker) {
 
 	// open the session.
 	mode := &serial.Mode{
 		BaudRate: 115200,
 	}
-	sess, err := xbee.NewSerialXBee("/dev/ttyUSB1", mode)
+
+	sess, err := xbee.NewSerialXBee("/dev/ttyACM0", mode)
 	if err != nil {
 		fmt.Printf("got error %v", err)
 		panic(err)
@@ -121,8 +126,6 @@ func xbeeSvc(packets <-chan can.Frame, device string, quit <-chan struct{}) {
 		select {
 		case data := <-receivedData:
 			fmt.Printf("Got a data %v\n", data)
-		case packet := <-packets:
-			fmt.Printf("Got a packet, %v\n", packet)
 		}
 
 	}
@@ -237,4 +240,11 @@ func (b *Broker) Subscribe(name string) <-chan can.Frame {
 	}
 	b.subsCh <- bc
 	return ch
+}
+
+func (b *Broker) Unsubscribe(name string) {
+	bc := BrokerClient{
+		Name: name,
+	}
+	b.unsubCh <- bc
 }

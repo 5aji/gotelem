@@ -123,6 +123,7 @@ func encodeRemoteATCommand(at ATCmd, idx uint8, queued bool, destination uint64)
 	if !queued {
 		options = options | 0x2
 	}
+	buf.WriteByte(options)
 
 	// write AT command
 	cmd := at.Cmd()
@@ -136,3 +137,23 @@ func encodeRemoteATCommand(at ATCmd, idx uint8, queued bool, destination uint64)
 }
 
 // let's actually define some AT commands now.
+
+// the AT command for the ID (Network ID).
+// the network identifier is used to communicate with other devices. It must match.
+type ATCmdID struct {
+	id      uint32
+	isQuery bool
+}
+
+func (cmd ATCmdID) Cmd() [2]rune {
+	return [2]rune{'I', 'D'}
+}
+
+func (cmd ATCmdID) Payload() []byte {
+	if cmd.isQuery {
+		return []byte{}
+	}
+	res := make([]byte, 0)
+	res = binary.BigEndian.AppendUint32(res, cmd.id)
+	return res
+}

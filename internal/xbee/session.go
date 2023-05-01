@@ -126,7 +126,7 @@ func (sess *SerialSession) rxHandler() {
 		}
 
 	}
-	// if we get here, the serial port has closed. this is fine, usually.
+	// if we get here, the serial port has closed. this is fine.
 }
 
 // This implements io.Reader for the UART Session.
@@ -214,7 +214,7 @@ func (sess *SerialSession) ATCommand(at ATCmd, queued bool) error {
 
 	if resp.Status != 0 {
 		// sinec ATCmdStatus is a stringer thanks to the generator
-		return fmt.Errorf("AT command failed: %s", resp.Status)
+		return fmt.Errorf("AT command failed: %v", resp.Status)
 	}
 
 	// finally, we use the provided ATCmd interface to unpack the data.
