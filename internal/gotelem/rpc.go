@@ -213,6 +213,7 @@ type msgpackObject interface {
 // of func(T msgpObject)(R msgpObject, error) where T and R can be *concrete* types.
 // and returns a new function that handles conversion to/from msgp.Raw.
 // the function returned can be used by the RPCConn as a handler function.
+// This function can typically have it's paramters inferred.
 func MakeService[T, R msgpackObject](fn func(T) (R, error)) func(msgp.Raw) (msgp.Raw, error) {
 	return func(p msgp.Raw) (msgp.Raw, error) {
 		// decode the raw data into a new underlying type.
@@ -233,6 +234,63 @@ func MakeService[T, R msgpackObject](fn func(T) (R, error)) func(msgp.Raw) (msgp
 		}
 
 		return resp.MarshalMsg([]byte{})
+
+	}
+}
+
+// should the RPCConn/method name be baked into the function or should they be
+// part of the returned function paramters?
+
+// MakeCaller creates a simple wrapper around a parameter of call. The method name
+// and RPC connection can be given to the returned function to make a RPC call on that
+// function with the given type parameters.
+//
+// This function is slightly obtuse compared to MakeBoundCaller but is more flexible
+// since you can reuse the same function across multiple connections and method names.
+//
+// This generic function must always have it's type paratmers declared explicitly.
+// They cannot be inferred from the given parameters.
+func MakeCaller[T, R msgpackObject]() func(string, T, *RPCConn) (R, error) {
+	return func(method string, param T, rpc *RPCConn) (R, error) {
+		rawResponse, err := rpc.Call(method, param)
+		if err != nil {
+			var emtpyR R
+			return emtpyR, err
+		}
+
+		var resp R
+
+		_, err = resp.UnmarshalMsg(rawResponse)
+
+		return resp, err
+	}
+}
+
+// MakeBoundCaller is like MakeCaller, except the RPC connection and method name are
+// fixed and cannot be adjusted later. This function is more elegant but less flexible
+// than MakeCaller
+//
+// This generic function must always have it's type paratmers declared explicitly.
+// They cannot be inferred from the given parameters.
+func MakeBoundCaller[T, R msgpackObject](rpc *RPCConn, method string) func(T) (R, error) {
+
+	return func(param T) (R, error) {
+		// encode parameters
+		// invoke rpc.Call
+		// await response
+		// unpack values.
+
+		rawResponse, err := rpc.Call(method, param)
+		if err != nil {
+			var emtpyR R
+			return emtpyR, err
+		}
+
+		var resp R
+
+		_, err = resp.UnmarshalMsg(rawResponse)
+
+		return resp, err
 
 	}
 }
