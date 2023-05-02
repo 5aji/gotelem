@@ -138,6 +138,7 @@ func encodeRemoteATCommand(at ATCmd, idx uint8, queued bool, destination uint64)
 
 // let's actually define some AT commands now.
 
+// TODO: should we just use a function.
 // the AT command for the ID (Network ID).
 // the network identifier is used to communicate with other devices. It must match.
 type ATCmdID struct {

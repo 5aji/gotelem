@@ -18,7 +18,6 @@ const (
 	NotificationType RPCType = 2
 )
 
-
 // the messagepack RPC spec requires that the RPC wire formts are ordered arrays,
 // aka tuples. we can use msgp options to make them tuple automatically,
 // based on the order they are declared. This makes the order of these
@@ -50,8 +49,8 @@ func NewRequest(msgid uint32, method string, params msgp.Raw) *Request {
 // A response is the result of a function call, or an error.
 type Response struct {
 	// should always be one.
-	msgtype RPCType     `msg:"type"`
-	MsgId   uint32      `msg:"msgid"`
+	msgtype RPCType  `msg:"type"`
+	MsgId   uint32   `msg:"msgid"`
 	Error   RPCError `msg:"error,allownil"`
 	Result  msgp.Raw `msg:"result,allownil"`
 }
@@ -59,9 +58,9 @@ type Response struct {
 func NewResponse(msgid uint32, respErr RPCError, res msgp.Raw) *Response {
 	return &Response{
 		msgtype: 1,
-		MsgId: msgid,
-		Error: respErr,
-		Result: res,
+		MsgId:   msgid,
+		Error:   respErr,
+		Result:  res,
 	}
 }
 
@@ -69,9 +68,17 @@ func NewResponse(msgid uint32, respErr RPCError, res msgp.Raw) *Response {
 // succeeds and ignores responses.
 type Notification struct {
 	// should always be *2*
-	msgtype RPCType     `msg:"type"`
-	Method  string      `msg:"method"`
+	msgtype RPCType  `msg:"type"`
+	Method  string   `msg:"method"`
 	Params  msgp.Raw `msg:"params,allownil"`
+}
+
+func NewNotification(method string, params msgp.Raw) *Notification {
+	return &Notification{
+		msgtype: 2,
+		Method:  method,
+		Params:  params,
+	}
 }
 
 // todo: should these be functions instead, since they're arrays? and we need to determine the type beforehand.
@@ -94,7 +101,6 @@ func getMsgType(b []byte) RPCType {
 	// todo: use readIntf instead? returns a []interface{} and we can map it ourselves...
 	return RPCType(vtype)
 }
-
 
 // parseRPC takes a raw message and decodes it based on the first value
 // of the array (the type). It returns the decoded object. Callers
@@ -126,13 +132,11 @@ func parseRPC(raw msgp.Raw) (interface{}, error) {
 // RPCError is a common RPC error format. It is basically a clone of the
 // JSON-RPC error format. We use it so we know what to expect there.
 
-
 //msgp:tuple RPCError
 type RPCError struct {
 	Code int
 	Desc string
 }
-
 
 // Converts a go error into a RPC error.
 func MakeRPCError(err error) *RPCError {
@@ -143,4 +147,8 @@ func MakeRPCError(err error) *RPCError {
 		Code: -1,
 		Desc: err.Error(),
 	}
+}
+
+func (r *RPCError) Error() string {
+	return r.Desc
 }
