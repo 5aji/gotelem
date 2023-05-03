@@ -20,10 +20,13 @@ Notify() the callback service with the new event as an argument every time it
 occured.  While this may be less optimal than protocol-level streaming, it is
 far simpler.
 
+# Generic Helper Functions
+
 The idiomatic way to use mprpc is to use the generic functions that are provided
-as helpers. They allow the programmer to easily wrap functions in a closure that
-automatically encodes and decodes the parameters and results to their
-MessagePack representations. See the Make* generic functions for more information.
+as helpers. They allow the programmer to easily wrap existing functions in a
+closure that automatically encodes and decodes the parameters and results to
+their MessagePack representations. See the Make* generic functions for more
+information.
 
 	// Assume myParam and myResult are MessagePack-enabled structs.
 	// Use `msgp` to generate the required functions for them.
@@ -37,6 +40,9 @@ MessagePack representations. See the Make* generic functions for more informatio
 The generic functions allow for flexiblity and elegant code while still keeping
 the underlying implementation reflect-free. For more complex functions (i.e
 multiple parameters or return types), a second layer of indirection can be used.
+
+There is also a `MakeCaller` function that can make a stub function that handles
+encoding the arguments and decoding the response for a remote procedure.
 */
 package mprpc
 
@@ -155,6 +161,7 @@ func (rpc *RPCConn) Serve() {
 	}
 }
 
+// dispatch is an internal method used to execute a Request sent by the remote:w
 func (rpc *RPCConn) dispatch(req Request) {
 
 	result, err := rpc.handlers[req.Method](req.Params)
@@ -172,6 +179,9 @@ func (rpc *RPCConn) dispatch(req Request) {
 	response.EncodeMsg(w)
 
 }
+
+// dispatchNotif is like dispatch, but for Notifications. This means that it never replies,
+// even if there is an error.
 func (rpc *RPCConn) dispatchNotif(req Notification) {
 
 	_, err := rpc.handlers[req.Method](req.Params)
@@ -201,7 +211,7 @@ func MakeService[T, R msgpackObject](fn func(T) (R, error)) ServiceFunc {
 	return func(p msgp.Raw) (msgp.Raw, error) {
 		// decode the raw data into a new underlying type.
 		var params T
-		// TODO: handler errors
+
 		_, err := params.UnmarshalMsg(p)
 
 		if err != nil {
@@ -236,8 +246,13 @@ func MakeService[T, R msgpackObject](fn func(T) (R, error)) ServiceFunc {
 func MakeCaller[T, R msgpackObject]() func(string, T, *RPCConn) (R, error) {
 	return func(method string, param T, rpc *RPCConn) (R, error) {
 
-		rawParam, _ := param.MarshalMsg([]byte{})
+		rawParam, err := param.MarshalMsg([]byte{})
+		if err != nil {
+			var emtpyR R
+			return emtpyR, err
+		}
 		rawResponse, err := rpc.Call(method, rawParam)
+
 		if err != nil {
 			var emtpyR R
 			return emtpyR, err

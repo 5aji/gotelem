@@ -20,6 +20,8 @@ import (
 // first, we should make it take the frame directly, so we make an interface
 // that represents "framable" things. note that bytes.Buffer also fulfils this.
 
+// Frameable is an object that can be sent in an XBee Frame. An XBee Frame
+// consists of a start delimiter, length, the payload, and a checksum.
 type Frameable interface {
 	// returns the API identifier for this frame.
 	// encodes this frame correctly.

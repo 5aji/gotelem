@@ -14,6 +14,12 @@ type Frame struct {
 	Kind Kind
 }
 
+type CANFrame interface {
+	Id() uint32
+	Data() []byte
+	Type() Kind
+}
+
 //go:generate stringer -output=frame_kind.go -type Kind
 
 // Kind is the type of the can Frame

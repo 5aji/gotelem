@@ -1,3 +1,6 @@
+/*
+socketcan provides a wrapper around the Linux socketCAN interface.
+*/
 package socketcan
 
 import (
@@ -18,12 +21,13 @@ type CanSocket struct {
 	fd    int
 }
 
+// standardFrameSize is the full size in bytes of the default CAN frame.
 const standardFrameSize = unix.CAN_MTU
 
 // we use the base CAN_MTU since the FD MTU is not in sys/unix. but we know it's +64-8 bytes
 const fdFrameSize = unix.CAN_MTU + 56
 
-// Constructs a new CanSocket and binds it to the interface given by ifname
+// NewCanSocket constructs a new CanSocket and binds it to the interface given by ifname
 func NewCanSocket(ifname string) (*CanSocket, error) {
 
 	var sck CanSocket
@@ -52,17 +56,17 @@ func NewCanSocket(ifname string) (*CanSocket, error) {
 	return &sck, nil
 }
 
-// Closes the socket.
+// Close closes the socket.
 func (sck *CanSocket) Close() error {
 	return unix.Close(sck.fd)
 }
 
-// get the name of the socket.
+// Name returns the name of the socket.
 func (sck *CanSocket) Name() string {
 	return sck.iface.Name
 }
 
-// Sets if error packets should be sent upstream
+// SetErrFilter sets if error packets should be sent upstream
 func (sck *CanSocket) SetErrFilter(shouldFilter bool) error {
 
 	var err error
@@ -114,6 +118,7 @@ func (sck *CanSocket) SetFilters(filters []can.CanFilter) error {
 
 }
 
+// Send sends a CAN frame
 func (sck *CanSocket) Send(msg *can.Frame) error {
 
 	buf := make([]byte, fdFrameSize)

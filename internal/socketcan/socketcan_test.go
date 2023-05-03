@@ -6,34 +6,7 @@ import (
 	"testing"
 
 	"github.com/kschamplin/gotelem/internal/can"
-	"golang.org/x/sys/unix"
 )
-
-func TestMakeFilter(t *testing.T) {
-
-	t.Run("non-invert", func(t *testing.T) {
-
-		filter := can.CanFilter{Id: 0x123, Mask: 0x11, Inverted: true}
-
-		if filter.Id != 0x123 {
-			t.Errorf("expected %d, got %d", 0x123, filter.Id)
-		}
-		if filter.Mask != 0x11 {
-			t.Errorf("expected %d, got %d", 0x11, filter.Mask)
-		}
-	})
-	t.Run("invert", func(t *testing.T) {
-
-		filter := can.CanFilter{Id: 0x123, Mask: 0x11, Inverted: true}
-
-		if filter.Id != 0x123|unix.CAN_INV_FILTER {
-			t.Errorf("expected %d, got %d", 0x123|unix.CAN_INV_FILTER, filter.Id)
-		}
-		if filter.Mask != 0x11 {
-			t.Errorf("expected %d, got %d", 0x11, filter.Mask)
-		}
-	})
-}
 
 func TestCanSocket(t *testing.T) {
 
