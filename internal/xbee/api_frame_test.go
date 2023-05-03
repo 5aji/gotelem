@@ -18,7 +18,6 @@ func Test_xbeeFrameSplit(t *testing.T) {
 		wantToken   []byte
 		wantErr     bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "empty data",
 			args: args{
@@ -127,7 +126,6 @@ func Test_parseFrame(t *testing.T) {
 		want    []byte
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "missing start delimiter",
 			args: args{
@@ -175,10 +173,19 @@ func Test_writeXBeeFrame(t *testing.T) {
 		name    string
 		args    args
 		wantN   int
-		wantW   string
+		wantW   []byte
 		wantErr bool
 	}{
 		// TODO: Add test cases.
+		{
+			name: "a test",
+			args: args{
+				data: []byte{0x23, 0x11},
+			},
+			wantN:   6,
+			wantW:   []byte{0x7E, 0x00, 0x02, 0x23, 0x11, 0xCB},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -191,7 +198,7 @@ func Test_writeXBeeFrame(t *testing.T) {
 			if gotN != tt.wantN {
 				t.Errorf("writeXBeeFrame() = %v, want %v", gotN, tt.wantN)
 			}
-			if gotW := w.String(); gotW != tt.wantW {
+			if gotW := w.Bytes(); !reflect.DeepEqual(gotW, tt.wantW) {
 				t.Errorf("writeXBeeFrame() = %v, want %v", gotW, tt.wantW)
 			}
 		})
