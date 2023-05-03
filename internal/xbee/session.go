@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"go.bug.st/serial"
-	"go.uber.org/zap"
+	"golang.org/x/exp/slog"
 )
 
 // todo: make transport-agnostic (serial port or TCP/IP)
@@ -31,7 +31,7 @@ type Session interface {
 type SerialSession struct {
 	port serial.Port
 	ct   connTrack
-	log  *zap.SugaredLogger
+	slog.Logger
 	// todo: add queuing structures here for reliable transport and tracking.
 	// this buffer is used for storing data that must be read at some point.
 	rxBuf     *bufio.ReadWriter
@@ -57,12 +57,6 @@ func NewSerialXBee(portName string, mode *serial.Mode) (*SerialSession, error) {
 	// will write to the buffer when new Rx packets come in, and we can read out from application code.
 	sess.rxBuf = bufio.NewReadWriter(bufio.NewReader(rd), bufio.NewWriter(wr))
 
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		return sess, err
-	}
-	sess.log = logger.Sugar()
-
 	// start the rx handler in the background. we close it later by closing the serial port.
 
 	go sess.rxHandler()
@@ -86,7 +80,7 @@ func (sess *SerialSession) rxHandler() {
 		// data is a frame payload - not a full frame.
 		data, err := parseFrame(scan.Bytes())
 		if err != nil {
-			sess.log.Warnw("error parsing frame", "error", err, "data", data)
+			sess.Logger.Warn("error parsing frame", "error", err, "data", data)
 			continue
 		}
 		// data is good, lets parse the frame - using the first byte as the identifier.
@@ -97,13 +91,13 @@ func (sess *SerialSession) rxHandler() {
 			//TODO: if we have multiple sources, we need to track them here.
 			frame, err := ParseRxFrame(data)
 			if err != nil {
-				sess.log.Warnw("error parsing rx packet", "error", err, "data", data)
+				sess.Logger.Warn("error parsing rx packet", "error", err, "data", data)
 				break //continue?
 			}
 			// take the data and write it to our internal rx packet buffer.
 			_, err = sess.rxBuf.Write(frame.Payload)
 			if err != nil {
-				sess.log.Warnw("error writing data", "error", err, "payload", frame.Payload)
+				sess.Logger.Warn("error writing data", "error", err, "payload", frame.Payload)
 			}
 
 		// the "callback"-style handler. Any received packet with a frame ID should
@@ -116,12 +110,12 @@ func (sess *SerialSession) rxHandler() {
 			err := sess.ct.ClearMark(idx, data)
 			if err != nil {
 				// we got a rogue packet lol
-				sess.log.Warnw("rogue frame ID", "id", idx, "error", err)
+				sess.Logger.Warn("rogue frame ID", "id", idx, "error", err)
 			}
 
 		default:
 			// we don't know what to do with it.
-			sess.log.Infow("unhandled packet type", "type", data[0], "id", data[1])
+			sess.Logger.Info("unhandled packet type", "type", data[0], "id", data[1])
 
 		}
 
@@ -239,4 +233,8 @@ func (sess *SerialSession) GetStatus() {
 // Implement the io.Closer.
 func (sess *SerialSession) Close() error {
 	return sess.port.Close()
+}
+
+func (sess *SerialSession) DiscoverNodes() {
+
 }

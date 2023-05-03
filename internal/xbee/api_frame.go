@@ -108,6 +108,8 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 		// we add 4 since start delimiter (1) + length (2) + checksum (1).
 		// the length inside the packet represents the frame data only.
 		if len(data[startIdx:]) < 3 {
+			// since we don't have enough bytes to get the length, instead we
+			// will discard all data before the start index
 			return startIdx, nil, nil
 		}
 		// FIXME: add bounds checking! this can panic.
@@ -125,6 +127,8 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 	return len(data), nil, nil
 }
 
+// parseFrame takes a framed packet and returns the contents after checking the
+// checksum and start delimiter.
 func parseFrame(frame []byte) ([]byte, error) {
 	if frame[0] != 0x7E {
 		return nil, errors.New("incorrect start delimiter")
@@ -139,6 +143,7 @@ func parseFrame(frame []byte) ([]byte, error) {
 // stackup
 // low level readwriter (serial or IP socket)
 // XBee library layer (frame encoding/decoding to/from structs)
+// AT command layer (for setup/control)
 // xbee conn-like layer (ReadWriter + custom control functions)
 // application marshalling format (msgpack or json or gob)
 // application
