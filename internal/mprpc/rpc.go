@@ -1,36 +1,63 @@
-package gotelem
+/*
+mprpc is a simple bidirectional RPC library using the MessagePack-RPC spec.
+
+It fully implements the spec and additionally provides Go `error“ handling by
+converting the error to a standard format for other clients.
+
+mprpc does not have a typical server/client designation - both use "handlers",
+which expose methods to be called over the network. A "client" would be an
+RPCConn which doesn't expose any services, and a "server" would be an RPCConn
+that doesn't make any `Call`s to the other side.
+
+This lack of discrete server and client enables mprpc to implement a basic
+"streaming" architecture on top of the MessagePack-RPC spec, which does not
+include streaming primitives.  Instead, we can provide simple "service handlers"
+as a callback/destination for streaming data.
+
+For example, a "client" could subscribe to events from the "server", by
+providing a callback service to point events to. Then, the "server" would
+Notify() the callback service with the new event as an argument every time it
+occured.  While this may be less optimal than protocol-level streaming, it is
+far simpler.
+
+The idiomatic way to use mprpc is to use the generic functions that are provided
+as helpers. They allow the programmer to easily wrap functions in a closure that
+automatically encodes and decodes the parameters and results to their
+MessagePack representations. See the Make* generic functions for more information.
+
+	// Assume myParam and myResult are MessagePack-enabled structs.
+	// Use `msgp` to generate the required functions for them.
+
+	// this is our plain function - we can call it locally to test.
+	func myPlainFunction(p myParam) (r myResult, err error)
+
+	// wrapped is a ServiceFunc that can be passed to rpcConn.RegisterHandler
+	var wrapped := MakeService(myPlainFunction)
+
+The generic functions allow for flexiblity and elegant code while still keeping
+the underlying implementation reflect-free. For more complex functions (i.e
+multiple parameters or return types), a second layer of indirection can be used.
+*/
+package mprpc
 
 import (
-	"errors"
-	"math/rand"
 	"net"
-	"sync"
 
 	"github.com/tinylib/msgp/msgp"
 	"golang.org/x/exp/slog"
 )
 
-// the target architecture is a subscribe function that
-// takes a can FILTER. Then the server will emit notifications.
-// that contain new can packets as they come in.
-
-// this means that the client should be able to handle
-// notify packets on top of response packets.
-
-// we should register handlers. They should handle serialization
-// and deserialization on their own. This way we avoid reflect.
-// since reflected code can be more complex under the hood.
-// to make writing services easier, we can use generic functions
-// that convert a normal go function to a serviceFunc
-
-// ServiceFunc is a RPC service handler. It can be created manually,
-// or by using the generic MakeService function on a
-// `func(msgp.Encoder) (msgp.Deocder, error)`
+// ServiceFunc is a RPC service handler.
+// It can be created manually, or by using the generic MakeService function on a
+//
+//	func(msgp.Encoder) (msgp.Deocder, error)
+//
+// type.
 type ServiceFunc func(params msgp.Raw) (res msgp.Raw, err error)
 
-// RPCConn is a single RPC communication pair. It is used by both the
-// "server" aka listener, and client. Dynamic registration of service
-// handlers is supported.
+// RPCConn is a single RPC communication pair.
+// It is used by both the
+// "server" aka listener, and client.
 type RPCConn struct {
 	// TODO: use io.readwritecloser?
 	conn     net.Conn
@@ -42,8 +69,8 @@ type RPCConn struct {
 }
 
 // Call intiates an RPC call to a remote method and returns the
-// response, or the error, if any.
-// TODO: determine signature. Should params be msgp.Raw?
+// response, or the error, if any. To make calling easier, you can
+// construct a "Caller" with MakeCaller
 func (rpc *RPCConn) Call(method string, params msgp.Raw) (msgp.Raw, error) {
 
 	// TODO: error handling.
@@ -153,59 +180,6 @@ func (rpc *RPCConn) dispatchNotif(req Notification) {
 		// log the error, but don't do anything about it.
 		rpc.Logger.Warn("error dispatching rpc function", "method", req.Method, "err", err)
 	}
-}
-
-// RPCConntrack is a request-response tracker that is used to connect
-// the response to the appropriate caller.
-type rpcConnTrack struct {
-	ct map[uint32]chan Response // TODO: change the values of the map for callbacks.
-	mu sync.RWMutex
-}
-
-// Get attempts to get a random mark from the mutex.
-func (c *rpcConnTrack) Claim() (uint32, chan Response) {
-	// TODO: make this threadsafe.
-	var val uint32
-	for {
-
-		newVal := rand.Uint32()
-		// collision is *rare* - so we just try again.
-		// I hope to god you don't saturate this tracker.
-		c.mu.RLock()
-		if _, exist := c.ct[newVal]; !exist {
-			val = newVal
-			c.mu.RUnlock()
-			break
-		}
-		c.mu.RUnlock()
-	}
-
-	// claim it
-	// the channel should be buffered. We only expect one value to go through.
-	// so the size is fixed.
-	ch := make(chan Response, 1)
-	c.mu.Lock()
-	c.ct[val] = ch
-	c.mu.Unlock()
-
-	return val, ch
-}
-
-// Clear deletes the connection from the tracker and returns the channel
-// associated with it. The caller can use the channel afterwards
-// to send the response.
-func (c *rpcConnTrack) Clear(val uint32) (chan Response, error) {
-	// TODO: get a lock
-	c.mu.RLock()
-	ch, ok := c.ct[val]
-	c.mu.RUnlock()
-	if !ok {
-		return nil, errors.New("invalid msg id")
-	}
-	c.mu.Lock()
-	delete(c.ct, val)
-	c.mu.Unlock()
-	return ch, nil
 }
 
 // Next, we define some helper generic functions that can be used to make

@@ -1,4 +1,4 @@
-package gotelem
+package mprpc
 
 import (
 	"errors"
@@ -6,10 +6,9 @@ import (
 	"github.com/tinylib/msgp/msgp"
 )
 
-// this file is a simple implementation of the msgpack-rpc data formato.
-// it also contains an RPC server and client.
-// We can port this to python rather easily too.
+// this file is a simple implementation of the msgpack-rpc data formats.
 
+// RPCType is the message type that is being sent.
 type RPCType int
 
 const (
@@ -28,13 +27,17 @@ const (
 //msgp:tuple Response
 //msgp:tuple Notification
 
-// A request is a function call that expects a Response.
+// Request represents a function call that expects a Response.
 type Request struct {
 	// should always be zero.
-	msgtype RPCType  `msg:"type"`
-	MsgId   uint32   `msg:"msgid"`
-	Method  string   `msg:"method"`
-	Params  msgp.Raw `msg:"params,allownil"`
+	msgtype RPCType `msg:"type"`
+	// MsgId is used to match a Response with a Request
+	MsgId uint32 `msg:"msgid"`
+	// Method is the name of the method/service to execute on the remote
+	Method string `msg:"method"`
+	// Params is the arguments of the method/service. It can be any
+	// MessagePack-serializable type.
+	Params msgp.Raw `msg:"params,allownil"`
 }
 
 func NewRequest(msgid uint32, method string, params msgp.Raw) *Request {
@@ -46,13 +49,17 @@ func NewRequest(msgid uint32, method string, params msgp.Raw) *Request {
 	}
 }
 
-// A response is the result of a function call, or an error.
+// A Response is the result and error given from calling a service.
 type Response struct {
 	// should always be one.
-	msgtype RPCType  `msg:"type"`
-	MsgId   uint32   `msg:"msgid"`
-	Error   RPCError `msg:"error,allownil"`
-	Result  msgp.Raw `msg:"result,allownil"`
+	msgtype RPCType `msg:"type"`
+	// MsgId is an identifier used to match this Response with the Request that created it.
+	MsgId uint32 `msg:"msgid"`
+	// Error is the error encountered while attempting to execute the method, if any.
+	Error RPCError `msg:"error,allownil"`
+	// Result is the raw object that was returned by the calling method. It
+	// can be any MessagePack-serializable object.
+	Result msgp.Raw `msg:"result,allownil"`
 }
 
 func NewResponse(msgid uint32, respErr RPCError, res msgp.Raw) *Response {
@@ -81,9 +88,9 @@ func NewNotification(method string, params msgp.Raw) *Notification {
 	}
 }
 
-// todo: should these be functions instead, since they're arrays? and we need to determine the type beforehand.
-
-func getMsgType(b []byte) RPCType {
+// getMsgType uses raw messagpack RPC to return the underlying message type from
+// the raw array given by b.
+func getMsgType(b msgp.Raw) RPCType {
 	size, next, err := msgp.ReadArrayHeaderBytes(b)
 	if err != nil {
 		panic(err)
@@ -129,16 +136,16 @@ func parseRPC(raw msgp.Raw) (interface{}, error) {
 	}
 }
 
+//msgp:tuple RPCError
+
 // RPCError is a common RPC error format. It is basically a clone of the
 // JSON-RPC error format. We use it so we know what to expect there.
-
-//msgp:tuple RPCError
 type RPCError struct {
 	Code int
 	Desc string
 }
 
-// Converts a go error into a RPC error.
+// Converts a Go error into a RPC error.
 func MakeRPCError(err error) *RPCError {
 	if err == nil {
 		return nil
@@ -149,6 +156,7 @@ func MakeRPCError(err error) *RPCError {
 	}
 }
 
+// Implements the Error interface for RPCError
 func (r *RPCError) Error() string {
 	return r.Desc
 }
