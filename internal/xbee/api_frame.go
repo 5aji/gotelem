@@ -136,7 +136,7 @@ func parseFrame(frame []byte) ([]byte, error) {
 		return nil, errors.New("incorrect start delimiter")
 	}
 	fsize := len(frame)
-	if calculateChecksum(frame[3:fsize-1]) != frame[fsize] {
+	if calculateChecksum(frame[3:fsize-1]) != frame[fsize-1] {
 		return nil, errors.New("checksum mismatch")
 	}
 	return frame[3 : fsize-1], nil

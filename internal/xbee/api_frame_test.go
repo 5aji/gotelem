@@ -1,6 +1,7 @@
 package xbee
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 )
@@ -23,6 +24,16 @@ func Test_xbeeFrameSplit(t *testing.T) {
 			args: args{
 				data:  []byte{},
 				atEOF: false,
+			},
+			wantAdvance: 0,
+			wantToken:   nil,
+			wantErr:     false,
+		},
+		{
+			name: "EOF and empty data",
+			args: args{
+				data:  []byte{},
+				atEOF: true,
 			},
 			wantAdvance: 0,
 			wantToken:   nil,
@@ -125,6 +136,22 @@ func Test_parseFrame(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "checksum mismatch",
+			args: args{
+				frame: []byte{0x7E, 0x00, 0x02, 0x23, 0x11, 0xCA},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "valid packet",
+			args: args{
+				frame: []byte{0x7E, 0x00, 0x02, 0x23, 0x11, 0xCB},
+			},
+			want:    []byte{0x23, 0x11},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -135,6 +162,37 @@ func Test_parseFrame(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("parseFrame() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_writeXBeeFrame(t *testing.T) {
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantN   int
+		wantW   string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &bytes.Buffer{}
+			gotN, err := writeXBeeFrame(w, tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("writeXBeeFrame() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotN != tt.wantN {
+				t.Errorf("writeXBeeFrame() = %v, want %v", gotN, tt.wantN)
+			}
+			if gotW := w.String(); gotW != tt.wantW {
+				t.Errorf("writeXBeeFrame() = %v, want %v", gotW, tt.wantW)
 			}
 		})
 	}
