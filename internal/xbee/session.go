@@ -145,10 +145,10 @@ func (sess *SerialSession) Write(p []byte) (n int, err error) {
 
 	sess.writeLock.Lock()
 	n, err = writeXBeeFrame(sess.port, wf.Bytes())
+	sess.writeLock.Unlock()
 	if err != nil {
 		return
 	}
-	sess.writeLock.Unlock()
 
 	// finally, wait for the channel we got to return. this means that
 	// the matching response frame was received, so we can parse it.
@@ -172,7 +172,7 @@ func (sess *SerialSession) Write(p []byte) (n int, err error) {
 // instead, an AC command must be set to apply the queued changes. `queued` does not
 // affect query-type commands, which always return right away.
 // the AT command is an interface.
-func (sess *SerialSession) ATCommand(at ATCmd, queued bool) error {
+func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]byte, error) {
 	// we must encode the command, and then create the actual packet.
 	// then we send the packet, and wait for the response
 	// TODO: how to handle multiple-response-packet AT commands?
@@ -180,19 +180,19 @@ func (sess *SerialSession) ATCommand(at ATCmd, queued bool) error {
 
 	// get a mark for the frame
 
-	isQuery := len(at.Payload()) > 0
+	isQuery := len(data) > 0
 	idx, ch, err := sess.ct.GetMark()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	rawData := encodeATCommand(at, idx, queued)
+	rawData := encodeATCommand(cmd, data, idx, queued)
 
 	sess.writeLock.Lock()
 	_, err = writeXBeeFrame(sess.port, rawData)
 	sess.writeLock.Unlock()
 
 	if err != nil {
-		return fmt.Errorf("error writing xbee frame: %w", err)
+		return nil, fmt.Errorf("error writing xbee frame: %w", err)
 	}
 
 	// we use the AT command that was provided to decode the frame.
@@ -203,12 +203,12 @@ func (sess *SerialSession) ATCommand(at ATCmd, queued bool) error {
 	// TODO: add timeout.
 	resp, err := ParseATCmdResponse(<-ch)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if resp.Status != 0 {
 		// sinec ATCmdStatus is a stringer thanks to the generator
-		return fmt.Errorf("AT command failed: %v", resp.Status)
+		return nil, fmt.Errorf("AT command failed: %v", resp.Status)
 	}
 
 	// finally, we use the provided ATCmd interface to unpack the data.
@@ -217,11 +217,11 @@ func (sess *SerialSession) ATCommand(at ATCmd, queued bool) error {
 	// TODO: skip if not a query command?
 
 	if isQuery {
-		return at.Parse(resp)
+		return resp.Data, nil
 	}
 
 	// it's not a query, and there was no error, so we just plain return
-	return nil
+	return nil, nil
 
 }
 
