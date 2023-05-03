@@ -28,7 +28,12 @@ func ParseRxFrame(data []byte) (*RxFrame, error) {
 	// RX options
 	opt := data[11]
 	// todo: use this
-	fmt.Print(opt)
+	if (opt & 0x1) == 1 {
+		rx.ACK = true
+	}
+	if (opt & 0x2) == 1 {
+		rx.BCast = true
+	}
 
 	return rx, nil
 }
