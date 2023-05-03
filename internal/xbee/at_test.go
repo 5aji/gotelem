@@ -97,6 +97,16 @@ func Test_encodeATCommand(t *testing.T) {
 			},
 			want: []byte{0x09, 0x53, 0x42, 0x44, 0x07},
 		},
+		{
+			name: "Queue Query AT Command",
+			args: args{
+				cmd:    [2]rune{'T', 'P'},
+				idx:    0x17,
+				p:      nil,
+				queued: true,
+			},
+			want: []byte{0x09, 0x17, 0x54, 0x50},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
