@@ -3,6 +3,7 @@ package xbee
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -48,18 +49,23 @@ type TxStatus uint8
 
 //go:generate stringer -output=txStatus.go -type TxStatus
 const (
-	TxStatusSuccess  TxStatus = 0x00
-	TxStatusNoACK    TxStatus = 0x01
-	TxStatusCCAFail  TxStatus = 0x02
-	TxStatusIndirect TxStatus = 0x03
-	TxStatusTxFail   TxStatus = 0x04
-	TxStatusACKFail  TxStatus = 0x21
-	// TODO: finish this
+	TxStatusSuccess             TxStatus = 0x00
+	TxStatusNoACK               TxStatus = 0x01
+	TxStatusCCAFail             TxStatus = 0x02
+	TxStatusIndirect            TxStatus = 0x03
+	TxStatusACKFail             TxStatus = 0x21
+	TxStatusNoRoute             TxStatus = 0x25
+	TxStatusResourceError       TxStatus = 0x31
+	TxStatusResourceUnavail     TxStatus = 0x32
+	TxStatusPayloadTooLarge     TxStatus = 0x74
+	TxStatusIndirectUnrequested TxStatus = 0x75
 )
 
 type TxStatusFrame struct {
-	Id     uint8    // the Frame identifier that this status frame represents.
+	Id     uint8 // the Frame identifier that this status frame represents.
+	NRetry uint8
 	Status TxStatus // the status itself - TxStatus is a stringable.
+	Routed bool
 }
 
 func ParseTxStatusFrame(data []byte) (*TxStatusFrame, error) {
@@ -67,9 +73,21 @@ func ParseTxStatusFrame(data []byte) (*TxStatusFrame, error) {
 		return nil, fmt.Errorf("incorrect frame type for Tx status frame 0x%x", data[0])
 	}
 
+	if len(data) < 7 {
+		return nil, errors.New("incomplete status frame")
+
+	}
+
 	status := &TxStatusFrame{
 		Id:     data[1],
-		Status: TxStatus(data[2]),
+		Status: TxStatus(data[5]),
+		NRetry: data[4],
+	}
+
+	if data[6] == 0 {
+		status.Routed = false
+	} else {
+		status.Routed = true
 	}
 
 	return status, nil
