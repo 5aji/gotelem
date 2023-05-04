@@ -15,7 +15,41 @@ func TestParseATCmdResponse(t *testing.T) {
 		want    *ATCmdResponse
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "AT Command Change OK",
+			args: args{
+				p: []byte{0x88, 0x53, 0x49, 0x44, 0x00},
+			},
+			want: &ATCmdResponse{
+				Cmd:    "ID",
+				Data:   []byte{},
+				Status: ATCmdStatusOK,
+			},
+			wantErr: false,
+		},
+		{
+			name: "AT Command Query OK",
+			args: args{
+				p: []byte{0x88, 0x53, 0x49, 0x44, 0x00, 0x43, 0xEF},
+			},
+			want: &ATCmdResponse{
+				Cmd:    "ID",
+				Data:   []byte{0x43, 0xEF},
+				Status: ATCmdStatusOK,
+			},
+		},
+		{
+			name: "AT Command Parameter Error",
+			args: args{
+				p: []byte{0x88, 0x53, 0x49, 0x44, 0x03},
+			},
+			want: &ATCmdResponse{
+				Cmd:    "ID",
+				Data:   []byte{},
+				Status: ATCmdStatusInvalidParam,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

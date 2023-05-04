@@ -3,7 +3,7 @@ package xbee
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+	"errors"
 )
 
 // This code is handled slightly differently. Rather than use structs to represent
@@ -13,7 +13,6 @@ import (
 // The downside is that it's more difficult to deal with.
 //
 // AT command responses are handled with a struct to get the response status code.
-//
 
 // an ATCmd is anything that has a Payload function that returns the given payload
 // pre-formatted to be send over the wire, and a Cmd command that returns the 2-character
@@ -70,15 +69,16 @@ type ATCmdResponse struct {
 func ParseATCmdResponse(p []byte) (*ATCmdResponse, error) {
 
 	if p[0] != 0x88 {
-		return nil, fmt.Errorf("invalid frame type 0x%x", p[0])
+		return nil, errors.New("not an AT command response")
+	}
+	if len(p) < 5 {
+		return nil, errors.New("received partial AT command response")
 	}
 	resp := &ATCmdResponse{
 		Cmd:    string(p[2:4]),
 		Status: ATCmdStatus(p[4]),
-		// TODO: check if this overflows when there's no payload.
-		Data: p[5:],
+		Data:   p[5:],
 	}
-
 	return resp, nil
 }
 
