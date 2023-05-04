@@ -14,12 +14,6 @@ import (
 	"io"
 )
 
-// the frames have an outer shell - we will make a function that takes
-// an inner frame element and wraps it in the appropriate headers.
-
-// first, we should make it take the frame directly, so we make an interface
-// that represents "framable" things. note that bytes.Buffer also fulfils this.
-
 // Frameable is an object that can be sent in an XBee Frame. An XBee Frame
 // consists of a start delimiter, length, the payload, and a checksum.
 type Frameable interface {
@@ -62,6 +56,8 @@ func writeXBeeFrame(w io.Writer, data []byte) (n int, err error) {
 // xbee uses the first byte of the "frame data" as the API identifier or command.
 
 //go:generate stringer -output=api_frame_cmd.go -type xbeeCmd
+
+// XBeeCmd is the frame command type.
 type XBeeCmd byte
 
 const (
@@ -86,12 +82,10 @@ const (
 	RemoteCmdRespType XBeeCmd = 0x97 // Remote Command Response
 )
 
-// AT commands are hard, so let's write out all the major ones here
-
 // Now we will implement receiving packets from a character stream.
 // we first need to make a thing that produces frames from a stream using a scanner.
 
-// this is a split function for bufio.scanner. It makes it easier to handle the FSM
+// xbeeFrameSplit is a split function for bufio.scanner. It makes it easier to handle the FSM
 // for extracting data from a stream. For the Xbee, this means that we must
 // find the magic start character, (check that it's escaped), read the length,
 // and then ensure we have enough length to finish the token, requesting more data
@@ -121,8 +115,7 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 			// data that came before the start, but not return a token.
 			return startIdx, nil, nil
 		}
-		// there is enough data to pull a frame.
-		// todo: check checksum here? we can return an error.
+		// there is enough data to pull a frame, so return it.
 		return startIdx + frameLen, data[startIdx : startIdx+frameLen], nil
 	}
 	// we didn't find a start character in our data, so request more. trash everythign given to us
