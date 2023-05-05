@@ -13,6 +13,7 @@ func Execute() {
 		Usage: "see everything",
 		Commands: []*cli.Command{
 			serveCmd,
+			xbeeCmd,
 		},
 	}
 

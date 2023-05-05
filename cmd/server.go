@@ -5,10 +5,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/kschamplin/gotelem/internal/can"
-	"github.com/kschamplin/gotelem/internal/gotelem"
-	"github.com/kschamplin/gotelem/internal/socketcan"
-	"github.com/kschamplin/gotelem/internal/xbee"
+	"github.com/kschamplin/gotelem/can"
+	"github.com/kschamplin/gotelem/socketcan"
+	"github.com/kschamplin/gotelem/xbee"
 	"github.com/tinylib/msgp/msgp"
 	"github.com/urfave/cli/v2"
 	"go.bug.st/serial"

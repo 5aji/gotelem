@@ -1,11 +1,9 @@
 package db
 
 import (
-	"database/sql"
-
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/kschamplin/gotelem/internal/can"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // this file implements a CAN adapter for the sqlite db.
@@ -21,3 +19,5 @@ func (cdb *CanDB) Send(_ *can.Frame) error {
 func (cdb *CanDB) Recv() (*can.Frame, error) {
 	panic("not implemented") // TODO: Implement
 }
+
+func NewCanDB()

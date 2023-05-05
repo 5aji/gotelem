@@ -236,5 +236,5 @@ func (sess *SerialSession) Close() error {
 }
 
 func (sess *SerialSession) DiscoverNodes() {
-
+	panic("TODO: implement")
 }
