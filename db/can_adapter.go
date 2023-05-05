@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/kschamplin/gotelem/internal/can"
+	"github.com/kschamplin/gotelem/can"
 	_ "github.com/mattn/go-sqlite3"
 )
 

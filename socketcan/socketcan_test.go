@@ -5,7 +5,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/kschamplin/gotelem/internal/can"
+	"github.com/kschamplin/gotelem/can"
 )
 
 func TestCanSocket(t *testing.T) {

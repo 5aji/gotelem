@@ -1,5 +1,5 @@
 /*
-socketcan provides a wrapper around the Linux socketCAN interface.
+Package socketcan provides a wrapper around the Linux socketCAN interface.
 */
 package socketcan
 
@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kschamplin/gotelem/internal/can"
+	"github.com/kschamplin/gotelem/can"
 	"golang.org/x/sys/unix"
 )
 
