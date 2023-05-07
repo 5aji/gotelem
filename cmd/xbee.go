@@ -4,10 +4,13 @@ package cmd
 // we can do network discovery and netcat-like things.
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/kschamplin/gotelem/xbee"
@@ -69,8 +72,8 @@ writtend to stdout.
 func xbeeInfo(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	serialDevice, _ := serial.Open("/dev/ttyACM0", &serial.Mode{})
-	xb, err := xbee.NewSession(serialDevice, logger.With("name", ""))
+	transport, _ := parseDeviceString(ctx.String("device"))
+	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -94,7 +97,7 @@ func netcat(ctx *cli.Context) error {
 	// basically create two pipes.
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
-	transport, _ := parseDeviceString("/dev/ttyUSB0")
+	transport, _ := parseDeviceString(ctx.String("device"))
 	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))
 
 	sent := make(chan int64)
@@ -137,10 +140,58 @@ func parseDeviceString(dev string) (*xbeeTransport, error) {
 	}
 	if strings.HasPrefix(dev, "tcp://") {
 
+		addr, _ := strings.CutPrefix(dev, "tcp://")
+
+		conn, err := net.Dial("tcp", addr)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = conn
+
+		xbt.devType = "tcp"
+
 	} else if strings.HasPrefix(dev, "COM") && runtime.GOOS == "windows" {
 
-	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
+		path, bRate, found := strings.Cut(dev, ":")
 
+		mode := &serial.Mode{
+			BaudRate: 9600,
+		}
+		if found {
+			b, err := strconv.Atoi(bRate)
+			if err != nil {
+				return nil, err
+			}
+			mode.BaudRate = b
+		}
+		sDev, err := serial.Open(path, mode)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = sDev
+		xbt.devType = "serialWin"
+
+	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
+		path, bRate, found := strings.Cut(dev, ":")
+
+		mode := &serial.Mode{
+			BaudRate: 9600,
+		}
+		if found {
+			b, err := strconv.Atoi(bRate)
+			if err != nil {
+				return nil, err
+			}
+			mode.BaudRate = b
+		}
+		sDev, err := serial.Open(path, mode)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = sDev
+		xbt.devType = "serial"
+	} else {
+		return nil, errors.New("could not parse device path")
 	}
 	return xbt, nil
 }
