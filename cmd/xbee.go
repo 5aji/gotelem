@@ -132,12 +132,26 @@ func (xbt *xbeeTransport) Type() string {
 // device. The device is returned in an xbeeTransport which also stores
 // the underlying type of the device with Type() string
 func parseDeviceString(dev string) (*xbeeTransport, error) {
-	// FIXME: implement properly
-	serialDevice, _ := serial.Open(dev, &serial.Mode{})
-	xbt := &xbeeTransport{
-		ReadWriteCloser: serialDevice,
-		devType:         "serial",
+	xbt := &xbeeTransport{}
+
+	parseSerial := func(s string) (serial.Port, error) {
+
+		path, bRate, found := strings.Cut(dev, ":")
+
+		mode := &serial.Mode{
+			BaudRate: 9600,
+		}
+		if found {
+			b, err := strconv.Atoi(bRate)
+			if err != nil {
+				return nil, err
+			}
+			mode.BaudRate = b
+		}
+		return serial.Open(path, mode)
 	}
+
+	// actually parse the path
 	if strings.HasPrefix(dev, "tcp://") {
 
 		addr, _ := strings.CutPrefix(dev, "tcp://")
@@ -152,19 +166,7 @@ func parseDeviceString(dev string) (*xbeeTransport, error) {
 
 	} else if strings.HasPrefix(dev, "COM") && runtime.GOOS == "windows" {
 
-		path, bRate, found := strings.Cut(dev, ":")
-
-		mode := &serial.Mode{
-			BaudRate: 9600,
-		}
-		if found {
-			b, err := strconv.Atoi(bRate)
-			if err != nil {
-				return nil, err
-			}
-			mode.BaudRate = b
-		}
-		sDev, err := serial.Open(path, mode)
+		sDev, err := parseSerial(dev)
 		if err != nil {
 			return nil, err
 		}
@@ -172,19 +174,7 @@ func parseDeviceString(dev string) (*xbeeTransport, error) {
 		xbt.devType = "serialWin"
 
 	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
-		path, bRate, found := strings.Cut(dev, ":")
-
-		mode := &serial.Mode{
-			BaudRate: 9600,
-		}
-		if found {
-			b, err := strconv.Atoi(bRate)
-			if err != nil {
-				return nil, err
-			}
-			mode.BaudRate = b
-		}
-		sDev, err := serial.Open(path, mode)
+		sDev, err := parseSerial(dev)
 		if err != nil {
 			return nil, err
 		}
