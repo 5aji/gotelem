@@ -3,15 +3,11 @@ package cmd
 import (
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/kschamplin/gotelem/can"
 	"github.com/kschamplin/gotelem/socketcan"
-	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
-	"go.bug.st/serial"
-	"golang.org/x/exp/slog"
 )
 
 const xbeeCategory = "XBee settings"
@@ -59,17 +55,6 @@ func handleCon(conn net.Conn, broker *Broker) {
 
 func xbeeSvc(b *Broker) {
 
-	// open the session.
-	mode := &serial.Mode{
-		BaudRate: 115200,
-	}
-
-	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	_, err := xbee.NewSerialXBee("/dev/ttyACM0", mode, logger)
-	if err != nil {
-		fmt.Printf("got error %v", err)
-		panic(err)
-	}
 }
 
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.

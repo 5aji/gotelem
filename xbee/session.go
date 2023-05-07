@@ -6,7 +6,6 @@ import (
 	"io"
 	"sync"
 
-	"go.bug.st/serial"
 	"golang.org/x/exp/slog"
 )
 
@@ -15,41 +14,35 @@ import (
 // A session is a simple way to manage an xbee device.
 // it provides io.Reader and io.Writer, as well as some extra functions to handle
 // custom Xbee frames.
-type Session interface {
-	io.ReadWriteCloser
-	GetStatus() // todo: figure out signature for this
+// type Session interface {
+// 	io.ReadWriteCloser
+// 	GetStatus() // todo: figure out signature for this
 
-	// Dial takes an address and allows direct communication with that
-	// device, without using broadcast.
-	Dial(addr uint64) io.ReadWriteCloser
-	// AT command related functions - query, set on local, query, set on remote.
+// 	// Dial takes an address and allows direct communication with that
+// 	// device, without using broadcast.
+// 	Dial(addr uint64) io.ReadWriteCloser
+// 	// AT command related functions - query, set on local, query, set on remote.
 
-	ATCommand(cmd ATCmd, queued bool) (resp ATCmd, err error)
-	RemoteATCommand(cmd ATCmd, addr uint64) (resp ATCmd, err error)
-}
+// 	ATCommand(cmd ATCmd, queued bool) (resp ATCmd, err error)
+// 	RemoteATCommand(cmd ATCmd, addr uint64) (resp ATCmd, err error)
+// }
 
-type SerialSession struct {
-	port serial.Port
-	ct   connTrack
+type Session struct {
+	ioDev io.ReadWriteCloser
+	ct    connTrack
 	slog.Logger
-	// todo: add queuing structures here for reliable transport and tracking.
 	// this buffer is used for storing data that must be read at some point.
 	rxBuf     *bufio.ReadWriter
 	writeLock sync.Mutex // prevents multiple writers from accessing the port at once.
 }
 
-func NewSerialXBee(portName string, mode *serial.Mode, baseLog *slog.Logger) (*SerialSession, error) {
+func NewSession(dev io.ReadWriteCloser, baseLog *slog.Logger) (*Session, error) {
 	// make the session with the port/mode given, and set up the conntrack.
-	sess := &SerialSession{}
-
-	port, err := serial.Open(portName, mode)
-	if err != nil {
-		return sess, err
+	sess := &Session{
+		ioDev:  dev,
+		Logger: *baseLog,
+		ct:     *NewConnTrack(),
 	}
-	sess.port = port
-
-	sess.ct = *NewConnTrack()
-	sess.Logger = *baseLog.With("portname", portName)
 
 	// setup io readwriter with a pipe.
 	rd, wr := io.Pipe()
@@ -71,9 +64,9 @@ func NewSerialXBee(portName string, mode *serial.Mode, baseLog *slog.Logger) (*S
 //
 // if it's a different kind of packet, we do custom functionality (free the conntrack, update
 // local status, etc)
-func (sess *SerialSession) rxHandler() {
+func (sess *Session) rxHandler() {
 	// we wrap the serial port read line in a bufio.scanner using our custom split function.
-	scan := bufio.NewScanner(sess.port)
+	scan := bufio.NewScanner(sess.ioDev)
 	scan.Split(xbeeFrameSplit)
 
 	for scan.Scan() {
@@ -120,12 +113,12 @@ func (sess *SerialSession) rxHandler() {
 }
 
 // This implements io.Reader for the UART Session.
-func (sess *SerialSession) Read(p []byte) (int, error) {
+func (sess *Session) Read(p []byte) (int, error) {
 	// Since we have an rx buffer, we just read from that and return the results.
 	return sess.rxBuf.Read(p)
 }
 
-func (sess *SerialSession) Write(p []byte) (n int, err error) {
+func (sess *Session) Write(p []byte) (n int, err error) {
 	sess.Warn("hello")
 	idx, ch, err := sess.ct.GetMark()
 	if err != nil {
@@ -141,7 +134,7 @@ func (sess *SerialSession) Write(p []byte) (n int, err error) {
 	// write the actual packet
 
 	sess.writeLock.Lock()
-	_, err = writeXBeeFrame(sess.port, wf.Bytes())
+	_, err = writeXBeeFrame(sess.ioDev, wf.Bytes())
 	sess.writeLock.Unlock()
 	if err != nil {
 		return
@@ -169,7 +162,7 @@ func (sess *SerialSession) Write(p []byte) (n int, err error) {
 // instead, an AC command must be set to apply the queued changes. `queued` does not
 // affect query-type commands, which always return right away.
 // the AT command is an interface.
-func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]byte, error) {
+func (sess *Session) ATCommand(cmd [2]rune, data []byte, queued bool) ([]byte, error) {
 	// we must encode the command, and then create the actual packet.
 	// then we send the packet, and wait for the response
 	// TODO: how to handle multiple-response-packet AT commands?
@@ -184,7 +177,7 @@ func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]b
 	rawData := encodeATCommand(cmd, data, idx, queued)
 
 	sess.writeLock.Lock()
-	_, err = writeXBeeFrame(sess.port, rawData)
+	_, err = writeXBeeFrame(sess.ioDev, rawData)
 	sess.writeLock.Unlock()
 
 	if err != nil {
@@ -208,14 +201,15 @@ func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]b
 }
 
 // Does this need to exist?
-func (sess *SerialSession) GetStatus() {
+func (sess *Session) GetStatus() {
 	panic("TODO: implement")
 }
 
 // Implement the io.Closer.
-func (sess *SerialSession) Close() error {
-	return sess.port.Close()
+func (sess *Session) Close() error {
+	return sess.ioDev.Close()
 }
 
 // next, we define AT commands. These are functions that take in a Session and
 // provide wrappers around AT command information, like type checking.
+//

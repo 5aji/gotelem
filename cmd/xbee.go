@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
@@ -67,7 +69,8 @@ writtend to stdout.
 func xbeeInfo(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	xb, err := xbee.NewSerialXBee("/dev/ttyACM0", &serial.Mode{}, logger)
+	serialDevice, _ := serial.Open("/dev/ttyACM0", &serial.Mode{})
+	xb, err := xbee.NewSession(serialDevice, logger.With("name", ""))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
@@ -90,7 +93,9 @@ func netcat(ctx *cli.Context) error {
 	}
 	// basically create two pipes.
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	xb, _ := xbee.NewSerialXBee("/dev/ttyACM0", &serial.Mode{}, logger)
+
+	transport, _ := parseDeviceString("/dev/ttyUSB0")
+	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))
 
 	sent := make(chan int64)
 	streamCopy := func(r io.ReadCloser, w io.WriteCloser) {
@@ -109,4 +114,33 @@ func netcat(ctx *cli.Context) error {
 	<-sent
 
 	return nil
+}
+
+type xbeeTransport struct {
+	io.ReadWriteCloser
+	devType string
+}
+
+func (xbt *xbeeTransport) Type() string {
+	return xbt.devType
+}
+
+// parseDeviceString parses the device parameter and sets up the associated
+// device. The device is returned in an xbeeTransport which also stores
+// the underlying type of the device with Type() string
+func parseDeviceString(dev string) (*xbeeTransport, error) {
+	// FIXME: implement properly
+	serialDevice, _ := serial.Open(dev, &serial.Mode{})
+	xbt := &xbeeTransport{
+		ReadWriteCloser: serialDevice,
+		devType:         "serial",
+	}
+	if strings.HasPrefix(dev, "tcp://") {
+
+	} else if strings.HasPrefix(dev, "COM") && runtime.GOOS == "windows" {
+
+	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
+
+	}
+	return xbt, nil
 }
