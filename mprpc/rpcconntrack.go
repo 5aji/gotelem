@@ -9,13 +9,12 @@ import (
 // RPCConntrack is a request-response tracker that is used to connect
 // the response to the appropriate caller.
 type rpcConnTrack struct {
-	ct map[uint32]chan Response // TODO: change the values of the map for callbacks.
+	ct map[uint32]chan Response
 	mu sync.RWMutex
 }
 
 // Get attempts to get a random mark from the mutex.
 func (c *rpcConnTrack) Claim() (uint32, chan Response) {
-	// TODO: make this threadsafe.
 	var val uint32
 	for {
 
@@ -50,7 +49,6 @@ func (c *rpcConnTrack) Claim() (uint32, chan Response) {
 // associated with it. The caller can use the channel afterwards
 // to send the response.
 func (c *rpcConnTrack) Clear(val uint32) (chan Response, error) {
-	// TODO: get a lock
 	c.mu.RLock()
 	ch, ok := c.ct[val]
 	c.mu.RUnlock()

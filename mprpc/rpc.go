@@ -56,7 +56,7 @@ import (
 // ServiceFunc is a RPC service handler.
 // It can be created manually, or by using the generic MakeService function on a
 //
-//	func(msgp.Encoder) (msgp.Deocder, error)
+//	func(msgp.Encoder) (msgp.Decoder, error)
 //
 // type.
 type ServiceFunc func(params msgp.Raw) (res msgp.Raw, err error)
@@ -152,7 +152,6 @@ func (rpc *RPCConn) Serve() {
 		case Response:
 			cbCh, err := rpc.ct.Clear(rpcObject.MsgId)
 			if err != nil {
-				// TODO: scream
 				rpc.Logger.Warn("could not get rpc callback", "msgid", rpcObject.MsgId, "err", err)
 				continue
 			}
