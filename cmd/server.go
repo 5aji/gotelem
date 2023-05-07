@@ -3,14 +3,15 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/kschamplin/gotelem/can"
 	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/kschamplin/gotelem/xbee"
-	"github.com/tinylib/msgp/msgp"
 	"github.com/urfave/cli/v2"
 	"go.bug.st/serial"
+	"golang.org/x/exp/slog"
 )
 
 const xbeeCategory = "XBee settings"
@@ -35,9 +36,6 @@ func serve(useXbee bool) {
 	go vcanTest()
 	go canHandler(broker)
 	go broker.Start()
-	if useXbee {
-		go xbeeSvc()
-	}
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Printf("Error listening: %v\n", err)
@@ -55,48 +53,7 @@ func serve(useXbee bool) {
 
 func handleCon(conn net.Conn, broker *Broker) {
 	//	reader := msgp.NewReader(conn)
-	rxPkts := make(chan gotelem.Data)
-	done := make(chan bool)
-	go func() {
-		// setpu our msgp reader.
-		scann := msgp.NewReader(conn)
-		data := gotelem.Data{}
-		for {
-			err := data.DecodeMsg(scann)
-			if err != nil {
-				break
-			}
-			rxPkts <- data
-		}
 
-		done <- true // if we got here, it means the connction was closed.
-	}()
-
-	// subscribe to can packets
-	// TODO: make this unique since remote addr could be non-unique
-	canCh := broker.Subscribe(conn.RemoteAddr().String())
-	writer := msgp.NewWriter(conn)
-mainloop:
-	for {
-		select {
-		case canFrame := <-canCh:
-			cf := gotelem.CanBody{
-				Id:      canFrame.Id,
-				Payload: canFrame.Data,
-				Source:  "me",
-			}
-			cf.EncodeMsg(writer)
-		case rxBody := <-rxPkts:
-			// do nothing for now.
-			fmt.Printf("got a body %v\n", rxBody)
-		case <-time.After(1 * time.Second): // time out.
-			writer.Flush()
-		case <-done:
-			break mainloop
-		}
-	}
-	// unsubscribe and close the conn.
-	broker.Unsubscribe(conn.RemoteAddr().String())
 	conn.Close()
 }
 
@@ -107,26 +64,11 @@ func xbeeSvc(b *Broker) {
 		BaudRate: 115200,
 	}
 
-	sess, err := xbee.NewSerialXBee("/dev/ttyACM0", mode)
+	logger := slog.New(slog.NewTextHandler(os.Stderr))
+	_, err := xbee.NewSerialXBee("/dev/ttyACM0", mode, logger)
 	if err != nil {
 		fmt.Printf("got error %v", err)
 		panic(err)
-	}
-
-	receivedData := make(chan gotelem.Data)
-	// make a simple reader that goes in the background.
-	go func() {
-		msgpReader := msgp.NewReader(sess)
-		var msgData gotelem.Data
-		msgData.DecodeMsg(msgpReader)
-		receivedData <- msgData
-	}()
-	for {
-		select {
-		case data := <-receivedData:
-			fmt.Printf("Got a data %v\n", data)
-		}
-
 	}
 }
 

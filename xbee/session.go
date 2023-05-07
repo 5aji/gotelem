@@ -38,7 +38,7 @@ type SerialSession struct {
 	writeLock sync.Mutex // prevents multiple writers from accessing the port at once.
 }
 
-func NewSerialXBee(portName string, mode *serial.Mode) (*SerialSession, error) {
+func NewSerialXBee(portName string, mode *serial.Mode, baseLog *slog.Logger) (*SerialSession, error) {
 	// make the session with the port/mode given, and set up the conntrack.
 	sess := &SerialSession{}
 
@@ -48,7 +48,8 @@ func NewSerialXBee(portName string, mode *serial.Mode) (*SerialSession, error) {
 	}
 	sess.port = port
 
-	sess.ct = connTrack{}
+	sess.ct = *NewConnTrack()
+	sess.Logger = *baseLog.With("portname", portName)
 
 	// setup io readwriter with a pipe.
 	rd, wr := io.Pipe()
@@ -76,19 +77,16 @@ func (sess *SerialSession) rxHandler() {
 	scan.Split(xbeeFrameSplit)
 
 	for scan.Scan() {
-		// TODO: check for errors?
-		// data is a frame payload - not a full frame.
 		data, err := parseFrame(scan.Bytes())
 		if err != nil {
 			sess.Logger.Warn("error parsing frame", "error", err, "data", data)
 			continue
 		}
-		// data is good, lets parse the frame - using the first byte as the identifier.
 
 		switch XBeeCmd(data[0]) {
 		case RxPktType:
 			// we parse the data, and push it to the rx buffer.
-			//TODO: if we have multiple sources, we need to track them here.
+			//TODO: if we have multiple remotes on the network, we need to track them here.
 			frame, err := ParseRxFrame(data)
 			if err != nil {
 				sess.Logger.Warn("error parsing rx packet", "error", err, "data", data)
@@ -100,10 +98,8 @@ func (sess *SerialSession) rxHandler() {
 				sess.Logger.Warn("error writing data", "error", err, "payload", frame.Payload)
 			}
 
-		// the "callback"-style handler. Any received packet with a frame ID should
-		// be handled here.
-		case TxStatusType, ATCmdResponseType, RemoteCmdRespType: // these take the frame bytes and parse it themselves.
-			// we hand it back via the channel. we directly find the ID since it's always
+		case TxStatusType, ATCmdResponseType, RemoteCmdRespType:
+			// we hand the frame back via the channel. we directly find the ID since it's always
 			// the second byte.
 			idx := data[1]
 
@@ -130,12 +126,13 @@ func (sess *SerialSession) Read(p []byte) (int, error) {
 }
 
 func (sess *SerialSession) Write(p []byte) (n int, err error) {
-	// we construct a packet - using the conntrack to ensure that the packet is okay.
-	// we block - this is more correct.
+	sess.Warn("hello")
 	idx, ch, err := sess.ct.GetMark()
 	if err != nil {
 		return
 	}
+
+	n = len(p)
 	wf := &TxFrame{
 		Id:          idx,
 		Destination: BroadcastAddr,
@@ -144,7 +141,7 @@ func (sess *SerialSession) Write(p []byte) (n int, err error) {
 	// write the actual packet
 
 	sess.writeLock.Lock()
-	n, err = writeXBeeFrame(sess.port, wf.Bytes())
+	_, err = writeXBeeFrame(sess.port, wf.Bytes())
 	sess.writeLock.Unlock()
 	if err != nil {
 		return
@@ -180,7 +177,6 @@ func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]b
 
 	// get a mark for the frame
 
-	isQuery := len(data) > 0
 	idx, ch, err := sess.ct.GetMark()
 	if err != nil {
 		return nil, err
@@ -195,12 +191,8 @@ func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]b
 		return nil, fmt.Errorf("error writing xbee frame: %w", err)
 	}
 
-	// we use the AT command that was provided to decode the frame.
-	// Parse stores the response result locally.
-	// we parse the base frame ourselves, and if it's okay we pass it
-	// to the provided ATCommand
-
 	// TODO: add timeout.
+
 	resp, err := ParseATCmdResponse(<-ch)
 	if err != nil {
 		return nil, err
@@ -208,20 +200,10 @@ func (sess *SerialSession) ATCommand(cmd [2]rune, data []byte, queued bool) ([]b
 
 	if resp.Status != 0 {
 		// sinec ATCmdStatus is a stringer thanks to the generator
-		return nil, fmt.Errorf("AT command failed: %v", resp.Status)
+		return resp.Data, fmt.Errorf("AT command failed: %v", resp.Status)
 	}
 
-	// finally, we use the provided ATCmd interface to unpack the data.
-	// this overwrites the values provided, but this should only happen
-	// during a query, so this is fine.
-	// TODO: skip if not a query command?
-
-	if isQuery {
-		return resp.Data, nil
-	}
-
-	// it's not a query, and there was no error, so we just plain return
-	return nil, nil
+	return resp.Data, nil
 
 }
 
@@ -235,6 +217,5 @@ func (sess *SerialSession) Close() error {
 	return sess.port.Close()
 }
 
-func (sess *SerialSession) DiscoverNodes() {
-	panic("TODO: implement")
-}
+// next, we define AT commands. These are functions that take in a Session and
+// provide wrappers around AT command information, like type checking.

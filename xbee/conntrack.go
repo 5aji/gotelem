@@ -16,6 +16,12 @@ type connTrack struct {
 	// the map is set when writing a frame, and deleted when recieving a matching frame.
 }
 
+func NewConnTrack() *connTrack {
+	return &connTrack{
+		internal: make(map[uint8]chan []byte),
+	}
+}
+
 // GetMark finds the next available marker and takes it, returning the value of
 // the mark as well as a channel to use as a semaphore when the mark is cleared.
 // If no mark can be acquired, it returns an error.
@@ -49,16 +55,18 @@ func (ct *connTrack) GetMark() (uint8, <-chan []byte, error) {
 // tracked.
 func (ct *connTrack) ClearMark(mark uint8, data []byte) error {
 	ct.mu.RLock()
-	// FIXME: should this be the other way around (swap if and normal execution
-	if val, ok := ct.internal[mark]; ok {
+
+	val, ok := ct.internal[mark]
+	if !ok {
 		ct.mu.RUnlock()
-		ct.mu.Lock()
-		val <- data
-		close(val)
-		delete(ct.internal, mark)
-		ct.mu.Unlock()
-		return nil
+		return errors.New("mark was not set")
 	}
+
 	ct.mu.RUnlock()
-	return errors.New("mark was not set")
+	ct.mu.Lock()
+	val <- data
+	close(val)
+	delete(ct.internal, mark)
+	ct.mu.Unlock()
+	return nil
 }
