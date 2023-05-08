@@ -12,8 +12,14 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"strings"
+	"errors"
+	"runtime"
+	"net"
+	"strconv"
 
 	"golang.org/x/exp/slog"
+	"go.bug.st/serial"
 )
 
 // TODO: implement net.Conn for Session/Conn. We are missing LocalAddr, RemoteAddr,
@@ -231,4 +237,84 @@ type Conn struct {
 
 func (c *Conn) Write(p []byte) (int, error) {
 	return c.parent.writeAddr(p, c.addr)
+}
+
+
+
+/* Transport represents a connection that an XBee can use.
+  it's mostly a helper struct to parse URIs. It can parse the following formats:
+
+  	tcp://192.168.4.5:8340
+	COM1
+	/dev/ttyUSB0:115200
+
+for network devices, a port is optional. If it is not specified it will
+default to 2616. The colon after a serial port sets the baud rate.
+It will default to 9600 if not specified.
+*/
+type Transport struct {
+	io.ReadWriteCloser
+	devType string
+}
+
+func (xbt *Transport) Type() string {
+	return xbt.devType
+}
+
+// parseDeviceString parses the device parameter and sets up the associated
+// device. The device is returned in an xbeeTransport which also stores
+// the underlying type of the device with Type() string
+func ParseDeviceString(dev string) (*Transport, error) {
+	xbt := &Transport{}
+
+	parseSerial := func(s string) (serial.Port, error) {
+
+		path, bRate, found := strings.Cut(dev, ":")
+
+		mode := &serial.Mode{
+			BaudRate: 9600,
+		}
+		if found {
+			b, err := strconv.Atoi(bRate)
+			if err != nil {
+				return nil, err
+			}
+			mode.BaudRate = b
+		}
+		return serial.Open(path, mode)
+	}
+
+	// actually parse the path
+	if strings.HasPrefix(dev, "tcp://") {
+
+		addr, _ := strings.CutPrefix(dev, "tcp://")
+
+		conn, err := net.Dial("tcp", addr)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = conn
+
+		xbt.devType = "tcp"
+
+	} else if strings.HasPrefix(dev, "COM") && runtime.GOOS == "windows" {
+
+		sDev, err := parseSerial(dev)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = sDev
+		xbt.devType = "serialWin"
+
+	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
+		sDev, err := parseSerial(dev)
+		if err != nil {
+			return nil, err
+		}
+		xbt.ReadWriteCloser = sDev
+		xbt.devType = "serial"
+	} else {
+		return nil, errors.New("could not parse device path")
+	}
+	return xbt, nil
 }

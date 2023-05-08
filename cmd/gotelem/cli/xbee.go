@@ -5,18 +5,12 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"net"
 	"os"
-	"runtime"
-	"strconv"
-	"strings"
 
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
-	"go.bug.st/serial"
 	"golang.org/x/exp/slog"
 )
 
@@ -56,7 +50,7 @@ TCP/UDP connections require a port and will fail if one is not provided.
 	// this parses the device string and creates the io device.
 	// TODO: should we create the session here instead?
 	Before: func(ctx *cli.Context) error {
-		transport, err := parseDeviceString(ctx.String("device"))
+		transport, err := xbee.ParseDeviceString(ctx.String("device"))
 		if err != nil {
 			return err
 		}
@@ -91,7 +85,7 @@ writtend to stdout.
 func xbeeInfo(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	transport := ctx.Context.Value(keyIODevice).(xbeeTransport)
+	transport := ctx.Context.Value(keyIODevice).(xbee.Transport)
 	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
 		return cli.Exit(err, 1)
@@ -115,7 +109,7 @@ func netcat(ctx *cli.Context) error {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
-	transport := ctx.Context.Value(keyIODevice).(xbeeTransport)
+	transport := ctx.Context.Value(keyIODevice).(xbee.Transport)
 	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))
 
 	sent := make(chan int64)
@@ -139,69 +133,3 @@ func netcat(ctx *cli.Context) error {
 	return nil
 }
 
-type xbeeTransport struct {
-	io.ReadWriteCloser
-	devType string
-}
-
-func (xbt *xbeeTransport) Type() string {
-	return xbt.devType
-}
-
-// parseDeviceString parses the device parameter and sets up the associated
-// device. The device is returned in an xbeeTransport which also stores
-// the underlying type of the device with Type() string
-func parseDeviceString(dev string) (*xbeeTransport, error) {
-	xbt := &xbeeTransport{}
-
-	parseSerial := func(s string) (serial.Port, error) {
-
-		path, bRate, found := strings.Cut(dev, ":")
-
-		mode := &serial.Mode{
-			BaudRate: 9600,
-		}
-		if found {
-			b, err := strconv.Atoi(bRate)
-			if err != nil {
-				return nil, err
-			}
-			mode.BaudRate = b
-		}
-		return serial.Open(path, mode)
-	}
-
-	// actually parse the path
-	if strings.HasPrefix(dev, "tcp://") {
-
-		addr, _ := strings.CutPrefix(dev, "tcp://")
-
-		conn, err := net.Dial("tcp", addr)
-		if err != nil {
-			return nil, err
-		}
-		xbt.ReadWriteCloser = conn
-
-		xbt.devType = "tcp"
-
-	} else if strings.HasPrefix(dev, "COM") && runtime.GOOS == "windows" {
-
-		sDev, err := parseSerial(dev)
-		if err != nil {
-			return nil, err
-		}
-		xbt.ReadWriteCloser = sDev
-		xbt.devType = "serialWin"
-
-	} else if strings.HasPrefix(dev, "/") && runtime.GOOS != "windows" {
-		sDev, err := parseSerial(dev)
-		if err != nil {
-			return nil, err
-		}
-		xbt.ReadWriteCloser = sDev
-		xbt.devType = "serial"
-	} else {
-		return nil, errors.New("could not parse device path")
-	}
-	return xbt, nil
-}
