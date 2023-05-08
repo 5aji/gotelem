@@ -4,7 +4,7 @@
 // we also define standard interfaces for objects that can accept
 // can frames. We can use this pattern to easily extend the capabiltiies of the program
 // by writing "adapters" to various devices/formats (xbee, sqlite, network socket, socketcan)
-package can
+package gotelem
 
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.

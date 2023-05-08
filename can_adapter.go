@@ -1,8 +1,7 @@
-package db
+package gotelem
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/kschamplin/gotelem/can"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -12,11 +11,11 @@ type CanDB struct {
 	Db *sqlx.DB
 }
 
-func (cdb *CanDB) Send(_ *can.Frame) error {
+func (cdb *CanDB) Send(_ *Frame) error {
 	panic("not implemented") // TODO: Implement
 }
 
-func (cdb *CanDB) Recv() (*can.Frame, error) {
+func (cdb *CanDB) Recv() (*Frame, error) {
 	panic("not implemented") // TODO: Implement
 }
 

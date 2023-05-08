@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kschamplin/gotelem/can"
+	"github.com/kschamplin/gotelem"
 	"golang.org/x/sys/unix"
 )
 
@@ -96,12 +96,12 @@ func (sck *CanSocket) SetFDMode(enable bool) error {
 }
 
 // SetFilters will set the socketCAN filters based on a standard CAN filter list.
-func (sck *CanSocket) SetFilters(filters []can.CanFilter) error {
+func (sck *CanSocket) SetFilters(filters []gotelem.CanFilter) error {
 
 	// helper function to make a filter.
 	// id and mask are straightforward, if inverted is true, the filter
 	// will reject anything that matches.
-	makeFilter := func(filter can.CanFilter) unix.CanFilter {
+	makeFilter := func(filter gotelem.CanFilter) unix.CanFilter {
 		f := unix.CanFilter{Id: filter.Id, Mask: filter.Mask}
 
 		if filter.Inverted {
@@ -119,19 +119,19 @@ func (sck *CanSocket) SetFilters(filters []can.CanFilter) error {
 }
 
 // Send sends a CAN frame
-func (sck *CanSocket) Send(msg *can.Frame) error {
+func (sck *CanSocket) Send(msg *gotelem.Frame) error {
 
 	buf := make([]byte, fdFrameSize)
 
 	idToWrite := msg.Id
 
 	switch msg.Kind {
-	case can.SFF:
+	case gotelem.SFF:
 		idToWrite &= unix.CAN_SFF_MASK
-	case can.EFF:
+	case gotelem.EFF:
 		idToWrite &= unix.CAN_EFF_MASK
 		idToWrite |= unix.CAN_EFF_FLAG
-	case can.RTR:
+	case gotelem.RTR:
 		idToWrite |= unix.CAN_RTR_FLAG
 	default:
 		return errors.New("you can't send error frames")
@@ -164,7 +164,7 @@ func (sck *CanSocket) Send(msg *can.Frame) error {
 	return nil
 }
 
-func (sck *CanSocket) Recv() (*can.Frame, error) {
+func (sck *CanSocket) Recv() (*gotelem.Frame, error) {
 
 	// todo: support extended frames.
 	buf := make([]byte, fdFrameSize)
@@ -175,18 +175,18 @@ func (sck *CanSocket) Recv() (*can.Frame, error) {
 
 	id := binary.LittleEndian.Uint32(buf[0:4])
 
-	var k can.Kind
+	var k gotelem.Kind
 	if id&unix.CAN_EFF_FLAG != 0 {
 		// extended id frame
-		k = can.EFF
+		k = gotelem.EFF
 	} else {
 		// it's a normal can frame
-		k = can.SFF
+		k = gotelem.SFF
 	}
 
 	dataLength := uint8(buf[4])
 
-	result := &can.Frame{
+	result := &gotelem.Frame{
 		Id:   id & unix.CAN_EFF_MASK,
 		Kind: k,
 		Data: buf[8 : dataLength+8],
