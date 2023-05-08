@@ -15,7 +15,6 @@ func TestParseRxFrame(t *testing.T) {
 		want    *RxFrame
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{
 			name: "64-bit unicast",
 			args: args{

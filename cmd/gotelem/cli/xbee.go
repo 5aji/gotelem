@@ -1,9 +1,10 @@
-package cmd
+package cli
 
 // this file contains xbee utilities.
 // we can do network discovery and netcat-like things.
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,13 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.bug.st/serial"
 	"golang.org/x/exp/slog"
+)
+
+// context key stuff to prevent collisions
+type ctxKey int
+
+const (
+	keyIODevice ctxKey = iota
 )
 
 var xbeeCmd = &cli.Command{
@@ -45,6 +53,17 @@ TCP/UDP connections require a port and will fail if one is not provided.
 			EnvVars:  []string{"XBEE_DEVICE"},
 		},
 	},
+	// this parses the device string and creates the io device.
+	// TODO: should we create the session here instead?
+	Before: func(ctx *cli.Context) error {
+		transport, err := parseDeviceString(ctx.String("device"))
+		if err != nil {
+			return err
+		}
+
+		ctx.Context = context.WithValue(ctx.Context, keyIODevice, transport)
+		return nil
+	},
 	Subcommands: []*cli.Command{
 		{
 			Name:            "info",
@@ -72,7 +91,7 @@ writtend to stdout.
 func xbeeInfo(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	transport, _ := parseDeviceString(ctx.String("device"))
+	transport := ctx.Context.Value(keyIODevice).(xbeeTransport)
 	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
 		return cli.Exit(err, 1)
@@ -94,10 +113,9 @@ func netcat(ctx *cli.Context) error {
 		return cli.Exit("missing [addr] argument", 1)
 
 	}
-	// basically create two pipes.
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
-	transport, _ := parseDeviceString(ctx.String("device"))
+	transport := ctx.Context.Value(keyIODevice).(xbeeTransport)
 	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))
 
 	sent := make(chan int64)
@@ -114,7 +132,9 @@ func netcat(ctx *cli.Context) error {
 	go streamCopy(os.Stdin, xb)
 	go streamCopy(xb, os.Stdout)
 
-	<-sent
+	n := <-sent
+
+	fmt.Printf("Sent %d\n", n)
 
 	return nil
 }

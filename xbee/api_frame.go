@@ -1,10 +1,3 @@
-// Package xbee implements xbee API encoding and decoding.
-
-// It encodes and decodes
-// API frames from io.Writer and io.Reader by providing a WriteFrame function and
-// a scanner.split function. It also includes internal packets for using the API.
-// For end-users, it provides a simple net.Conn-like interface that can write
-// and read arbitrary bytes (to be used by a higher level protocol)
 package xbee
 
 import (
