@@ -8,10 +8,10 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[SFF-0]
-	_ = x[EFF-1]
-	_ = x[RTR-2]
-	_ = x[ERR-3]
+	_ = x[CanSFFFrame-0]
+	_ = x[CanEFFFrame-1]
+	_ = x[CanRTRFrame-2]
+	_ = x[CanErrFrame-3]
 }
 
 const _Kind_name = "SFFEFFRTRERR"

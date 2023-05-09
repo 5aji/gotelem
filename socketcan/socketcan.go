@@ -134,15 +134,17 @@ func (sck *CanSocket) Send(msg *gotelem.Frame) error {
 	idToWrite := msg.Id
 
 	switch msg.Kind {
-	case gotelem.SFF:
+	case gotelem.CanSFFFrame:
 		idToWrite &= unix.CAN_SFF_MASK
-	case gotelem.EFF:
+	case gotelem.CanEFFFrame:
 		idToWrite &= unix.CAN_EFF_MASK
 		idToWrite |= unix.CAN_EFF_FLAG
-	case gotelem.RTR:
+	case gotelem.CanRTRFrame:
 		idToWrite |= unix.CAN_RTR_FLAG
-	default:
+	case gotelem.CanErrFrame:
 		return errors.New("you can't send error frames")
+	default:
+		return errors.New("unknown frame type")
 	}
 
 	binary.LittleEndian.PutUint32(buf[:4], idToWrite)
@@ -186,10 +188,10 @@ func (sck *CanSocket) Recv() (*gotelem.Frame, error) {
 	var k gotelem.Kind
 	if id&unix.CAN_EFF_FLAG != 0 {
 		// extended id frame
-		k = gotelem.EFF
+		k = gotelem.CanEFFFrame
 	} else {
 		// it's a normal can frame
-		k = gotelem.SFF
+		k = gotelem.CanSFFFrame
 	}
 
 	dataLength := uint8(buf[4])

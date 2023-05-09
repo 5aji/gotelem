@@ -6,6 +6,12 @@
 // by writing "adapters" to various devices/formats (xbee, sqlite, network socket, socketcan)
 package gotelem
 
+import (
+	"fmt"
+	"os"
+	"time"
+)
+
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.
 type Frame struct {
@@ -26,10 +32,10 @@ type CANFrame interface {
 type Kind uint8
 
 const (
-	SFF Kind = iota // Standard ID Frame
-	EFF             // Extended ID Frame
-	RTR             // Remote Transmission Request Frame
-	ERR             // Error Frame
+	CanSFFFrame Kind = iota // Standard ID Frame
+	CanEFFFrame             // Extended ID Frame
+	CanRTRFrame             // Remote Transmission Request Frame
+	CanErrFrame             // Error Frame
 )
 
 // CanFilter is a basic filter for masking out data. It has an Inverted flag
@@ -55,4 +61,33 @@ type CanSource interface {
 type CanTransciever interface {
 	CanSink
 	CanSource
+}
+
+// CanWriter
+type CanWriter struct {
+	output *os.File
+}
+
+// send writes the frame to the file.
+func (cw *CanWriter) Send(f *Frame) error {
+	ts := time.Now().Unix()
+
+	_, err := fmt.Fprintf(cw.output, "%d %X %X", ts, f.Id, f.Data)
+	return err
+}
+
+func (cw *CanWriter) Close() error {
+	return cw.output.Close()
+}
+
+func OpenCanWriter(name string) (*CanWriter, error) {
+	f, err := os.Create(name)
+	if err != nil {
+		return nil, err
+	}
+
+	cw := &CanWriter{
+		output: f,
+	}
+	return cw, nil
 }

@@ -45,7 +45,7 @@ func TestCanSocket(t *testing.T) {
 		// make a packet.
 		testFrame := &gotelem.Frame{
 			Id:   0x123,
-			Kind: gotelem.SFF,
+			Kind: gotelem.CanSFFFrame,
 			Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
 		}
 		err := sock.Send(testFrame)
@@ -63,7 +63,7 @@ func TestCanSocket(t *testing.T) {
 
 		testFrame := &gotelem.Frame{
 			Id:   0x234,
-			Kind: gotelem.SFF,
+			Kind: gotelem.CanSFFFrame,
 			Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
 		}
 		_ = sock.Send(testFrame)
@@ -81,4 +81,5 @@ func TestCanSocket(t *testing.T) {
 
 	})
 
+	// TODO: test filtering.
 }
