@@ -1,3 +1,5 @@
+//go:build linux
+
 /*
 Package socketcan provides a wrapper around the Linux socketCAN interface.
 */
@@ -19,6 +21,12 @@ type CanSocket struct {
 	iface *net.Interface
 	addr  *unix.SockaddrCAN
 	fd    int
+}
+
+type CanFilter interface {
+	Inverted() bool
+	Mask() uint32
+	Id() uint32
 }
 
 // standardFrameSize is the full size in bytes of the default CAN frame.
@@ -96,15 +104,15 @@ func (sck *CanSocket) SetFDMode(enable bool) error {
 }
 
 // SetFilters will set the socketCAN filters based on a standard CAN filter list.
-func (sck *CanSocket) SetFilters(filters []gotelem.CanFilter) error {
+func (sck *CanSocket) SetFilters(filters []CanFilter) error {
 
 	// helper function to make a filter.
 	// id and mask are straightforward, if inverted is true, the filter
 	// will reject anything that matches.
-	makeFilter := func(filter gotelem.CanFilter) unix.CanFilter {
-		f := unix.CanFilter{Id: filter.Id, Mask: filter.Mask}
+	makeFilter := func(filter CanFilter) unix.CanFilter {
+		f := unix.CanFilter{Id: filter.Id(), Mask: filter.Mask()}
 
-		if filter.Inverted {
+		if filter.Inverted() {
 			f.Id = f.Id | unix.CAN_INV_FILTER
 		}
 		return f

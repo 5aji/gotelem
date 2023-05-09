@@ -19,4 +19,4 @@ func (cdb *CanDB) Recv() (*Frame, error) {
 	panic("not implemented") // TODO: Implement
 }
 
-func NewCanDB()
+func NewCanDB() {}
