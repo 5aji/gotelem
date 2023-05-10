@@ -5,6 +5,7 @@ package cli
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -78,6 +79,11 @@ writtend to stdout.
 			`,
 			Action:          netcat,
 			HideHelpCommand: true,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name: "hex",
+				},
+			},
 		},
 	},
 }
@@ -85,7 +91,7 @@ writtend to stdout.
 func xbeeInfo(ctx *cli.Context) error {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
-	transport := ctx.Context.Value(keyIODevice).(xbee.Transport)
+	transport := ctx.Context.Value(keyIODevice).(*xbee.Transport)
 	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
 		return cli.Exit(err, 1)
@@ -95,7 +101,7 @@ func xbeeInfo(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	fmt.Println(b)
+	fmt.Printf("Network ID: %X\n", binary.BigEndian.Uint16(b))
 	return nil
 
 }
@@ -109,7 +115,7 @@ func netcat(ctx *cli.Context) error {
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
-	transport := ctx.Context.Value(keyIODevice).(xbee.Transport)
+	transport := ctx.Context.Value(keyIODevice).(*xbee.Transport)
 	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))
 
 	sent := make(chan int64)
