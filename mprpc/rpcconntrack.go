@@ -47,7 +47,7 @@ func (c *rpcConnTrack) Claim() (uint32, chan Response) {
 
 // Clear deletes the connection from the tracker and returns the channel
 // associated with it. The caller can use the channel afterwards
-// to send the response.
+// to send the response. It is the caller's responsibility to close the channel.
 func (c *rpcConnTrack) Clear(val uint32) (chan Response, error) {
 	c.mu.RLock()
 	ch, ok := c.ct[val]
