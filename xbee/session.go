@@ -9,6 +9,7 @@ package xbee
 
 import (
 	"bufio"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -24,6 +25,19 @@ import (
 
 // TODO: implement net.Conn for Session/Conn. We are missing LocalAddr, RemoteAddr,
 // and Deadline related methods.
+
+// XBeeAddr is an XBee device address.
+type XBeeAddr uint64
+
+func (addr XBeeAddr)String() string {
+	return fmt.Sprintf("%X", uint64(addr))
+}
+
+
+func (addr XBeeAddr) Network() string {
+	return "xbee"
+}
+
 
 // Session represents a connection to a locally-attached XBee. The connection can be through
 // serial/USB or TCP/IP depending on what is supported by the device.
@@ -137,6 +151,8 @@ func (sess *Session) Write(p []byte) (int, error) {
 
 }
 
+
+// internal function used by Conn to write data to a specific address.
 func (sess *Session) writeAddr(p []byte, dest uint64) (n int, err error) {
 
 	idx, ch, err := sess.ct.GetMark()
@@ -226,6 +242,20 @@ func (sess *Session) GetStatus() {
 // Implement the io.Closer.
 func (sess *Session) Close() error {
 	return sess.ioDev.Close()
+}
+
+
+func (sess *Session) LocalAddr() XBeeAddr {
+	// TODO: should we get this once at the start? and then just store it?
+	sh, _ := sess.ATCommand([2]rune{'S', 'H'}, nil, false)
+	sl, _ := sess.ATCommand([2]rune{'S', 'L'}, nil, false)
+
+	addr := uint64(binary.BigEndian.Uint32(sh)) << 32 & uint64(binary.BigEndian.Uint32(sl))
+	return  XBeeAddr(addr)
+}
+
+func (sess *Session) RemoteAddr() XBeeAddr {
+	return 0xFFFF
 }
 
 // Conn is a connection to a specific remote XBee. Conn allows for the user to

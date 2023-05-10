@@ -11,22 +11,36 @@ import (
 type Field interface {
 	Name() string
 
-}
-type PacketField struct {
-	Name string
-	Type string
-	Units string
-	Conversion float32
+	Size() int // the size of the data.
+	
+	// returns something like
+	// 	AuxVoltage uint16
+	// used inside the packet struct
+	Embed() string
+	
+	// returns 
+	Marshal() string
+	Decode() string
 }
 
+// this is a standard field, not a bitfield.
+type DataField struct {
+	Name string
+	Type string
+	Units string // mostly for documentation
+	Conversion float32 
+}
+
+
+// a PacketDef is a full can packet.
 type PacketDef struct {
 	Name string
 	Description string
 	Id uint32
 	BigEndian bool
-	data: []PacketField
-
+	data: []Field
 }
+
 // we need to generate bitfield types.
 // packet structs per each packet
 // constancts for packet IDs or a map.
@@ -46,8 +60,8 @@ it also needs a json marshalling.
 
 	func (b *BMSMeasurement)MarshalPacket() ([]byte, error) {
 		pkt := make([]byte, b.Size())
-		binary.LittleEndian.PutUint16(b.BatteryVoltage * 0.01)
-		binary.LittleEndian.PutUint16(b.AuxVoltage * 0.001)
+		binary.LittleEndian.PutUint16(pkt[0:], b.BatteryVoltage * 0.01)
+		binary.LittleEndian.PutUint16(pkt[2:],b.AuxVoltage * 0.001)
 		binary.LittleEndian.PutFloat32(b.Current) // TODO: make float function
 	}
 
@@ -64,7 +78,7 @@ it also needs a json marshalling.
 	}
 
 	func (b *BMSMeasurement) String() string {
-		return 'blah blah"
+		return "blah blah"
 	}
 
 we also need some kind of mechanism to lookup data type.
