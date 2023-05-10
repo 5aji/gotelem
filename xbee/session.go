@@ -9,17 +9,17 @@ package xbee
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
-	"sync"
-	"strings"
-	"errors"
-	"runtime"
 	"net"
+	"runtime"
 	"strconv"
+	"strings"
+	"sync"
 
-	"golang.org/x/exp/slog"
 	"go.bug.st/serial"
+	"golang.org/x/exp/slog"
 )
 
 // TODO: implement net.Conn for Session/Conn. We are missing LocalAddr, RemoteAddr,
@@ -27,6 +27,8 @@ import (
 
 // Session represents a connection to a locally-attached XBee. The connection can be through
 // serial/USB or TCP/IP depending on what is supported by the device.
+// Session implements the net.Conn interface, so it can be used anywhere a net.Conn can be used.
+// This also means that deadlines can be set.
 type Session struct {
 	ioDev io.ReadWriteCloser
 	ct    connTrack
@@ -239,14 +241,13 @@ func (c *Conn) Write(p []byte) (int, error) {
 	return c.parent.writeAddr(p, c.addr)
 }
 
+/*
+	 Transport represents a connection that an XBee can use.
+	  it's mostly a helper struct to parse URIs. It can parse the following formats:
 
-
-/* Transport represents a connection that an XBee can use.
-  it's mostly a helper struct to parse URIs. It can parse the following formats:
-
-  	tcp://192.168.4.5:8340
-	COM1
-	/dev/ttyUSB0:115200
+	  	tcp://192.168.4.5:8340
+		COM1
+		/dev/ttyUSB0:115200
 
 for network devices, a port is optional. If it is not specified it will
 default to 2616. The colon after a serial port sets the baud rate.
