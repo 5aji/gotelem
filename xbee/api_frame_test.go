@@ -2,11 +2,13 @@ package xbee
 
 import (
 	"bytes"
+	"encoding/hex"
 	"reflect"
 	"testing"
 )
 
 func Test_xbeeFrameSplit(t *testing.T) {
+	advTest, _ := hex.DecodeString("007E7E0012900013A20041B320")
 	type args struct {
 		data  []byte
 		atEOF bool
@@ -98,6 +100,17 @@ func Test_xbeeFrameSplit(t *testing.T) {
 			wantToken:   nil,
 			wantErr:     false,
 		},
+		{
+			name: "start delimiter inside partial packet",
+			args: args{
+				data: advTest,
+				atEOF: false,
+			},
+			wantAdvance: 2,
+			wantToken: nil,
+			wantErr: false,
+		},
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -115,6 +128,8 @@ func Test_xbeeFrameSplit(t *testing.T) {
 		})
 	}
 }
+
+
 
 func Test_parseFrame(t *testing.T) {
 	type args struct {
