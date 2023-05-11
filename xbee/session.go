@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"go.bug.st/serial"
 	"golang.org/x/exp/slog"
@@ -29,15 +30,13 @@ import (
 // XBeeAddr is an XBee device address.
 type XBeeAddr uint64
 
-func (addr XBeeAddr)String() string {
+func (addr XBeeAddr) String() string {
 	return fmt.Sprintf("%X", uint64(addr))
 }
-
 
 func (addr XBeeAddr) Network() string {
 	return "xbee"
 }
-
 
 // Session represents a connection to a locally-attached XBee. The connection can be through
 // serial/USB or TCP/IP depending on what is supported by the device.
@@ -151,7 +150,6 @@ func (sess *Session) Write(p []byte) (int, error) {
 
 }
 
-
 // internal function used by Conn to write data to a specific address.
 func (sess *Session) writeAddr(p []byte, dest uint64) (n int, err error) {
 
@@ -220,7 +218,13 @@ func (sess *Session) ATCommand(cmd [2]rune, data []byte, queued bool) ([]byte, e
 
 	// TODO: add timeout.
 
-	resp, err := ParseATCmdResponse(<-ch)
+	var respBytes []byte
+	select {
+	case respBytes = <-ch:
+	case <-time.After(1 * time.Second):
+		return nil, errors.New("timeout waiting for response frame")
+	}
+	resp, err := ParseATCmdResponse(respBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -244,31 +248,47 @@ func (sess *Session) Close() error {
 	return sess.ioDev.Close()
 }
 
-
 func (sess *Session) LocalAddr() XBeeAddr {
 	// TODO: should we get this once at the start? and then just store it?
 	sh, _ := sess.ATCommand([2]rune{'S', 'H'}, nil, false)
 	sl, _ := sess.ATCommand([2]rune{'S', 'L'}, nil, false)
 
 	addr := uint64(binary.BigEndian.Uint32(sh)) << 32 & uint64(binary.BigEndian.Uint32(sl))
-	return  XBeeAddr(addr)
+	return XBeeAddr(addr)
 }
 
 func (sess *Session) RemoteAddr() XBeeAddr {
 	return 0xFFFF
 }
 
+/*
+The session implements a io.Writer and io.Reader, but does not
+have a way of connecting to a specific XBee by default. To do this, we would
+need to either pass an address to the write and read methods (breaking io.ReadWriter),
+or add another command. Rather than do that, we can make a "Conn" class, which represents
+a single connection to a device on the network.
+
+*/
+
 // Conn is a connection to a specific remote XBee. Conn allows for the user to
 // contact one Xbee for point-to-point communications. This enables ACK packets
 // for reliable transmission.
 type Conn struct {
 	parent *Session
-	log    slog.Logger
-	addr   uint64
+	addr   XBeeAddr
 }
 
 func (c *Conn) Write(p []byte) (int, error) {
-	return c.parent.writeAddr(p, c.addr)
+	return c.parent.writeAddr(p, uint64(c.addr))
+}
+
+func (c *Conn) Close() error {
+
+	return nil
+}
+
+func (c *Conn) GetRSSI() int {
+	return 0
 }
 
 /*

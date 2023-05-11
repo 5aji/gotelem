@@ -136,4 +136,11 @@ func encodeRemoteATCommand(at ATCmd, idx uint8, queued bool, destination uint64)
 
 // let's actually define some AT commands now.
 
-// TODO: should we just use a function.
+type NetworkDevice struct {
+	Addr       XBeeAddr
+	Identifier string
+	DeviceType byte
+	ProfileNum uint16
+	MfrId      uint16
+	RSSI       byte
+}
