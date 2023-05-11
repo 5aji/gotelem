@@ -177,18 +177,17 @@ func (sess *Session) writeAddr(p []byte, dest uint64) (n int, err error) {
 	if err != nil {
 		return
 	}
-	n = n - 4
+	n = len(p)
 
 	// finally, wait for the channel we got to return. this means that
 	// the matching response frame was received, so we can parse it.
-	// TODO: add timeout.
 
 	var status *TxStatusFrame
 	select {
 	case responseFrame := <-ch:
 		status, err = ParseTxStatusFrame(responseFrame)
 	case <-time.After(1 * time.Second):
-		return n, errors.New("timeout waiting for response")
+		return 0, errors.New("timeout waiting for response")
 	}
 
 
@@ -321,7 +320,7 @@ func (c *Conn) Read(p []byte) (n int, err error) {
 
 func (c *Conn) Close() error {
 	// remove ourselves from the conn list.
-
+	delete(c.parent.conns, uint64(c.addr))
 	return nil
 }
 
@@ -378,7 +377,9 @@ func ParseDeviceString(dev string) (*Transport, error) {
 
 		addr, _ := strings.CutPrefix(dev, "tcp://")
 
+		// FIXME: use default port (9750) if port not provided.
 		conn, err := net.Dial("tcp", addr)
+
 		if err != nil {
 			return nil, err
 		}
