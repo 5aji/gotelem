@@ -22,6 +22,15 @@ const (
 	keyIODevice ctxKey = iota
 )
 
+var xbeeDeviceFlag =  &cli.StringFlag{
+			Name:     "device",
+			Aliases:  []string{"d"},
+			Usage:    "The XBee to connect to",
+			Required: true,
+			EnvVars:  []string{"XBEE_DEVICE"},
+		}
+
+
 var xbeeCmd = &cli.Command{
 	Name:    "xbee",
 	Aliases: []string{"x"},
@@ -40,13 +49,7 @@ TCP/UDP connections require a port and will fail if one is not provided.
 
 	`,
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "device",
-			Aliases:  []string{"d"},
-			Usage:    "The XBee to connect to",
-			Required: true,
-			EnvVars:  []string{"XBEE_DEVICE"},
-		},
+		xbeeDeviceFlag,
 	},
 	// this parses the device string and creates the io device.
 	// TODO: should we create the session here instead?
@@ -97,7 +100,7 @@ func xbeeInfo(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 
-	b, err := xb.ATCommand([2]rune{'I', 'D'}, nil, false)
+	b, err := xb.ATCommand([2]byte{'I', 'D'}, nil, false)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}

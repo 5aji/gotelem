@@ -35,7 +35,7 @@ func (b RawATCmd) Bytes() []byte {
 // EncodeATCommand takes an AT command and encodes it in the payload format.
 // it takes the frame index (which can be zero) as well as if it should be queued or
 // not. It encodes the AT command to be framed and sent over the wire and returns the packet
-func encodeATCommand(cmd [2]rune, p []byte, idx uint8, queued bool) RawATCmd {
+func encodeATCommand(cmd [2]byte, p []byte, idx uint8, queued bool) RawATCmd {
 	// we encode a new byte slice that contains the cmd + payload concatenated correclty.
 	// this is then used to make the command frame, which contains ID/Type/Queued or not.
 	// the ATCmdFrame can be converted to bytes to be sent over the wire once framed.

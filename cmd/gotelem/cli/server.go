@@ -1,13 +1,18 @@
 package cli
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/socketcan"
+	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 var serveCmd = &cli.Command{
@@ -15,49 +20,116 @@ var serveCmd = &cli.Command{
 	Aliases: []string{"server", "s"},
 	Usage:   "Start a telemetry server",
 	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "xbee", Aliases: []string{"x"}, Usage: "Find and connect to an XBee"},
+		&cli.BoolFlag{Name: "test", Usage: "use vcan0 test"},
+		&cli.StringFlag{
+			Name:     "device",
+			Aliases:  []string{"d"},
+			Usage:    "The XBee to connect to",
+			EnvVars:  []string{"XBEE_DEVICE"},
+		},
+		&cli.StringFlag{
+			Name:     "can",
+			Aliases:  []string{"c"},
+			Usage:    "CAN device string",
+			EnvVars:  []string{"CAN_DEVICE"},
+		},
+		&cli.StringFlag{
+			Name:    "logfile",
+			Aliases: []string{"l"},
+			Value:   "log.txt",
+			Usage:   "file to store log to",
+		},
 	},
-	Action: func(ctx *cli.Context) error {
-		serve(ctx.Bool("xbee"))
-		return nil
-	},
+	Action: serve,
 }
 
-func serve(useXbee bool) {
+func serve(cCtx *cli.Context) error {
+	// TODO: output both to stderr and a file.
+	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
+	slog.SetDefault(logger)
 	broker := gotelem.NewBroker(3)
+
+	done := make(chan struct{})
 	// start the can listener
-	go vcanTest()
-	go canHandler(broker)
+	// can logger.
+	go CanDump(broker, logger.WithGroup("candump"), done)
+
+
+	if cCtx.String("device") != "" {
+		logger.Info("using xbee device")
+		transport, err := xbee.ParseDeviceString(cCtx.String("device"))
+		if err != nil {
+			logger.Error("failed to open device string", "err", err)
+			os.Exit(1)
+		}
+		go XBeeSend(broker, logger.WithGroup("xbee"), done, transport)
+	}
+
+	if cCtx.String("can") != "" {
+		logger.Info("using can device")
+		go canHandler(broker, logger.With("device", cCtx.String("can")), done, cCtx.String("can"))
+
+		if strings.HasPrefix(cCtx.String("can"), "v") {
+			go vcanTest(cCtx.String("can"))
+		}
+	}
+
 	go broker.Start()
+
+	// tcp listener server.
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Printf("Error listening: %v\n", err)
 	}
-	fmt.Printf("Listening on :8082\n")
+	logger.Info("TCP listener started", "addr", ln.Addr().String())
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			fmt.Printf("error accepting: %v\n", err)
 		}
-		go handleCon(conn, broker)
+		go handleCon(conn, broker, logger.WithGroup("tcp"), done)
 	}
 }
 
-func handleCon(conn net.Conn, broker *gotelem.Broker) {
+func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	//	reader := msgp.NewReader(conn)
 
-	conn.Close()
+	subname := fmt.Sprint("hi", conn.RemoteAddr().String())
+
+	rxCh := broker.Subscribe(subname)
+	defer broker.Unsubscribe(subname)
+	defer conn.Close()
+
+	for {
+		select {
+		case msg := <-rxCh:
+			// FIXME: poorly optimized
+			buf := make([]byte, 0, 8)
+			binary.LittleEndian.AppendUint32(buf, msg.Id)
+			buf = append(buf, msg.Data...)
+
+			_, err := conn.Write(buf)
+			if err != nil {
+				l.Warn("error writing tcp packet", "err", err)
+			}
+		case <-done:
+			return
+
+		}
+	}
+
 }
 
-func xbeeSvc(b *gotelem.Broker) {
-
-}
 
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
-func vcanTest() {
-	sock, _ := socketcan.NewCanSocket("vcan0")
+func vcanTest(devname string) {
+	sock, err := socketcan.NewCanSocket(devname)
+	if err != nil {
+		slog.Error("error opening socket", "err", err)
+		return
+	}
 	testFrame := &gotelem.Frame{
 		Id:   0x234,
 		Kind: gotelem.CanSFFFrame,
@@ -65,31 +137,106 @@ func vcanTest() {
 	}
 	for {
 
-		fmt.Printf("sending test packet\n")
+		slog.Info("sending test packet")
 		sock.Send(testFrame)
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func canHandler(broker *gotelem.Broker) {
+// connects the broker to a socket can
+func canHandler(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, devname string) {
 	rxCh := broker.Subscribe("socketcan")
-	sock, _ := socketcan.NewCanSocket("vcan0")
+	sock, err := socketcan.NewCanSocket(devname)
+
+	if err != nil {
+		l.Error("error opening socket", "err", err)
+		return
+	}
 
 	// start a simple dispatcher that just relays can frames.
 	rxCan := make(chan gotelem.Frame)
 	go func() {
 		for {
-			pkt, _ := sock.Recv()
+			pkt, err := sock.Recv()
+			if err != nil {
+				l.Warn("error reading SocketCAN", "err", err)
+				return
+			}
 			rxCan <- *pkt
 		}
 	}()
 	for {
 		select {
 		case msg := <-rxCh:
+			l.Info("Sending a CAN bus message", "id", msg.Id, "data", msg.Data)
 			sock.Send(&msg)
 		case msg := <-rxCan:
-			fmt.Printf("got a packet from the can %v\n", msg)
+			l.Info("Got a CAN bus message", "id", msg.Id, "data", msg.Data)
 			broker.Publish("socketcan", msg)
+		case <-done:
+			sock.Close()
+			return
 		}
 	}
+}
+
+func CanDump(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
+	rxCh := broker.Subscribe("candump")
+	t := time.Now()
+	fname := fmt.Sprintf("candump_%d-%02d-%02dT%02d.%02d.%02d.txt",
+		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+
+	cw, err := gotelem.OpenCanWriter(fname)
+	if err != nil {
+		slog.Error("error opening file", "err", err)
+	}
+
+	for {
+		select {
+		case msg := <-rxCh:
+
+			cw.Send(&msg)
+		case <-done:
+			cw.Close()
+			return
+		}
+	}
+}
+
+
+func XBeeSend(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, trspt *xbee.Transport) {
+	rxCh := broker.Subscribe("xbee")
+	l.Info("starting xbee send routine")
+
+	xb, err := xbee.NewSession(trspt, l.With("device", trspt.Type()))
+
+	if err != nil {
+		l.Error("failed to start xbee session", "err", err)
+		return
+	}
+
+	l.Info("connected to local xbee", "addr", xb.LocalAddr())
+
+	for {
+		select {
+		case <-done:
+			xb.Close()
+			return
+		case msg := <-rxCh:
+			// TODO: take can message and send it over CAN.
+			l.Info("got msg", "msg", msg)
+			buf := make([]byte, 0)
+
+			binary.LittleEndian.AppendUint32(buf, msg.Id)
+			buf = append(buf, msg.Data...)
+
+			_, err := xb.Write(buf)
+			if err != nil {
+				l.Warn("error writing to xbee", "err", err)
+			}
+
+		}
+	}
+	
+
 }

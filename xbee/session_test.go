@@ -47,9 +47,9 @@ func TestXBeeHardware(t *testing.T) {
 	// now we should test sending a packet. and getting a response.
 
 	t.Run("Get Network ID", func(t *testing.T) {
-		b, err := sess.ATCommand([2]rune{'I', 'D'}, nil, false)
+		b, err := sess.ATCommand([2]byte{'I', 'D'}, nil, false)
 		if err != nil {
-			t.Errorf("ATCommand() error = %v", err)
+			t.Fatalf("ATCommand() error = %v", err)
 		}
 		if len(b) != 2 {
 			t.Errorf("reponse length mismatch: expected 2 got %d", len(b))
@@ -57,10 +57,10 @@ func TestXBeeHardware(t *testing.T) {
 	})
 
 	t.Run("Check NP", func(t *testing.T) {
-		b, err := sess.ATCommand([2]rune{'N', 'P'}, nil, false)
+		b, err := sess.ATCommand([2]byte{'N', 'P'}, nil, false)
 
 		if err != nil {
-			t.Errorf("ATCommand() error = %v", err)
+			t.Fatalf("ATCommand() error = %v", err)
 		}
 
 		val := binary.BigEndian.Uint16(b)
@@ -68,6 +68,27 @@ func TestXBeeHardware(t *testing.T) {
 			t.Errorf("NP response wrong, expected 0x100 or 0x640 got 0x%X", val)
 		}
 	})
+
+
+	t.Run("check source address", func(t *testing.T) {
+		a := sess.LocalAddr()
+
+		t.Logf("local device address is %v", a)
+		
+	})
+
+
+	t.Run("Check device name", func(t *testing.T) {
+		a, err := sess.ATCommand([2]byte{'N', 'I'}, nil, false)
+
+		if err != nil {
+			t.Fatalf("Could not run NI: %v", err)
+		}
+
+		name := string(a)
+		t.Logf("Device Name: %s", name)
+	})
+	
 
 }
 

@@ -55,6 +55,9 @@ type Session struct {
 	// can only be one direct connection to a device. This is pretty reasonable IMO.
 	// but needs to be documented very clearly.
 	conns map[uint64]*Conn
+
+	// local address
+	lAddr XBeeAddr
 }
 
 // NewSession takes an IO device and a logger and returns a new XBee session.
@@ -76,6 +79,21 @@ func NewSession(dev io.ReadWriteCloser, baseLog *slog.Logger) (*Session, error) 
 
 	go sess.rxHandler()
 
+
+	// now we should get the local address cached so LocalAddr is fast.
+	sh, err := sess.ATCommand([2]byte{'S', 'H'}, nil, false)
+	if err != nil {
+		return sess, errors.New("error getting SH")
+	}
+	sl, err := sess.ATCommand([2]byte{'S', 'L'}, nil, false)
+	if err != nil {
+		return sess, errors.New("error getting SL")
+	}
+
+	addr := append(sh, sl...)
+
+	sess.lAddr = XBeeAddr(binary.BigEndian.Uint64(addr))
+
 	return sess, nil
 }
 
@@ -90,10 +108,13 @@ func (sess *Session) rxHandler() {
 	scan := bufio.NewScanner(sess.ioDev)
 	scan.Split(xbeeFrameSplit)
 
+	sess.log.Debug("starting rx handler", "device", sess.ioDev)
+
 	// scan.Scan() will return false when there's EOF, i.e the io device is closed.
 	// this is activated by sess.Close()
 	for scan.Scan() {
 		data, err := parseFrame(scan.Bytes())
+		sess.log.Debug("got an api frame", "data", data)
 		if err != nil {
 			sess.log.Warn("error parsing frame", "error", err, "data", data)
 			continue
@@ -207,7 +228,7 @@ func (sess *Session) writeAddr(p []byte, dest uint64) (n int, err error) {
 // instead, an AC command must be set to apply the queued changes. `queued` does not
 // affect query-type commands, which always return right away.
 // the AT command is an interface.
-func (sess *Session) ATCommand(cmd [2]rune, data []byte, queued bool) (payload []byte, err error) {
+func (sess *Session) ATCommand(cmd [2]byte, data []byte, queued bool) (payload []byte, err error) {
 	// we must encode the command, and then create the actual packet.
 	// then we send the packet, and wait for the response
 	// TODO: how to handle multiple-response-packet AT commands?
@@ -262,12 +283,7 @@ func (sess *Session) Close() error {
 }
 
 func (sess *Session) LocalAddr() XBeeAddr {
-	// TODO: should we get this once at the start? and then just store it?
-	sh, _ := sess.ATCommand([2]rune{'S', 'H'}, nil, false)
-	sl, _ := sess.ATCommand([2]rune{'S', 'L'}, nil, false)
-
-	addr := uint64(binary.BigEndian.Uint32(sh)) << 32 & uint64(binary.BigEndian.Uint32(sl))
-	return XBeeAddr(addr)
+	return sess.lAddr
 }
 
 func (sess *Session) RemoteAddr() XBeeAddr {

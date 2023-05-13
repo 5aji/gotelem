@@ -90,7 +90,7 @@ func Test_encodeRemoteATCommand(t *testing.T) {
 
 func Test_encodeATCommand(t *testing.T) {
 	type args struct {
-		cmd    [2]rune
+		cmd    [2]byte
 		p      []byte
 		idx    uint8
 		queued bool
@@ -104,7 +104,7 @@ func Test_encodeATCommand(t *testing.T) {
 		{
 			name: "Setting AT Command",
 			args: args{
-				cmd:    [2]rune{'N', 'I'},
+				cmd:    [2]byte{'N', 'I'},
 				idx:    0xA1,
 				p:      []byte{0x45, 0x6E, 0x64, 0x20, 0x44, 0x65, 0x76, 0x69, 0x63, 0x65},
 				queued: false,
@@ -114,7 +114,7 @@ func Test_encodeATCommand(t *testing.T) {
 		{
 			name: "Query AT Command",
 			args: args{
-				cmd:    [2]rune{'T', 'P'},
+				cmd:    [2]byte{'T', 'P'},
 				idx:    0x17,
 				p:      nil,
 				queued: false,
@@ -124,7 +124,7 @@ func Test_encodeATCommand(t *testing.T) {
 		{
 			name: "Queue Local AT Command",
 			args: args{
-				cmd:    [2]rune{'B', 'D'},
+				cmd:    [2]byte{'B', 'D'},
 				idx:    0x53,
 				p:      []byte{0x07},
 				queued: true,
@@ -134,7 +134,7 @@ func Test_encodeATCommand(t *testing.T) {
 		{
 			name: "Queue Query AT Command",
 			args: args{
-				cmd:    [2]rune{'T', 'P'},
+				cmd:    [2]byte{'T', 'P'},
 				idx:    0x17,
 				p:      nil,
 				queued: true,
