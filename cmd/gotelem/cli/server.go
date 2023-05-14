@@ -96,7 +96,10 @@ func serve(cCtx *cli.Context) error {
 func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	//	reader := msgp.NewReader(conn)
 
-	subname := fmt.Sprint("hi", conn.RemoteAddr().String())
+
+	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
+
+	l.Info("started handling", "name", subname)
 
 	rxCh := broker.Subscribe(subname)
 	defer broker.Unsubscribe(subname)
@@ -105,14 +108,16 @@ func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-cha
 	for {
 		select {
 		case msg := <-rxCh:
+			l.Info("got packet")
 			// FIXME: poorly optimized
-			buf := make([]byte, 0, 8)
-			binary.LittleEndian.AppendUint32(buf, msg.Id)
+			buf := make([]byte, 0)
+			buf = binary.BigEndian.AppendUint32(buf, msg.Id)
 			buf = append(buf, msg.Data...)
 
 			_, err := conn.Write(buf)
 			if err != nil {
-				l.Warn("error writing tcp packet", "err", err)
+				l.Error("error writing tcp packet", "err", err)
+				return
 			}
 		case <-done:
 			return
@@ -227,7 +232,7 @@ func XBeeSend(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, trsp
 			l.Info("got msg", "msg", msg)
 			buf := make([]byte, 0)
 
-			binary.LittleEndian.AppendUint32(buf, msg.Id)
+			buf = binary.BigEndian.AppendUint32(buf, msg.Id)
 			buf = append(buf, msg.Data...)
 
 			_, err := xb.Write(buf)

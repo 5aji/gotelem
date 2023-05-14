@@ -72,7 +72,7 @@ type CanWriter struct {
 func (cw *CanWriter) Send(f *Frame) error {
 	ts := time.Now().Unix()
 
-	_, err := fmt.Fprintf(cw.output, "%d %X %X", ts, f.Id, f.Data)
+	_, err := fmt.Fprintf(cw.output, "%d %X %X\n", ts, f.Id, f.Data)
 	return err
 }
 

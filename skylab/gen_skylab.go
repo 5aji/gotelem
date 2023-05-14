@@ -5,7 +5,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 	"strings"
@@ -94,8 +93,10 @@ packets:
     endian: little
     frequency: 10
     data:
+      - name: blah_blah
+        type: uint32_t
       - name: accel_pedal_value
-        type: uint8_t
+        type: float
       - name: brake_pedal_value
         type: uint8_t
 `
@@ -140,9 +141,44 @@ func (d *DataField) ToStructMember() string {
 	return ""
 }
 
+func (d *DataField) MakeMarshal(offset int) string {
+
+	if d.Type == "uint8_t" || d.Type == "int8_t" {
+		return fmt.Sprintf("b[%d] = p.%s", offset, toCamelInitCase(d.Name, true))
+	} else if d.Type == "bitfield" {
+		return "panic(\"bitfields don't work\")"
+	} else if d.Type == "float" {
+
+		return fmt.Sprintf("float32ToBytes(b[%d:], p.%s, false)", offset, toCamelInitCase(d.Name, true))
+
+	} else if t ,ok := typeMap[d.Type]; ok {
+		// it's uint or int of some kind, use endian to write it.
+		return fmt.Sprintf("binary.LittleEndian.Put%s(b[%d:], p.%s)", toCamelInitCase(t, true), offset, toCamelInitCase(d.Name, true))
+	}
+	return "panic(\"failed to do it\")\n"
+}
 
 
-func (p PacketDef) Size() int {
+func (d *DataField) MakeUnmarshal(offset int) string {
+
+		if d.Type == "uint8_t" || d.Type == "int8_t" {
+			return fmt.Sprintf("p.%s = b[%d]", toCamelInitCase(d.Name, true), offset)
+		} else if d.Type == "bitfield" {
+
+		} else if d.Type == "float" {
+
+			return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", toCamelInitCase(d.Name, true), offset)
+
+		} else if t ,ok := typeMap[d.Type]; ok {
+			// it's uint or int of some kind, use endian to write it.
+			return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", toCamelInitCase(d.Name, true), toCamelInitCase(t, true), offset)
+		}
+		panic("unhandled type")
+}
+
+
+
+func (p PacketDef) CalcSize() int {
 	// makes a function that returns the size of the code.
 
 	var size int = 0
@@ -161,21 +197,33 @@ func (p PacketDef) MakeMarshal() string {
 	// we have a b []byte as the correct-size byte array to store in.
 	// and the packet itself is represented as `p`
 	for _, val := range p.Data {
-		if val.Type == "uint8_t" || val.Type == "int8_t" {
-			buf.WriteString(fmt.Sprintf("b[%d] = p.%s\n", offset, toCamelInitCase(val.Name, true)))
-		} else if val.Type == "bitfield" {
 
-		} else if val.Type == "float" {
+		buf.WriteRune('\t')
+		buf.WriteString(val.MakeMarshal(offset))
+		buf.WriteRune('\n')
 
-		} else if name,ok := typeMap[val.Type]; ok {
-
-		}
-
-
+		// shift our offset so that our next write is good.
 		offset += int(typeSizeMap[val.Type])
 	}
 
-	return ""
+
+	return buf.String()
+}
+
+func (p PacketDef) MakeUnmarshal() string {
+	var buf strings.Builder
+
+
+	var offset int = 0
+	for _, val := range p.Data {
+
+		buf.WriteRune('\t')
+		buf.WriteString(val.MakeUnmarshal(offset))
+		buf.WriteRune('\n')
+		offset += int(typeSizeMap[val.Type])
+	}
+
+	return buf.String()
 }
 
 var templ = `
@@ -189,11 +237,21 @@ type {{$structName}} struct {
 }
 
 func (p *{{$structName}}) Id() uint32 {
-	return {{.Id}}
+	return {{printf "0x%X" .Id}}
 }
 
 func (p *{{$structName}}) Size() int {
-	return {{.Size}}
+	return {{.CalcSize}}
+}
+
+func (p *{{$structName}}) Marshal() []byte {
+	b = make([]byte, {{ .Size }})
+{{.MakeMarshal}}
+	return b
+}
+
+func (p *{{$structName}}) Unmarshal(b []byte) {
+	{{.MakeUnmarshal}}	
 }
 `
 
@@ -234,6 +292,9 @@ func toCamelInitCase(s string, initCase bool) string {
 	}
 	return n.String()
 }
+
+
+// stolen float32 to bytes code
 
 func main() {
 	v := &SkylabFile{}
