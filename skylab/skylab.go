@@ -1,9 +1,14 @@
 package skylab
 
 import (
-	"math"
 	"encoding/binary"
+	"math"
 )
+
+/*
+This file provides helpers used for serializing and deserializing skylab packets.
+It contains common code and interfaces.
+*/
 
 
 func float32ToBytes(b []byte, f float32, bigEndian bool) {
@@ -13,7 +18,6 @@ func float32ToBytes(b []byte, f float32, bigEndian bool) {
 	} else {
 		binary.LittleEndian.PutUint32(b, bits)
 	}
-	return
 }
 
 func float32FromBytes(b []byte, bigEndian bool) (f float32) {
@@ -26,11 +30,32 @@ func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 	return math.Float32frombits(bits)
 }
 
-
+// Packet is any Skylab-generated packet.
 type Packet interface {
 	MarshalPacket() ([]byte, error)
 	UnmarshalPacket(p []byte) error
 	Id() uint32
-	Size() int
-	String()
+	Size() uint
+	String() string
+}
+
+type Marshaler interface {
+	MarshalPacket() ([]byte, error)
+}
+type Unmarshaler interface {
+	UnmarshalPacket(p []byte) error
+}
+
+type Ider interface {
+	Id() uint32
+}
+
+type Sizer interface {
+	Size() uint
+}
+
+// CanSend takes a packet and makes a Can frame.
+func CanSend(p Packet) error {
+
+	return nil
 }

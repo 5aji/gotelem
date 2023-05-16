@@ -9,10 +9,23 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"time"
 
-	"golang.org/x/exp/slog"
 	"gopkg.in/yaml.v3"
 )
+
+// SkylabFile is a yaml file from skylab.
+type SkylabFile struct {
+	Packets []PacketDef
+	Boards []BoardSpec
+
+}
+
+type BoardSpec struct {
+	Name string
+	Transmit []string
+	Recieve []string
+}
 
 // data field.
 type DataField struct {
@@ -37,53 +50,8 @@ type PacketDef struct {
 }
 
 // we need to generate bitfield types.
-// packet structs per each packet
-// constancts for packet IDs or a map.
+// constants for packet IDs or a map.
 
-/*
-
-
-example for a simple packet type
-it also needs a json marshalling.
-
-	type BMSMeasurement struct {
-		BatteryVoltage uint16
-		AuxVoltage uint16
-		Current float32
-	}
-
-	func (b *BMSMeasurement)MarshalPacket() ([]byte, error) {
-		pkt := make([]byte, b.Size())
-		binary.LittleEndian.PutUint16(pkt[0:], b.BatteryVoltage * 0.01)
-		binary.LittleEndian.PutUint16(pkt[2:],b.AuxVoltage * 0.001)
-		binary.LittleEndian.PutFloat32(b.Current) // TODO: make float function
-	}
-
-	func (b *BMSMeasurement)UnmarshalPacket(p []byte) error {
-		// the opposite of above.
-
-	}
-
-	func (b *BMSMeasurement) Id() uint32 {
-		return 0x010
-	}
-
-	func (b *BMSMeasurement) Size() int {
-		return 8
-	}
-
-	func (b *BMSMeasurement) String() string {
-		return "blah blah"
-	}
-
-we also need some kind of mechanism to lookup data type.
-
-	func getPkt (id uint32, data []byte) (Packet, error) {
-
-		// insert really massive switch case statement here.
-	}
-
-*/
 
 var test = `
 packets:
@@ -93,17 +61,45 @@ packets:
     endian: little
     frequency: 10
     data:
-      - name: blah_blah
-        type: uint32_t
-      - name: accel_pedal_value
+      - name: reason1
+        type: bitfield
+        bits:
+          - name: OVERVOLT
+          - name: UNDERVOLT
+          - name: OVERTEMP
+          - name: TEMP_DISCONNECT
+          - name: COMM_FAIL
+      - name: reason2
+        type: bitfield
+        bits:
+          - name: HARDWARE
+          - name: KILL_PACKET
+          - name: UKNOWN
+          - name: OVERCURRENT
+          - name: PRECHARGE_FAIL
+          - name: AUX_OVER_UNDER
+      - name: module
+        type: uint16_t
+      - name: value
         type: float
-      - name: brake_pedal_value
-        type: uint8_t
+  - name: bms_module
+    description: Voltage and temperature for a single module
+    id: 0x01C
+    endian: little
+    repeat: 36
+    offset: 1
+    frequency: 2
+    data:
+      - name: voltage
+        type: float
+        units: V
+        conversion: 1
+      - name: temperature
+        type: float
+        units: C
+        conversion: 1
 `
 
-type SkylabFile struct {
-	Packets []PacketDef
-}
 
 var typeMap = map[string]string{
 	"uint16_t": "uint16",
@@ -132,28 +128,30 @@ var typeSizeMap = map[string]uint{
 	"bitfield": 1,
 }
 
-func (d *DataField) ToStructMember() string {
-	if d.Type != "bitfield" {
+func (d *DataField) ToStructMember(parentName string) string {
+	
+	if d.Type == "bitfield" {
+		bfStructName := parentName + toCamelInitCase(d.Name, true)
+		return toCamelInitCase(d.Name, true) + " " + bfStructName
+	} else {
 		return toCamelInitCase(d.Name, true) + " " + typeMap[d.Type]
 	}
-	// it's a bitfield, things are more complicated.
-	slog.Warn("bitfields are skipped for now")
-	return ""
 }
 
 func (d *DataField) MakeMarshal(offset int) string {
 
+	fieldName := toCamelInitCase(d.Name, true)
 	if d.Type == "uint8_t" || d.Type == "int8_t" {
-		return fmt.Sprintf("b[%d] = p.%s", offset, toCamelInitCase(d.Name, true))
+		return fmt.Sprintf("b[%d] = p.%s", offset, fieldName)
 	} else if d.Type == "bitfield" {
-		return "panic(\"bitfields don't work\")"
+		return fmt.Sprintf("b[%d] = p.%s.Marshal()", offset,fieldName)
 	} else if d.Type == "float" {
 
-		return fmt.Sprintf("float32ToBytes(b[%d:], p.%s, false)", offset, toCamelInitCase(d.Name, true))
+		return fmt.Sprintf("float32ToBytes(b[%d:], p.%s, false)", offset, fieldName)
 
 	} else if t ,ok := typeMap[d.Type]; ok {
 		// it's uint or int of some kind, use endian to write it.
-		return fmt.Sprintf("binary.LittleEndian.Put%s(b[%d:], p.%s)", toCamelInitCase(t, true), offset, toCamelInitCase(d.Name, true))
+		return fmt.Sprintf("binary.LittleEndian.Put%s(b[%d:], p.%s)", toCamelInitCase(t, true), offset, fieldName)
 	}
 	return "panic(\"failed to do it\")\n"
 }
@@ -161,19 +159,21 @@ func (d *DataField) MakeMarshal(offset int) string {
 
 func (d *DataField) MakeUnmarshal(offset int) string {
 
-		if d.Type == "uint8_t" || d.Type == "int8_t" {
-			return fmt.Sprintf("p.%s = b[%d]", toCamelInitCase(d.Name, true), offset)
-		} else if d.Type == "bitfield" {
+	fieldName := toCamelInitCase(d.Name, true)
+	if d.Type == "uint8_t" || d.Type == "int8_t" {
+		return fmt.Sprintf("p.%s = b[%d]", fieldName, offset)
+	} else if d.Type == "bitfield" {
+		return fmt.Sprintf("p.%s.Unmarshal(b[%d])", fieldName, offset)
+	} else if d.Type == "float" {
 
-		} else if d.Type == "float" {
+		return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", fieldName, offset)
 
-			return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", toCamelInitCase(d.Name, true), offset)
-
-		} else if t ,ok := typeMap[d.Type]; ok {
-			// it's uint or int of some kind, use endian to write it.
-			return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", toCamelInitCase(d.Name, true), toCamelInitCase(t, true), offset)
-		}
-		panic("unhandled type")
+	} else if t ,ok := typeMap[d.Type]; ok {
+		// it's uint or int of some kind, use endian to write it.
+		// FIXME: support big endian
+		return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", fieldName, toCamelInitCase(t, true), offset)
+	}
+	panic("unhandled type")
 }
 
 
@@ -227,32 +227,138 @@ func (p PacketDef) MakeUnmarshal() string {
 }
 
 var templ = `
-// go code generated! don't touch!
-{{ $structName := camelCase .Name true}}
-// {{$structName}} is {{.Description}}
-type {{$structName}} struct {
-{{- range .Data}}
-	{{.ToStructMember}}
-{{- end}}
+{{ define "packet" }}
+{{- $structName := camelCase .Name true}}
+
+{{- /* generate any bitfield structs */ -}}
+{{range .Data -}}
+{{ if .Bits -}}
+{{- $bfname := (printf "%s%s" $structName (camelCase .Name true)) }}
+type {{$bfname}} struct {
+	{{- range $el := .Bits}}
+	{{camelCase $el.Name true}} bool
+	{{- end}}
 }
 
-func (p *{{$structName}}) Id() uint32 {
-	return {{printf "0x%X" .Id}}
-}
-
-func (p *{{$structName}}) Size() int {
-	return {{.CalcSize}}
-}
-
-func (p *{{$structName}}) Marshal() []byte {
-	b = make([]byte, {{ .Size }})
-{{.MakeMarshal}}
+func (p *{{$bfname}}) Marshal() byte {
+	var b byte
+	{{- range $idx, $el := .Bits}}
+	{{- $bitName := camelCase $el.Name true}}
+	if p.{{$bitName}} {
+		b |= 1 << {{$idx}}
+	}
+	{{- end}}
 	return b
 }
 
-func (p *{{$structName}}) Unmarshal(b []byte) {
-	{{.MakeUnmarshal}}	
+func (p *{{$bfname}}) Unmarshal(b byte) {
+	{{- range $idx, $el := .Bits}}	
+	{{- $bitName := camelCase $el.Name true }}
+	p.{{$bitName}} = (b & (1 << {{ $idx }})) != 0
+	{{- end}}
 }
+{{end}}
+{{- end}}
+
+// {{$structName}} is {{.Description}}
+type {{$structName}} struct {
+{{- range .Data}}
+	{{ if .Units -}} // {{.Conversion}} {{.Units}} {{- end }}
+	{{.ToStructMember $structName }}
+{{- end}}
+{{- if .Repeat }}
+	// Idx is the packet index. The accepted range is 0-{{.Repeat}}
+	Idx uint32
+{{- end }}
+}
+
+func (p *{{$structName}}) Id() uint32 {
+{{- if .Repeat }}
+	return {{ printf "0x%X" .Id }} + p.Idx
+{{- else }}
+	return {{ printf "0x%X" .Id }}
+{{- end }}
+}
+
+func (p *{{$structName}}) Size() uint {
+	return {{.CalcSize}}
+}
+
+func (p *{{$structName}}) MarshalPacket() ([]byte, error) {
+	b := make([]byte, {{ .CalcSize }})
+{{.MakeMarshal}}
+	return b, nil
+}
+
+func (p *{{$structName}}) UnmarshalPacket(b []byte) error {
+{{.MakeUnmarshal}}
+	return nil
+}
+
+func (p *{{$structName}}) String() string {
+	return ""
+}
+
+{{ end }}
+
+{{- /* begin actual file template */ -}}
+
+// generated by gen_skylab.go at {{ Time }} DO NOT EDIT!
+
+package skylab
+
+import (
+	"errors"
+	"encoding/binary"
+)
+
+type SkylabId uint32
+
+const (
+{{- range .Packets }}
+	{{camelCase .Name true}}Id SkylabId = {{.Id | printf "0x%X"}}
+{{- end}}
+)
+
+// list of every packet ID. can be used for O(1) checks.
+var idMap = map[uint32]bool{
+	{{ range $p := .Packets -}}
+	{{ if $p.Repeat }} 
+	{{ range $idx := Nx (int $p.Id) $p.Repeat $p.Offset -}}
+	{{ $idx | printf "0x%X"}}: true,
+	{{ end }}
+	{{- else }}
+	{{ $p.Id | printf "0x%X" }}: true,
+	{{- end}}
+	{{- end}}
+}
+
+func FromCanFrame(id uint32, data []byte) (Packet, error) {
+	if !idMap[id] {
+		return nil, errors.New("Unknown Id")
+	}
+	switch id {
+{{- range $p := .Packets }}
+	{{- if $p.Repeat }}
+	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
+		var res *{{camelCase $p.Name true}}
+		res.UnmarshalPacket(data)
+		res.Idx = id - uint32({{camelCase $p.Name true}}Id)
+		return res, nil
+	{{- else }}
+	case {{ $p.Id | printf "0x%X" }}:
+		var res *{{camelCase $p.Name true}}
+		res.UnmarshalPacket(data)
+		return res, nil
+	{{- end}}
+{{- end}}
+	}
+
+	return nil, errors.New("failed to match Id, something is really wrong!")
+}
+{{range .Packets -}}
+{{template "packet" .}}
+{{- end}}
 `
 
 
@@ -293,10 +399,58 @@ func toCamelInitCase(s string, initCase bool) string {
 	return n.String()
 }
 
+// N takes a start and stop value and returns a stream of 
+// [start, end), including the starting value but excluding the end value.
+func N(start, end int) (stream chan int) {
+    stream = make(chan int)
+    go func() {
+        for i := start; i < end; i++ {
+            stream <- i
+        }
+        close(stream)
+    }()
+    return
+}
 
-// stolen float32 to bytes code
+
+// Nx takes a start, a quantity, and an offset and returns a stream
+// of `times` values which count from start and increment by `offset` each
+// time.
+func Nx (start, times, offset int) (elems []int) {
+	elems = make([]int, times)
+	for i := 0; i < times; i++ {
+		elems[i] = start + offset * i
+	}
+	return 
+}
+
+// dumb function for type conversion between uint32 to integer
+// used for converting packet id to int for other functions internally.
+func uint32ToInt(i uint32) (o int) {
+	return int(i)
+}
+
+
+// strJoin is a remapping of strings.Join so that we can use
+// it in a pipeline more easily.
+func strJoin(delim string, elems []string) string {
+	return strings.Join(elems, delim)
+}
+
+// mapf takes a slice of items and runs printf on each using the given format.
+// it is basically mapping a slice of things to a slice of strings using a format string).
+func mapf(format string, els []int) []string {
+	resp := make([]string, len(els))
+	for idx := range els {
+		resp[idx] = fmt.Sprintf(format, els[idx])
+	}
+	return resp
+}
 
 func main() {
+	// read path as the first arg, glob it for yamls, read each yaml into a skylabFile.
+	// then take each skylab file, put all the packets into one big array.
+	// then we need to make a header template.
 	v := &SkylabFile{}
 
 	err := yaml.Unmarshal([]byte(test), v)
@@ -304,18 +458,27 @@ func main() {
 		fmt.Printf("err %v", err)
 	}
 
-	fmt.Printf("%#v\n", v.Packets)
-
 	fnMap := template.FuncMap{
 		"camelCase": toCamelInitCase,
+		"Time": time.Now,
+		"N": N,
+		"Nx": Nx,
+		"int": uint32ToInt,
+		"strJoin": strJoin,
+		"mapf": mapf,
 	}
-	tmpl, err := template.New("packet").Funcs(fnMap).Parse(templ)
+	tmpl, err := template.New("skylab").Funcs(fnMap).Parse(templ)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = tmpl.Execute(os.Stdout, v.Packets[0])
+
+	f, err := os.Create("skylab_gen.go")
+	if err != nil {
+		panic(err)
+	}
+	err = tmpl.Execute(f, v)
 
 	if err != nil {
 		panic(err)
