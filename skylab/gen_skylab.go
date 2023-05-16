@@ -169,7 +169,7 @@ func (d *DataField) MakeUnmarshal(offset int) string {
 		return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", fieldName, offset)
 
 	} else if t ,ok := typeMap[d.Type]; ok {
-		// it's uint or int of some kind, use endian to write it.
+		// it's uint or int of some kind, use endian to read it.
 		// FIXME: support big endian
 		return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", fieldName, toCamelInitCase(t, true), offset)
 	}
@@ -310,6 +310,7 @@ package skylab
 import (
 	"errors"
 	"encoding/binary"
+	"encoding/json"
 )
 
 type SkylabId uint32
@@ -343,7 +344,7 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
 		var res *{{camelCase $p.Name true}}
 		res.UnmarshalPacket(data)
-		res.Idx = id - uint32({{camelCase $p.Name true}}Id)
+		res.Idx = id - {{$p.Id | printf "0x%X" }}
 		return res, nil
 	{{- else }}
 	case {{ $p.Id | printf "0x%X" }}:
@@ -355,6 +356,34 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	}
 
 	return nil, errors.New("failed to match Id, something is really wrong!")
+}
+
+func FromJson (raw []byte) (Packet, error) {
+	// attempt to parse the JSON to a JSONPacket
+	jp := &JSONPacket{}
+	err := json.Unmarshal(raw, jp)
+	if err != nil {
+		return nil, err
+	}
+	switch jp.Id {
+{{- range $p := .Packets }}
+	{{- if $p.Repeat }}
+	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
+		var res *{{camelCase $p.Name true}}
+		err := json.Unmarshal(jp.Data, res)
+		res.Idx = jp.Id -  {{ $p.Id | printf "0x%X" }}
+		return res, err
+	{{- else }}
+	case {{ $p.Id | printf "0x%X" }}:
+		var res *{{camelCase $p.Name true}}
+		err := json.Unmarshal(jp.Data, res)
+		return res, err
+	{{- end }}
+{{- end }}
+	}
+
+	return nil, errors.New("aaa")
+
 }
 {{range .Packets -}}
 {{template "packet" .}}
@@ -432,7 +461,8 @@ func uint32ToInt(i uint32) (o int) {
 
 
 // strJoin is a remapping of strings.Join so that we can use
-// it in a pipeline more easily.
+// it in a pipeline.
+// 		{{.Names | strJoin ", " }}
 func strJoin(delim string, elems []string) string {
 	return strings.Join(elems, delim)
 }
@@ -447,6 +477,7 @@ func mapf(format string, els []int) []string {
 	return resp
 }
 
+
 func main() {
 	// read path as the first arg, glob it for yamls, read each yaml into a skylabFile.
 	// then take each skylab file, put all the packets into one big array.
@@ -458,6 +489,7 @@ func main() {
 		fmt.Printf("err %v", err)
 	}
 
+	// we add any functions mapping we need here. 
 	fnMap := template.FuncMap{
 		"camelCase": toCamelInitCase,
 		"Time": time.Now,

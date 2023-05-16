@@ -2,6 +2,7 @@ package skylab
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"math"
 )
 
@@ -10,7 +11,7 @@ This file provides helpers used for serializing and deserializing skylab packets
 It contains common code and interfaces.
 */
 
-
+// float32ToBytes is an internal function used to encode a float value to bytes
 func float32ToBytes(b []byte, f float32, bigEndian bool) {
 	bits := math.Float32bits(f)
 	if bigEndian {
@@ -20,6 +21,7 @@ func float32ToBytes(b []byte, f float32, bigEndian bool) {
 	}
 }
 
+// float32FromBytes is an internal function used to decode float value from bytes
 func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 	var bits uint32
 	if bigEndian {
@@ -36,20 +38,24 @@ type Packet interface {
 	UnmarshalPacket(p []byte) error
 	Id() uint32
 	Size() uint
-	String() string
 }
 
+// Marshaler is a packet that can be marshalled into bytes.
 type Marshaler interface {
 	MarshalPacket() ([]byte, error)
 }
+
+// Unmarshaler is a packet that can be unmarshalled from bytes.
 type Unmarshaler interface {
 	UnmarshalPacket(p []byte) error
 }
 
+// Ider is a packet that can get its ID, based on the index of the packet, if any.
 type Ider interface {
 	Id() uint32
 }
 
+// Sizer allows for fast allocation.
 type Sizer interface {
 	Size() uint
 }
@@ -59,3 +65,31 @@ func CanSend(p Packet) error {
 
 	return nil
 }
+
+
+
+// ---- JSON encoding business ----
+
+
+type JSONPacket struct {
+	Id uint32
+	Data json.RawMessage
+}
+
+func ToJson(p Packet) (*JSONPacket, error) {
+
+	d, err := json.Marshal(p)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jp := &JSONPacket{
+		Id: p.Id(),
+		Data: d,
+	}
+	return jp, nil
+}
+
+// we need to be able to parse the JSON as well.
+// this is done using the generator since we can use the switch/case thing.
