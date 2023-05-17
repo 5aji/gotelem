@@ -272,11 +272,14 @@ type {{$structName}} struct {
 {{- end }}
 }
 
-func (p *{{$structName}}) Id() uint32 {
+func (p *{{$structName}}) Id() (uint32, error) {
 {{- if .Repeat }}
-	return {{ printf "0x%X" .Id }} + p.Idx
+	if p.Idx >= {{.Repeat}} {
+		return 0, errors.New("invalid packet index")
+	}
+	return {{ printf "0x%X" .Id }} + p.Idx, nil
 {{- else }}
-	return {{ printf "0x%X" .Id }}
+	return {{ printf "0x%X" .Id }}, nil
 {{- end }}
 }
 
@@ -383,8 +386,8 @@ func FromJson (raw []byte) (Packet, error) {
 	}
 
 	return nil, errors.New("aaa")
-
 }
+
 {{range .Packets -}}
 {{template "packet" .}}
 {{- end}}

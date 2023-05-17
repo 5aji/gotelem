@@ -36,7 +36,7 @@ func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 type Packet interface {
 	MarshalPacket() ([]byte, error)
 	UnmarshalPacket(p []byte) error
-	Id() uint32
+	Id() (uint32, error)
 	Size() uint
 }
 
@@ -52,7 +52,7 @@ type Unmarshaler interface {
 
 // Ider is a packet that can get its ID, based on the index of the packet, if any.
 type Ider interface {
-	Id() uint32
+	Id() (uint32, error)
 }
 
 // Sizer allows for fast allocation.
@@ -60,16 +60,18 @@ type Sizer interface {
 	Size() uint
 }
 
-// CanSend takes a packet and makes a Can frame.
-func CanSend(p Packet) error {
+// CanSend takes a packet and makes CAN framing data.
+func CanSend(p Packet) (id uint32, data []byte, err error) {
 
-	return nil
+	id, err = p.Id()
+	if err != nil {
+		return
+	}
+	data, err = p.MarshalPacket()
+	return
 }
 
-
-
 // ---- JSON encoding business ----
-
 
 type JSONPacket struct {
 	Id uint32
@@ -84,12 +86,16 @@ func ToJson(p Packet) (*JSONPacket, error) {
 		return nil, err
 	}
 
-	jp := &JSONPacket{
-		Id: p.Id(),
-		Data: d,
+	id, err := p.Id()
+	if err != nil {
+		return nil, err
 	}
+
+	jp := &JSONPacket{Id: id, Data: d}
+
 	return jp, nil
 }
 
 // we need to be able to parse the JSON as well.
-// this is done using the generator since we can use the switch/case thing.
+// this is done using the generator since we can use the switch/case thing
+// since it's the fastest
