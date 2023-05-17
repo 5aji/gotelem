@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
@@ -320,9 +321,29 @@ func main() {
 	// then we need to make a header template.
 	v := &SkylabFile{}
 
-	err := yaml.Unmarshal([]byte(test), v)
+	fmt.Printf("running %s on %s\n", os.Args[0], os.Getenv("GOFILE"))
+
+	fmt.Printf("skylab packet definition path is %s\n", os.Args[1])
+
+	fGlob := filepath.Join(os.Args[1], "*.y?ml")
+	files, err := filepath.Glob(fGlob)
 	if err != nil {
-		fmt.Printf("err %v", err)
+		panic(err)
+	}
+	for _, f := range files {
+		fd, err := os.Open(f)
+		if err != nil {
+			fmt.Printf("failed to open file %s:%v\n", f, err)
+		}
+		dec := yaml.NewDecoder(fd)
+		newFile := &SkylabFile{}
+		err = dec.Decode(newFile)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("adding %d packets and %d boards\n", len(newFile.Packets), len(newFile.Boards))
+		v.Packets = append(v.Packets, newFile.Packets...)
+		v.Boards = append(v.Boards, newFile.Boards...)
 	}
 
 	// we add any functions mapping we need here. 
@@ -335,7 +356,8 @@ func main() {
 		"strJoin": strJoin,
 		"mapf": mapf,
 	}
-	tmpl, err := template.New("golang.go.tmpl").Funcs(fnMap).ParseFiles("templates/golang.go.tmpl")
+
+	tmpl, err := template.New("golang.go.tmpl").Funcs(fnMap).ParseGlob("templates/*.go.tmpl")
 
 	if err != nil {
 		panic(err)
@@ -352,3 +374,4 @@ func main() {
 	}
 
 }
+
