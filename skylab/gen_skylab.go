@@ -152,6 +152,12 @@ func (d *DataField) MakeMarshal(offset int) string {
 
 	} else if t ,ok := typeMap[d.Type]; ok {
 		// it's uint or int of some kind, use endian to write it.
+		if strings.HasPrefix(t, "i") {
+			// this means it's a signed integer.
+			// encoding/binary does not support putting signed ints, instead
+			// we should cast it to unsigned and then use the unsigned int functions.
+			return fmt.Sprintf("binary.LittleEndian.PutU%s(b[%d:], u%s(p.%s))", t, offset, t, fieldName)
+		} 
 		return fmt.Sprintf("binary.LittleEndian.Put%s(b[%d:], p.%s)", toCamelInitCase(t, true), offset, fieldName)
 	}
 	return "panic(\"failed to do it\")\n"
@@ -169,9 +175,15 @@ func (d *DataField) MakeUnmarshal(offset int) string {
 
 		return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", fieldName, offset)
 
-	} else if t ,ok := typeMap[d.Type]; ok {
+	} else if t, ok := typeMap[d.Type]; ok {
 		// it's uint or int of some kind, use endian to read it.
 		// FIXME: support big endian
+		if strings.HasPrefix(t, "i") {
+			// this means it's a signed integer.
+			// encoding/binary does not support putting signed ints, instead
+			// we should cast it to unsigned and then use the unsigned int functions.
+			return fmt.Sprintf("p.%s = %s(binary.LittleEndian.U%s(b[%d:]))", fieldName, t, t, offset)
+		} 
 		return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", fieldName, toCamelInitCase(t, true), offset)
 	}
 	panic("unhandled type")
@@ -323,17 +335,22 @@ func main() {
 
 	fmt.Printf("running %s on %s\n", os.Args[0], os.Getenv("GOFILE"))
 
-	fmt.Printf("skylab packet definition path is %s\n", os.Args[1])
+	basePath, err := filepath.Abs(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("skylab packet definition path is %s\n", basePath)
 
-	fGlob := filepath.Join(os.Args[1], "*.y?ml")
+	fGlob := filepath.Join(basePath, "*.y?ml")
 	files, err := filepath.Glob(fGlob)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("found %d files\n", len(files))
 	for _, f := range files {
 		fd, err := os.Open(f)
 		if err != nil {
-			fmt.Printf("failed to open file %s:%v\n", f, err)
+			fmt.Printf("failed to open file %s:%v\n", filepath.Base(f), err)
 		}
 		dec := yaml.NewDecoder(fd)
 		newFile := &SkylabFile{}
@@ -341,7 +358,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("adding %d packets and %d boards\n", len(newFile.Packets), len(newFile.Boards))
+		fmt.Printf("%s: adding %d packets and %d boards\n", filepath.Base(f), len(newFile.Packets), len(newFile.Boards))
 		v.Packets = append(v.Packets, newFile.Packets...)
 		v.Boards = append(v.Boards, newFile.Boards...)
 	}

@@ -15,33 +15,44 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+var serveFlags = []cli.Flag{
+	&cli.StringFlag{
+		Name:    "device",
+		Aliases: []string{"d"},
+		Usage:   "The XBee to connect to",
+		EnvVars: []string{"XBEE_DEVICE"},
+	},
+	&cli.StringFlag{
+		Name:    "logfile",
+		Aliases: []string{"l"},
+		Value:   "log.txt",
+		Usage:   "file to store log to",
+	},
+}
+
 var serveCmd = &cli.Command{
 	Name:    "serve",
 	Aliases: []string{"server", "s"},
 	Usage:   "Start a telemetry server",
-	Flags: []cli.Flag{
-		&cli.BoolFlag{Name: "test", Usage: "use vcan0 test"},
-		&cli.StringFlag{
-			Name:     "device",
-			Aliases:  []string{"d"},
-			Usage:    "The XBee to connect to",
-			EnvVars:  []string{"XBEE_DEVICE"},
-		},
-		&cli.StringFlag{
-			Name:     "can",
-			Aliases:  []string{"c"},
-			Usage:    "CAN device string",
-			EnvVars:  []string{"CAN_DEVICE"},
-		},
-		&cli.StringFlag{
-			Name:    "logfile",
-			Aliases: []string{"l"},
-			Value:   "log.txt",
-			Usage:   "file to store log to",
-		},
-	},
-	Action: serve,
+	Flags:   serveFlags,
+	Action:  serve,
 }
+
+// FIXME: naming
+// this is a server handler for i.e tcp socket, http server, socketCAN, xbee,
+// etc. we can register them in init() functions.
+type testThing func(cCtx *cli.Context, broker *gotelem.Broker) (err error)
+
+type service interface {
+	fmt.Stringer
+	Start(cCtx *cli.Context, broker *gotelem.Broker) (err error)
+	Status()
+}
+
+// this variable stores all the hanlders. It has some basic ones, but also
+// can be extended on certain platforms (see cli/socketcan.go)
+// or if certain features are present (see sqlite.go)
+var serveThings = []testThing{}
 
 func serve(cCtx *cli.Context) error {
 	// TODO: output both to stderr and a file.
@@ -54,7 +65,6 @@ func serve(cCtx *cli.Context) error {
 	// start the can listener
 	// can logger.
 	go CanDump(broker, logger.WithGroup("candump"), done)
-
 
 	if cCtx.String("device") != "" {
 		logger.Info("using xbee device")
@@ -93,9 +103,24 @@ func serve(cCtx *cli.Context) error {
 	}
 }
 
+
+func tcpSvc(ctx *cli.Context, broker *gotelem.Broker) error {
+	// TODO: extract port/ip from cli context.
+	ln, err := net.Listen("tcp", ":8082")
+	if err != nil {
+		fmt.Printf("Error listening: %v\n", err)
+	}
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Printf("error accepting: %v\n", err)
+		}
+		go handleCon(conn, broker, slog.Default().WithGroup("tcp"), ctx.Done())
+	}
+}
+
 func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	//	reader := msgp.NewReader(conn)
-
 
 	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
 
@@ -124,9 +149,7 @@ func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-cha
 
 		}
 	}
-
 }
-
 
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
 func vcanTest(devname string) {
@@ -152,7 +175,6 @@ func vcanTest(devname string) {
 func canHandler(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, devname string) {
 	rxCh := broker.Subscribe("socketcan")
 	sock, err := socketcan.NewCanSocket(devname)
-
 	if err != nil {
 		l.Error("error opening socket", "err", err)
 		return
@@ -208,13 +230,11 @@ func CanDump(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	}
 }
 
-
 func XBeeSend(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, trspt *xbee.Transport) {
 	rxCh := broker.Subscribe("xbee")
 	l.Info("starting xbee send routine")
 
 	xb, err := xbee.NewSession(trspt, l.With("device", trspt.Type()))
-
 	if err != nil {
 		l.Error("failed to start xbee session", "err", err)
 		return
@@ -242,6 +262,4 @@ func XBeeSend(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, trsp
 
 		}
 	}
-	
-
 }

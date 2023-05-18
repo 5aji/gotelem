@@ -36,7 +36,7 @@ func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 type Packet interface {
 	MarshalPacket() ([]byte, error)
 	UnmarshalPacket(p []byte) error
-	Id() (uint32, error)
+	CANId() (uint32, error)
 	Size() uint
 }
 
@@ -52,7 +52,7 @@ type Unmarshaler interface {
 
 // Ider is a packet that can get its ID, based on the index of the packet, if any.
 type Ider interface {
-	Id() (uint32, error)
+	CANId() (uint32, error)
 }
 
 // Sizer allows for fast allocation.
@@ -63,7 +63,7 @@ type Sizer interface {
 // CanSend takes a packet and makes CAN framing data.
 func CanSend(p Packet) (id uint32, data []byte, err error) {
 
-	id, err = p.Id()
+	id, err = p.CANId()
 	if err != nil {
 		return
 	}
@@ -86,7 +86,7 @@ func ToJson(p Packet) (*JSONPacket, error) {
 		return nil, err
 	}
 
-	id, err := p.Id()
+	id, err := p.CANId()
 	if err != nil {
 		return nil, err
 	}

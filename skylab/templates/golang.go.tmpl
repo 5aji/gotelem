@@ -34,7 +34,9 @@ func (p *{{$bfname}}) Unmarshal(b byte) {
 // {{$structName}} is {{.Description}}
 type {{$structName}} struct {
 {{- range .Data}}
-	{{- if .Units -}} // {{.Conversion}} {{.Units}} {{- end }}
+	{{- if .Units }}
+	// {{.Conversion}} {{.Units}}
+	{{- end }}
 	{{ .ToStructMember $structName }} `json:"{{.Name}}"`
 {{- end}}
 {{- if .Repeat }}
@@ -43,7 +45,7 @@ type {{$structName}} struct {
 {{- end }}
 }
 
-func (p *{{$structName}}) Id() (uint32, error) {
+func (p *{{$structName}}) CANId() (uint32, error) {
 {{- if .Repeat }}
 	if p.Idx >= {{.Repeat}} {
 		return 0, errors.New("invalid packet index")
