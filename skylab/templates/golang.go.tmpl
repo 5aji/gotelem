@@ -145,13 +145,13 @@ func FromJson (raw []byte) (Packet, error) {
 {{- range $p := .Packets }}
 	{{- if $p.Repeat }}
 	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
-		var res *{{camelCase $p.Name true}}
+		var res = &{{camelCase $p.Name true}}{}
 		err := json.Unmarshal(jp.Data, res)
 		res.Idx = jp.Id -  {{ $p.Id | printf "0x%X" }}
 		return res, err
 	{{- else }}
 	case {{ $p.Id | printf "0x%X" }}:
-		var res *{{camelCase $p.Name true}}
+		var res = &{{camelCase $p.Name true}}{}
 		err := json.Unmarshal(jp.Data, res)
 		return res, err
 	{{- end }}

@@ -1,0 +1,51 @@
+
+package skylab
+
+import (
+	"testing"
+	"encoding/json"
+)
+
+{{ range .Packets }}
+{{- $structName := camelCase .Name true}}
+func TestMarshalUnmarshal{{$structName}}(t *testing.T) {
+	v := &{{$structName}}{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSON{{$structName}}(t *testing.T) {
+
+	v := &{{$structName}}{}
+	jp, err := ToJson(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rawData, err := json.Marshal(jp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := FromJson(rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *{{$structName}}:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+
+{{- end }}

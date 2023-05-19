@@ -53,55 +53,6 @@ type PacketDef struct {
 // we need to generate bitfield types.
 // constants for packet IDs or a map.
 
-
-var test = `
-packets:
-  - name: dashboard_pedal_percentages
-    description: ADC values from the brake and accelerator pedals.
-    id: 0x290
-    endian: little
-    frequency: 10
-    data:
-      - name: reason1
-        type: bitfield
-        bits:
-          - name: OVERVOLT
-          - name: UNDERVOLT
-          - name: OVERTEMP
-          - name: TEMP_DISCONNECT
-          - name: COMM_FAIL
-      - name: reason2
-        type: bitfield
-        bits:
-          - name: HARDWARE
-          - name: KILL_PACKET
-          - name: UKNOWN
-          - name: OVERCURRENT
-          - name: PRECHARGE_FAIL
-          - name: AUX_OVER_UNDER
-      - name: module
-        type: uint16_t
-      - name: value
-        type: float
-  - name: bms_module
-    description: Voltage and temperature for a single module
-    id: 0x01C
-    endian: little
-    repeat: 36
-    offset: 1
-    frequency: 2
-    data:
-      - name: voltage
-        type: float
-        units: V
-        conversion: 1
-      - name: temperature
-        type: float
-        units: C
-        conversion: 1
-`
-
-
 var typeMap = map[string]string{
 	"uint16_t": "uint16",
 	"uint32_t": "uint32",
@@ -381,14 +332,28 @@ func main() {
 	}
 
 	f, err := os.Create("skylab_gen.go")
+	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
 	err = tmpl.Execute(f, v)
 
+
 	if err != nil {
 		panic(err)
 	}
+
+	tests := tmpl.Lookup("golang_tests.go.tmpl")
+	if tests == nil {
+		panic("tests not found")
+	}
+
+	testF, err := os.Create("skylab_gen_test.go")
+	defer f.Close()
+	if err != nil {
+		panic(err)
+	}
+	tests.Execute(testF, v)
 
 }
 
