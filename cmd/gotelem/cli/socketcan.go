@@ -6,6 +6,7 @@ import (
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 // this file adds socketCAN commands and functionality when building on linux.
@@ -26,16 +27,29 @@ func init() {
 	serveFlags = append(serveFlags, canDevFlag)
 	// add services for server
 
-	serveThings = append(serveThings, socketCANService)
+	serveThings = append(serveThings, &socketCANService{})
 
 	// add can subcommand/actions
 	// TODO: make socketcan utility commands.
+	subCmds = append(subCmds, socketCANCmd)
 }
 
 
 // FIXME: add logging back in since it's missing rn
 
-func socketCANService(cCtx *cli.Context, broker *gotelem.Broker) (err error) {
+
+type socketCANService struct {
+}
+
+func (s *socketCANService) Status() {
+	return
+}
+
+func (s *socketCANService) String() string {
+	return ""
+}
+
+func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 	rxCh := broker.Subscribe("socketCAN")
 	sock, err := socketcan.NewCanSocket(cCtx.String("can"))
 	if err != nil {
@@ -46,10 +60,13 @@ func socketCANService(cCtx *cli.Context, broker *gotelem.Broker) (err error) {
 
 	go func() {
 		for {
-			pkt, _ := sock.Recv()
+			pkt, err := sock.Recv()
+			if err != nil {
+				logger.Warn("error receiving CAN packet", "err", err)
+			}
 			rxCan <- *pkt
 		}
-			
+
 	}()
 
 	for {
@@ -70,8 +87,7 @@ var socketCANCmd = &cli.Command{
 	Name: "can",
 	Usage: "SocketCAN utilities",
 	Description: `
-Various helper utilties for CAN bus on sockets. 
-
+Various helper utilties for CAN bus on sockets.
 	`,
 	Flags: []cli.Flag{
 		canDevFlag,

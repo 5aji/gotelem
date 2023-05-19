@@ -45,14 +45,16 @@ type testThing func(cCtx *cli.Context, broker *gotelem.Broker) (err error)
 
 type service interface {
 	fmt.Stringer
-	Start(cCtx *cli.Context, broker *gotelem.Broker) (err error)
+	Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
 	Status()
 }
 
 // this variable stores all the hanlders. It has some basic ones, but also
 // can be extended on certain platforms (see cli/socketcan.go)
 // or if certain features are present (see sqlite.go)
-var serveThings = []testThing{}
+var serveThings = []service{
+	&XBeeService{},
+}
 
 func serve(cCtx *cli.Context) error {
 	// TODO: output both to stderr and a file.
@@ -65,16 +67,6 @@ func serve(cCtx *cli.Context) error {
 	// start the can listener
 	// can logger.
 	go CanDump(broker, logger.WithGroup("candump"), done)
-
-	if cCtx.String("device") != "" {
-		logger.Info("using xbee device")
-		transport, err := xbee.ParseDeviceString(cCtx.String("device"))
-		if err != nil {
-			logger.Error("failed to open device string", "err", err)
-			os.Exit(1)
-		}
-		go XBeeSend(broker, logger.WithGroup("xbee"), done, transport)
-	}
 
 	if cCtx.String("can") != "" {
 		logger.Info("using can device")
@@ -102,7 +94,6 @@ func serve(cCtx *cli.Context) error {
 		go handleCon(conn, broker, logger.WithGroup("tcp"), done)
 	}
 }
-
 
 func tcpSvc(ctx *cli.Context, broker *gotelem.Broker) error {
 	// TODO: extract port/ip from cli context.
@@ -230,36 +221,60 @@ func CanDump(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	}
 }
 
-func XBeeSend(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, trspt *xbee.Transport) {
-	rxCh := broker.Subscribe("xbee")
-	l.Info("starting xbee send routine")
+type XBeeService struct {
+	session *xbee.Session
+}
 
-	xb, err := xbee.NewSession(trspt, l.With("device", trspt.Type()))
-	if err != nil {
-		l.Error("failed to start xbee session", "err", err)
+func (x *XBeeService) String() string {
+	return "hello"
+}
+func (x *XBeeService) Status() {
+}
+
+
+func (x *XBeeService) Start(cCtx *cli.Context,
+	broker *gotelem.Broker, logger *slog.Logger,
+) (err error) {
+	if cCtx.String("xbee") == "" {
+		logger.Info("not using xbee")
 		return
 	}
+	transport, err := xbee.ParseDeviceString(cCtx.String("device"))
+	if err != nil {
+		logger.Error("failed to open xbee string", "err", err)
+		return
+	}
+	logger.Info("using xbee device", "transport", transport)
+	rxCh := broker.Subscribe("xbee")
 
-	l.Info("connected to local xbee", "addr", xb.LocalAddr())
+	x.session, err = xbee.NewSession(transport, logger.With("device", transport.Type()))
+	if err != nil {
+		logger.Error("failed to start xbee session", "err", err)
+		return
+	}
+	logger.Info("connected to local xbee", "addr", x.session.LocalAddr())
 
 	for {
 		select {
-		case <-done:
-			xb.Close()
+		case <-cCtx.Done():
+			x.session.Close()
 			return
 		case msg := <-rxCh:
 			// TODO: take can message and send it over CAN.
-			l.Info("got msg", "msg", msg)
+			logger.Info("got msg", "msg", msg)
 			buf := make([]byte, 0)
 
 			buf = binary.BigEndian.AppendUint32(buf, msg.Id)
 			buf = append(buf, msg.Data...)
 
-			_, err := xb.Write(buf)
+			_, err := x.session.Write(buf)
 			if err != nil {
-				l.Warn("error writing to xbee", "err", err)
+				logger.Warn("error writing to xbee", "err", err)
 			}
-
 		}
+
+
 	}
+	return
 }
+
