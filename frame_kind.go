@@ -14,9 +14,9 @@ func _() {
 	_ = x[CanErrFrame-3]
 }
 
-const _Kind_name = "SFFEFFRTRERR"
+const _Kind_name = "CanSFFFrameCanEFFFrameCanRTRFrameCanErrFrame"
 
-var _Kind_index = [...]uint8{0, 3, 6, 9, 12}
+var _Kind_index = [...]uint8{0, 11, 22, 33, 44}
 
 func (i Kind) String() string {
 	if i >= Kind(len(_Kind_index)-1) {

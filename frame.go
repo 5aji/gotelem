@@ -20,6 +20,7 @@ type Frame struct {
 	Kind Kind
 }
 
+//go:generate msgp
 type CANFrame interface {
 	Id() uint32
 	Data() []byte
