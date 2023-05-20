@@ -25,9 +25,9 @@ func float32ToBytes(b []byte, f float32, bigEndian bool) {
 func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 	var bits uint32
 	if bigEndian {
-		binary.BigEndian.Uint32(b)
+		bits = binary.BigEndian.Uint32(b)
 	} else {
-		binary.LittleEndian.Uint32(b)
+		bits = binary.LittleEndian.Uint32(b)
 	}
 	return math.Float32frombits(bits)
 }
@@ -74,7 +74,7 @@ func CanSend(p Packet) (id uint32, data []byte, err error) {
 // ---- JSON encoding business ----
 
 type JSONPacket struct {
-	Id uint32
+	Id   uint32
 	Data json.RawMessage
 }
 
@@ -96,6 +96,5 @@ func ToJson(p Packet) (*JSONPacket, error) {
 	return jp, nil
 }
 
-// we need to be able to parse the JSON as well.
-// this is done using the generator since we can use the switch/case thing
-// since it's the fastest
+// we need to be able to parse the JSON as well.  this is done using the
+// generator since we can use the switch/case thing since it's the fastest
