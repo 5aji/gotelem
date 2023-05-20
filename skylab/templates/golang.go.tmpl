@@ -118,13 +118,13 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 {{- range $p := .Packets }}
 	{{- if $p.Repeat }}
 	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
-		var res *{{camelCase $p.Name true}}
+		var res = &{{camelCase $p.Name true}}{}
 		res.UnmarshalPacket(data)
 		res.Idx = id - {{$p.Id | printf "0x%X" }}
 		return res, nil
 	{{- else }}
 	case {{ $p.Id | printf "0x%X" }}:
-		var res *{{camelCase $p.Name true}}
+		var res = &{{camelCase $p.Name true}}{}
 		res.UnmarshalPacket(data)
 		return res, nil
 	{{- end}}
