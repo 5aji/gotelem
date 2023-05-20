@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/kschamplin/gotelem"
-	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
@@ -19,7 +17,7 @@ var serveFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "device",
 		Aliases: []string{"d"},
-		Usage:   "The XBee to connect to",
+		Usage:   "The XBee to connect to. Leave blank to not use XBee",
 		EnvVars: []string{"XBEE_DEVICE"},
 	},
 	&cli.StringFlag{
@@ -38,10 +36,11 @@ var serveCmd = &cli.Command{
 	Action:  serve,
 }
 
+
 // FIXME: naming
 // this is a server handler for i.e tcp socket, http server, socketCAN, xbee,
 // etc. we can register them in init() functions.
-type testThing func(cCtx *cli.Context, broker *gotelem.Broker) (err error)
+type testThing func(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
 
 type service interface {
 	fmt.Stringer
@@ -51,9 +50,16 @@ type service interface {
 
 // this variable stores all the hanlders. It has some basic ones, but also
 // can be extended on certain platforms (see cli/socketcan.go)
-// or if certain features are present (see sqlite.go)
+// or if certain features are present (see cli/sqlite.go)
 var serveThings = []service{
 	&XBeeService{},
+	&CanLoggerService{},
+}
+
+
+func deriveLogger (oldLogger *slog.Logger, svc service) (newLogger *slog.Logger) {
+	newLogger = oldLogger.With("svc", svc.String())
+	return
 }
 
 func serve(cCtx *cli.Context) error {
@@ -65,19 +71,20 @@ func serve(cCtx *cli.Context) error {
 
 	done := make(chan struct{})
 	// start the can listener
-	// can logger.
-	go CanDump(broker, logger.WithGroup("candump"), done)
-
-	if cCtx.String("can") != "" {
-		logger.Info("using can device")
-		go canHandler(broker, logger.With("device", cCtx.String("can")), done, cCtx.String("can"))
-
-		if strings.HasPrefix(cCtx.String("can"), "v") {
-			go vcanTest(cCtx.String("can"))
-		}
-	}
 
 	go broker.Start()
+
+
+	for _, svc := range serveThings {
+		svcLogger := deriveLogger(logger, svc)
+		logger.Info("starting service", "svc", svc.String())
+		go func(mySvc service) {
+			err := mySvc.Start(cCtx, broker, svcLogger)
+			if err != nil {
+				logger.Error("service stopped!", "err", err, "svc", mySvc.String())
+			}
+		}(svc)
+	}
 
 	// tcp listener server.
 	ln, err := net.Listen("tcp", ":8082")
@@ -95,18 +102,24 @@ func serve(cCtx *cli.Context) error {
 	}
 }
 
-func tcpSvc(ctx *cli.Context, broker *gotelem.Broker) error {
+
+type rpcService struct {
+}
+
+func tcpSvc(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error {
 	// TODO: extract port/ip from cli context.
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
 		fmt.Printf("Error listening: %v\n", err)
+		logger.Warn("error listening", "err", err)
+		return err
 	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			fmt.Printf("error accepting: %v\n", err)
+			logger.Warn("error accepting connection", "err", err)
 		}
-		go handleCon(conn, broker, slog.Default().WithGroup("tcp"), ctx.Done())
+		go handleCon(conn, broker, logger.With("addr", conn.RemoteAddr()), ctx.Done())
 	}
 }
 
@@ -143,70 +156,31 @@ func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-cha
 }
 
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
-func vcanTest(devname string) {
-	sock, err := socketcan.NewCanSocket(devname)
-	if err != nil {
-		slog.Error("error opening socket", "err", err)
-		return
-	}
-	testFrame := &gotelem.Frame{
-		Id:   0x234,
-		Kind: gotelem.CanSFFFrame,
-		Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
-	}
-	for {
 
-		slog.Info("sending test packet")
-		sock.Send(testFrame)
-		time.Sleep(1 * time.Second)
-	}
+type CanLoggerService struct {
+	cw gotelem.CanWriter
 }
 
-// connects the broker to a socket can
-func canHandler(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}, devname string) {
-	rxCh := broker.Subscribe("socketcan")
-	sock, err := socketcan.NewCanSocket(devname)
-	if err != nil {
-		l.Error("error opening socket", "err", err)
-		return
-	}
-
-	// start a simple dispatcher that just relays can frames.
-	rxCan := make(chan gotelem.Frame)
-	go func() {
-		for {
-			pkt, err := sock.Recv()
-			if err != nil {
-				l.Warn("error reading SocketCAN", "err", err)
-				return
-			}
-			rxCan <- *pkt
-		}
-	}()
-	for {
-		select {
-		case msg := <-rxCh:
-			l.Info("Sending a CAN bus message", "id", msg.Id, "data", msg.Data)
-			sock.Send(&msg)
-		case msg := <-rxCan:
-			l.Info("Got a CAN bus message", "id", msg.Id, "data", msg.Data)
-			broker.Publish("socketcan", msg)
-		case <-done:
-			sock.Close()
-			return
-		}
-	}
+func (c *CanLoggerService) String() string {
+	return "CanLoggerService"
 }
 
-func CanDump(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
+func (c *CanLoggerService) Status() {
+}
+
+
+func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.Broker, l *slog.Logger) (err error) {
 	rxCh := broker.Subscribe("candump")
 	t := time.Now()
 	fname := fmt.Sprintf("candump_%d-%02d-%02dT%02d.%02d.%02d.txt",
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+	
+	l.Info("logging to file", "filename", fname)
 
 	cw, err := gotelem.OpenCanWriter(fname)
 	if err != nil {
-		slog.Error("error opening file", "err", err)
+		l.Error("error opening file", "filename", fname, "err", err)
+		return
 	}
 
 	for {
@@ -214,7 +188,7 @@ func CanDump(broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 		case msg := <-rxCh:
 
 			cw.Send(&msg)
-		case <-done:
+		case <-cCtx.Done():
 			cw.Close()
 			return
 		}
@@ -232,9 +206,7 @@ func (x *XBeeService) Status() {
 }
 
 
-func (x *XBeeService) Start(cCtx *cli.Context,
-	broker *gotelem.Broker, logger *slog.Logger,
-) (err error) {
+func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
@@ -260,7 +232,6 @@ func (x *XBeeService) Start(cCtx *cli.Context,
 			x.session.Close()
 			return
 		case msg := <-rxCh:
-			// TODO: take can message and send it over CAN.
 			logger.Info("got msg", "msg", msg)
 			buf := make([]byte, 0)
 
@@ -275,6 +246,5 @@ func (x *XBeeService) Start(cCtx *cli.Context,
 
 
 	}
-	return
 }
 
