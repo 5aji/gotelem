@@ -13,6 +13,13 @@ type rpcConnTrack struct {
 	mu sync.RWMutex
 }
 
+
+func NewRPCConnTrack() rpcConnTrack {
+	return rpcConnTrack{
+		ct: make(map[uint32]chan Response),
+	}
+}
+
 // Get attempts to get a random mark from the mutex.
 func (c *rpcConnTrack) Claim() (uint32, chan Response) {
 	var val uint32

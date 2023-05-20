@@ -160,3 +160,11 @@ func MakeRPCError(err error) *RPCError {
 func (r *RPCError) Error() string {
 	return r.Desc
 }
+
+
+
+
+// we need to describe an empty data that will be excluded in the msgp
+// for functions without an argument or return value.
+type RPCEmpty struct {
+}

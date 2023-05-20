@@ -47,7 +47,8 @@ encoding the arguments and decoding the response for a remote procedure.
 package mprpc
 
 import (
-	"net"
+	"errors"
+	"io"
 
 	"github.com/tinylib/msgp/msgp"
 	"golang.org/x/exp/slog"
@@ -66,12 +67,33 @@ type ServiceFunc func(params msgp.Raw) (res msgp.Raw, err error)
 // "server" aka listener, and client.
 type RPCConn struct {
 	// TODO: use io.readwritecloser?
-	conn     net.Conn
+	rwc     io.ReadWriteCloser
 	handlers map[string]ServiceFunc
 
 	ct rpcConnTrack
 
-	slog.Logger
+	logger slog.Logger
+}
+
+
+// creates a new RPC connection on top of an io.ReadWriteCloser. Can be
+// pre-seeded with handlers.
+func NewRPC(rwc io.ReadWriteCloser, logger *slog.Logger, initialHandlers map[string]ServiceFunc) (rpc *RPCConn, err error) {
+
+	rpc = &RPCConn{
+		rwc: rwc,
+		handlers: make(map[string]ServiceFunc),
+		ct: NewRPCConnTrack(),
+	}
+	if initialHandlers != nil {
+		for k,v := range initialHandlers {
+			rpc.handlers[k] = v
+		}
+	}
+
+
+	return
+
 }
 
 // Call intiates an RPC call to a remote method and returns the
@@ -85,7 +107,7 @@ func (rpc *RPCConn) Call(method string, params msgp.Raw) (msgp.Raw, error) {
 
 	req := NewRequest(id, method, params)
 
-	w := msgp.NewWriter(rpc.conn)
+	w := msgp.NewWriter(rpc.rwc)
 	req.EncodeMsg(w)
 
 	// block and wait for response.
@@ -96,14 +118,13 @@ func (rpc *RPCConn) Call(method string, params msgp.Raw) (msgp.Raw, error) {
 
 // Notify initiates a notification to a remote method. It does not
 // return any information. There is no response from the server.
-// This method will not block. An error is returned if there is a local
-// problem.
+// This method will not block nor will it inform the caller if any errors occur.
 func (rpc *RPCConn) Notify(method string, params msgp.Raw) {
 	// TODO: return an error if there's a local problem?
 
 	req := NewNotification(method, params)
 
-	w := msgp.NewWriter(rpc.conn)
+	w := msgp.NewWriter(rpc.rwc)
 	req.EncodeMsg(w)
 
 }
@@ -115,30 +136,46 @@ func (rpc *RPCConn) RegisterHandler(name string, fn ServiceFunc) error {
 	// TODO: mutex lock for sync (or use sync.map?
 	rpc.handlers[name] = fn
 
-	rpc.Logger.Info("registered a new handler", "name", name, "fn", fn)
+	rpc.logger.Info("registered a new handler", "name", name, "fn", fn)
 
 	return nil
 }
 
-// Serve runs the server. It will dispatch goroutines to handle each
-// method call. This can (and should in most cases) be run in the background to allow for
-// sending and receving on the same connection.
+
+// Removes a handler, if it exists. Never errors. No-op if the name
+// is not a registered handler.
+func (rpc *RPCConn) RemoveHandler(name string) error {
+	delete(rpc.handlers, name)
+	return nil
+}
+
+// Serve runs the server. It will dispatch goroutines to handle each method
+// call. This can (and should in most cases) be run in the background to allow
+// for sending and receving on the same connection.
 func (rpc *RPCConn) Serve() {
 
 	// construct a stream reader.
-	msgReader := msgp.NewReader(rpc.conn)
+	msgReader := msgp.NewReader(rpc.rwc)
 
 	// read a request/notification from the connection.
 
 	var rawmsg msgp.Raw = make(msgp.Raw, 0, 4)
 
 	for {
-		rawmsg.DecodeMsg(msgReader)
+		err := rawmsg.DecodeMsg(msgReader)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				rpc.logger.Info("reached EOF, stopping server")
+				return
+			}
+			rpc.logger.Warn("error decoding message", "err", err)
+			continue
+		}
 
 		rpcIntf, err := parseRPC(rawmsg)
 
 		if err != nil {
-			rpc.Logger.Warn("Could not parse RPC message", "err", err)
+			rpc.logger.Warn("Could not parse RPC message", "err", err)
 			continue
 		}
 
@@ -152,13 +189,20 @@ func (rpc *RPCConn) Serve() {
 		case Response:
 			cbCh, err := rpc.ct.Clear(rpcObject.MsgId)
 			if err != nil {
-				rpc.Logger.Warn("could not get rpc callback", "msgid", rpcObject.MsgId, "err", err)
+				rpc.logger.Warn("could not get rpc callback", "msgid", rpcObject.MsgId, "err", err)
 				continue
 			}
 			cbCh <- rpcObject
+		default:
+			panic("invalid rpcObject!")
 		}
 	}
 }
+
+
+
+
+// INTERNAL functions for rpcConn
 
 // dispatch is an internal method used to execute a Request sent by the remote:w
 func (rpc *RPCConn) dispatch(req Request) {
@@ -166,12 +210,12 @@ func (rpc *RPCConn) dispatch(req Request) {
 	result, err := rpc.handlers[req.Method](req.Params)
 
 	if err != nil {
-		rpc.Logger.Warn("error dispatching rpc function", "method", req.Method, "err", err)
+		rpc.logger.Warn("error dispatching rpc function", "method", req.Method, "err", err)
 	}
 	// construct the response frame.
 	var rpcE *RPCError = MakeRPCError(err)
 
-	w := msgp.NewWriter(rpc.conn)
+	w := msgp.NewWriter(rpc.rwc)
 
 	response := NewResponse(req.MsgId, *rpcE, result)
 
@@ -187,7 +231,7 @@ func (rpc *RPCConn) dispatchNotif(req Notification) {
 
 	if err != nil {
 		// log the error, but don't do anything about it.
-		rpc.Logger.Warn("error dispatching rpc function", "method", req.Method, "err", err)
+		rpc.logger.Warn("error dispatching rpc function", "method", req.Method, "err", err)
 	}
 }
 
