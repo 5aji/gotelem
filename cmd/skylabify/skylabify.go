@@ -116,12 +116,11 @@ func run(ctx *cli.Context) (err error) {
 			return err
 		}
 
-		// format and print out.
+		// format and print out the JSON.
 		out, _ := json.Marshal(cd)
-		fmt.Printf("%s\n", out)
+		fmt.Println(string(out))
 
 	}
-	return nil
 }
 
 type candumpJSON struct {
