@@ -6,11 +6,6 @@
 // by writing "adapters" to various devices/formats (xbee, sqlite, network socket, socketcan)
 package gotelem
 
-import (
-	"fmt"
-	"os"
-	"time"
-)
 
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.
@@ -64,31 +59,3 @@ type CanTransciever interface {
 	CanSource
 }
 
-// CanWriter
-type CanWriter struct {
-	output *os.File
-}
-
-// send writes the frame to the file.
-func (cw *CanWriter) Send(f *Frame) error {
-	ts := time.Now().Unix()
-
-	_, err := fmt.Fprintf(cw.output, "%d %X %X\n", ts, f.Id, f.Data)
-	return err
-}
-
-func (cw *CanWriter) Close() error {
-	return cw.output.Close()
-}
-
-func OpenCanWriter(name string) (*CanWriter, error) {
-	f, err := os.Create(name)
-	if err != nil {
-		return nil, err
-	}
-
-	cw := &CanWriter{
-		output: f,
-	}
-	return cw, nil
-}
