@@ -72,7 +72,7 @@ func (p *{{$structName}}) UnmarshalPacket(b []byte) error {
 }
 
 func (p *{{$structName}}) String() string {
-	return ""
+	return "{{ .Name }}"
 }
 
 {{ end }}
