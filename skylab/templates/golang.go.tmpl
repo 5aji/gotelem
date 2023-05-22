@@ -41,7 +41,7 @@ type {{$structName}} struct {
 {{- end}}
 {{- if .Repeat }}
 	// Idx is the packet index. The accepted range is 0-{{.Repeat}}
-	Idx uint32
+	Idx uint32 `json:"idx"`
 {{- end }}
 }
 
@@ -110,6 +110,8 @@ var idMap = map[uint32]bool{
 	{{- end}}
 }
 
+// FromCanFrame creates a Packet from a given CAN ID and data payload.
+// If the CAN ID is unknown, it will return an error.
 func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	if !idMap[id] {
 		return nil, errors.New("Unknown Id")

@@ -284,8 +284,6 @@ func main() {
 	// then we need to make a header template.
 	v := &SkylabFile{}
 
-	fmt.Printf("running %s on %s\n", os.Args[0], os.Getenv("GOFILE"))
-
 	basePath, err := filepath.Abs(os.Args[1])
 	if err != nil {
 		panic(err)
