@@ -20,25 +20,25 @@ var canDevFlag = &cli.StringFlag{
 	Aliases:     []string{"c"},
 	Usage:       "CAN device string",
 	EnvVars:     []string{"CAN_DEVICE"},
-	DefaultText: "vcan0",
 }
 
 // this function sets up the `serve` flags and services that use socketCAN
 func init() {
-	serveFlags = append(serveFlags, &cli.BoolFlag{Name: "test", Usage: "use vcan0 test"})
-	serveFlags = append(serveFlags, canDevFlag)
-	// add services for server
+	// add the CAN flags to the serve command
+	serveCmd.Flags = append(serveCmd.Flags, &cli.BoolFlag{Name: "test", Usage: "use vcan0 test"})
+	serveCmd.Flags = append(serveCmd.Flags, canDevFlag)
 
+	// add services for server
 	serveThings = append(serveThings, &socketCANService{})
 
 	// add can subcommand/actions
-	// TODO: make socketcan utility commands.
+	// TODO: make more utility commands.
 	subCmds = append(subCmds, socketCANCmd)
 }
 
-// FIXME: add logging back in since it's missing rn
 
 type socketCANService struct {
+	name string
 	sock socketcan.CanSocket
 }
 
@@ -47,23 +47,37 @@ func (s *socketCANService) Status() {
 }
 
 func (s *socketCANService) String() string {
-	return ""
+	if s.name == "" {
+		return "socketCAN"
+	}
+	return s.name
 }
 
 func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 	// vcan0 demo
 
+	if cCtx.String("can") == "" {
+		return
+	}
+
 	if strings.HasPrefix(cCtx.String("can"), "v") {
 		go vcanTest(cCtx.String("can"))
 	}
 
-	rxCh := broker.Subscribe("socketCAN")
 	sock, err := socketcan.NewCanSocket(cCtx.String("can"))
 	if err != nil {
 		logger.Error("error opening socket", "err", err)
 		return
 	}
+	defer sock.Close()
+	s.name = sock.Name()
 
+	// connect to the broker
+	rxCh := broker.Subscribe("socketCAN")
+	defer broker.Unsubscribe("socketCAN")
+
+
+	// make a channel to receive socketCAN frames.
 	rxCan := make(chan gotelem.Frame)
 
 	go func() {

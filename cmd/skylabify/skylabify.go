@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
 )
@@ -91,7 +92,7 @@ func run(ctx *cli.Context) (err error) {
 
 		segments := strings.Split(dumpLine, " ")
 
-		var cd candumpJSON
+		var cd gotelem.CANDumpJSON
 		// this is cursed but easiest way to get a float from a string.
 		fmt.Sscanf(segments[0], "(%g)", &cd.Timestamp)
 
@@ -121,10 +122,4 @@ func run(ctx *cli.Context) (err error) {
 		fmt.Println(string(out))
 
 	}
-}
-
-type candumpJSON struct {
-	Timestamp float64       `json:"ts"`
-	Id        uint64        `json:"id"`
-	Data      skylab.Packet `json:"data"`
 }

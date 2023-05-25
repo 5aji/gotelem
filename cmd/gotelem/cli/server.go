@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/kschamplin/gotelem"
@@ -15,8 +16,8 @@ import (
 
 var serveFlags = []cli.Flag{
 	&cli.StringFlag{
-		Name:    "device",
-		Aliases: []string{"d"},
+		Name:    "xbee",
+		Aliases: []string{"x"},
 		Usage:   "The XBee to connect to. Leave blank to not use XBee",
 		EnvVars: []string{"XBEE_DEVICE"},
 	},
@@ -75,16 +76,23 @@ func serve(cCtx *cli.Context) error {
 	go broker.Start()
 
 
+	wg := sync.WaitGroup{}
 	for _, svc := range serveThings {
 		svcLogger := deriveLogger(logger, svc)
 		logger.Info("starting service", "svc", svc.String())
 		go func(mySvc service) {
+			wg.Add(1)
+			defer wg.Done()
 			err := mySvc.Start(cCtx, broker, svcLogger)
 			if err != nil {
 				logger.Error("service stopped!", "err", err, "svc", mySvc.String())
 			}
 		}(svc)
 	}
+
+
+	wg.Wait()
+
 
 	// tcp listener server.
 	ln, err := net.Listen("tcp", ":8082")
@@ -110,7 +118,6 @@ func tcpSvc(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error
 	// TODO: extract port/ip from cli context.
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
-		fmt.Printf("Error listening: %v\n", err)
 		logger.Warn("error listening", "err", err)
 		return err
 	}
@@ -195,6 +202,9 @@ func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.Broker, l *
 	}
 }
 
+
+// XBeeService provides data over an Xbee device, either by serial or TCP
+// based on the url provided in the xbee flag. see the description for details.
 type XBeeService struct {
 	session *xbee.Session
 }

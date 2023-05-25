@@ -1,6 +1,10 @@
 package gotelem
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"sync"
+)
 
 type BrokerRequest struct {
 	Source string // the name of the sender
@@ -82,4 +86,53 @@ func (b *Broker) Unsubscribe(name string) {
 	b.unsubCh <- bc
 }
 
-// TODO: don't use channels for everything to avoid using a mutex
+
+
+
+type JBroker struct {
+	subs map[string] chan CANDumpJSON // contains the channel for each subsciber
+
+	lock sync.RWMutex
+}
+
+func (b *JBroker) Subscribe(name string) (ch chan CANDumpJSON, err error) {
+	// get rw lock.
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	_, ok := b.subs[name]
+	if ok {
+		return nil, errors.New("name already in use")
+	}
+	ch = make(chan CANDumpJSON, 10)
+
+	return
+}
+
+func (b *JBroker) Unsubscribe(name string) {
+	// if the channel is in use, close it, else do nothing.
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	ch, ok := b.subs[name]
+	if ok {
+		close(ch)
+	}
+	delete(b.subs, name)
+}
+
+func (b *JBroker) Publish(sender string, message CANDumpJSON) {
+	go func() {
+		b.lock.RLock()
+		defer b.lock.RUnlock()
+		for name, ch := range b.subs {
+			if name == sender {
+				continue
+			}
+			// non blocking send.
+			select {
+			case ch <- message:
+			default:
+			}
+		}
+
+	}()
+}

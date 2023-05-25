@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"syscall"
 
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
@@ -22,14 +23,13 @@ const (
 	keyIODevice ctxKey = iota
 )
 
-var xbeeDeviceFlag =  &cli.StringFlag{
-			Name:     "device",
-			Aliases:  []string{"d"},
-			Usage:    "The XBee to connect to",
-			Required: true,
-			EnvVars:  []string{"XBEE_DEVICE"},
-		}
-
+var xbeeDeviceFlag = &cli.StringFlag{
+	Name:     "device",
+	Aliases:  []string{"d"},
+	Usage:    "The XBee to connect to",
+	Required: true,
+	EnvVars:  []string{"XBEE_DEVICE"},
+}
 
 var xbeeCmd = &cli.Command{
 	Name:    "xbee",
@@ -92,7 +92,6 @@ writtend to stdout.
 }
 
 func xbeeInfo(ctx *cli.Context) error {
-
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 	transport := ctx.Context.Value(keyIODevice).(*xbee.Transport)
 	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
@@ -106,14 +105,14 @@ func xbeeInfo(ctx *cli.Context) error {
 	}
 	fmt.Printf("Network ID: %X\n", binary.BigEndian.Uint16(b))
 	return nil
-
 }
+
 func netcat(ctx *cli.Context) error {
 	if ctx.Args().Len() < 1 {
 
 		cli.ShowSubcommandHelp(ctx)
 
-		return cli.Exit("missing [addr] argument", 1)
+		return cli.Exit("missing [addr] argument", int(syscall.EINVAL))
 
 	}
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
@@ -141,4 +140,3 @@ func netcat(ctx *cli.Context) error {
 
 	return nil
 }
-

@@ -11,8 +11,8 @@ import (
 
 // CanWriter
 type CanWriter struct {
-	output *os.File
-	cd candumpJSON
+	output  *os.File
+	cd      CANDumpJSON
 	jsonBuf []byte
 }
 
@@ -51,7 +51,7 @@ func OpenCanWriter(name string) (*CanWriter, error) {
 	return cw, nil
 }
 
-type candumpJSON struct {
+type CANDumpJSON struct {
 	Timestamp float64       `json:"ts"`
 	Id        uint64        `json:"id"`
 	Data      skylab.Packet `json:"data"`
