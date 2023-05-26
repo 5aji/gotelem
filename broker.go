@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"golang.org/x/exp/slog"
 )
 
 type BrokerRequest struct {
@@ -23,15 +25,6 @@ type Broker struct {
 	unsubCh chan BrokerClient
 }
 
-func NewBroker(bufsize int) *Broker {
-	b := &Broker{
-		subs:      make(map[string]chan Frame),
-		publishCh: make(chan BrokerRequest, 3),
-		subsCh:    make(chan BrokerClient, 3),
-		unsubCh:   make(chan BrokerClient, 3),
-	}
-	return b
-}
 
 // Start runs the broker and sends messages to the subscribers (but not the sender)
 func (b *Broker) Start() {
@@ -90,12 +83,23 @@ func (b *Broker) Unsubscribe(name string) {
 
 
 type JBroker struct {
-	subs map[string] chan CANDumpJSON // contains the channel for each subsciber
+	subs map[string] chan CANDumpEntry // contains the channel for each subsciber
 
+	logger *slog.Logger
 	lock sync.RWMutex
+	bufsize int // size of chan buffer in elements.
 }
 
-func (b *JBroker) Subscribe(name string) (ch chan CANDumpJSON, err error) {
+
+func NewBroker(bufsize int, logger *slog.Logger) *JBroker {
+	return &JBroker{
+		subs: make(map[string]chan CANDumpEntry),
+		logger: logger,
+		bufsize: bufsize,
+	}
+}
+
+func (b *JBroker) Subscribe(name string) (ch chan CANDumpEntry, err error) {
 	// get rw lock.
 	b.lock.Lock()
 	defer b.lock.Unlock()
@@ -103,36 +107,33 @@ func (b *JBroker) Subscribe(name string) (ch chan CANDumpJSON, err error) {
 	if ok {
 		return nil, errors.New("name already in use")
 	}
-	ch = make(chan CANDumpJSON, 10)
+	b.logger.Info("new subscriber", "name", name)
+	ch = make(chan CANDumpEntry, b.bufsize)
 
 	return
 }
 
 func (b *JBroker) Unsubscribe(name string) {
-	// if the channel is in use, close it, else do nothing.
+	// remove the channel from the map. We don't need to close it.
 	b.lock.Lock()
 	defer b.lock.Unlock()
-	ch, ok := b.subs[name]
-	if ok {
-		close(ch)
-	}
 	delete(b.subs, name)
 }
 
-func (b *JBroker) Publish(sender string, message CANDumpJSON) {
-	go func() {
-		b.lock.RLock()
-		defer b.lock.RUnlock()
-		for name, ch := range b.subs {
-			if name == sender {
-				continue
-			}
-			// non blocking send.
-			select {
-			case ch <- message:
-			default:
-			}
+func (b *JBroker) Publish(sender string, message CANDumpEntry) {
+	b.lock.RLock()
+	defer b.lock.RUnlock()
+	for name, ch := range b.subs {
+		if name == sender {
+			continue
 		}
+		// non blocking send.
+		select {
+		case ch <- message:
+			b.logger.Debug("sent message", "dest", name, "src", sender)
+		default:
+			b.logger.Warn("recipient buffer full", "dest", name)
+		}
+	}
 
-	}()
 }

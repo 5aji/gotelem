@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -45,7 +46,7 @@ type testThing func(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logg
 
 type service interface {
 	fmt.Stringer
-	Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
+	Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error)
 	Status()
 }
 
@@ -68,12 +69,11 @@ func serve(cCtx *cli.Context) error {
 	logger := slog.New(slog.NewTextHandler(os.Stderr))
 
 	slog.SetDefault(logger)
-	broker := gotelem.NewBroker(3)
+	broker := gotelem.NewBroker(3, logger.WithGroup("broker"))
 
 	done := make(chan struct{})
 	// start the can listener
 
-	go broker.Start()
 
 
 	wg := sync.WaitGroup{}
@@ -176,27 +176,31 @@ func (c *CanLoggerService) Status() {
 }
 
 
-func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.Broker, l *slog.Logger) (err error) {
-	rxCh := broker.Subscribe("candump")
+func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
+	rxCh, err := broker.Subscribe("candump")
+	if err != nil {
+		return err
+	}
 	t := time.Now()
 	fname := fmt.Sprintf("candump_%d-%02d-%02dT%02d.%02d.%02d.txt",
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 	
 	l.Info("logging to file", "filename", fname)
 
-	cw, err := gotelem.OpenCanWriter(fname)
+	f, err := os.Create(fname)
 	if err != nil {
 		l.Error("error opening file", "filename", fname, "err", err)
 		return
 	}
+	enc := json.NewEncoder(f)
 
 	for {
 		select {
 		case msg := <-rxCh:
 
-			cw.Send(&msg)
+			enc.Encode(msg)
 		case <-cCtx.Done():
-			cw.Close()
+			f.Close()
 			return
 		}
 	}
@@ -216,18 +220,21 @@ func (x *XBeeService) Status() {
 }
 
 
-func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
+func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
 	}
-	transport, err := xbee.ParseDeviceString(cCtx.String("device"))
+	transport, err := xbee.ParseDeviceString(cCtx.String("xbee"))
 	if err != nil {
 		logger.Error("failed to open xbee string", "err", err)
 		return
 	}
 	logger.Info("using xbee device", "transport", transport)
-	rxCh := broker.Subscribe("xbee")
+	rxCh, err := broker.Subscribe("xbee")
+	if err != nil {
+		logger.Error("failed to subscribe to broker", "err", err)
+	}
 
 	x.session, err = xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
@@ -245,8 +252,7 @@ func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *s
 			logger.Info("got msg", "msg", msg)
 			buf := make([]byte, 0)
 
-			buf = binary.BigEndian.AppendUint32(buf, msg.Id)
-			buf = append(buf, msg.Data...)
+			// FIXME: implement serialzation over xbee.
 
 			_, err := x.session.Write(buf)
 			if err != nil {

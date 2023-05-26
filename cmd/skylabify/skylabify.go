@@ -92,7 +92,7 @@ func run(ctx *cli.Context) (err error) {
 
 		segments := strings.Split(dumpLine, " ")
 
-		var cd gotelem.CANDumpJSON
+		var cd gotelem.CANDumpEntry
 		// this is cursed but easiest way to get a float from a string.
 		fmt.Sscanf(segments[0], "(%g)", &cd.Timestamp)
 
