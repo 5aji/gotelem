@@ -114,7 +114,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 				continue
 			}
 			cde := gotelem.CANDumpEntry{
-				Timestamp: float64(time.Now().Unix()),
+				Timestamp: float64(time.Now().UnixNano()) / 1e9,
 				Id: uint64(msg.Id),
 				Data: p,
 			}

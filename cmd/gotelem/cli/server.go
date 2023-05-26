@@ -164,7 +164,7 @@ func (c *CanLoggerService) Status() {
 
 
 func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
-	rxCh, err := broker.Subscribe("candump")
+	rxCh, err := broker.Subscribe("canDump")
 	if err != nil {
 		return err
 	}
@@ -186,6 +186,7 @@ func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l 
 		case msg := <-rxCh:
 
 			enc.Encode(msg)
+
 		case <-cCtx.Done():
 			f.Close()
 			return
@@ -230,6 +231,7 @@ func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *
 	}
 	logger.Info("connected to local xbee", "addr", x.session.LocalAddr())
 
+	encode := json.NewEncoder(x.session)
 	for {
 		select {
 		case <-cCtx.Done():
@@ -237,11 +239,7 @@ func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *
 			return
 		case msg := <-rxCh:
 			logger.Info("got msg", "msg", msg)
-			buf := make([]byte, 0)
-
-			// FIXME: implement serialzation over xbee.
-
-			_, err := x.session.Write(buf)
+			encode.Encode(msg)
 			if err != nil {
 				logger.Warn("error writing to xbee", "err", err)
 			}

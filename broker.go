@@ -110,6 +110,7 @@ func (b *JBroker) Subscribe(name string) (ch chan CANDumpEntry, err error) {
 	b.logger.Info("new subscriber", "name", name)
 	ch = make(chan CANDumpEntry, b.bufsize)
 
+	b.subs[name] = ch
 	return
 }
 
