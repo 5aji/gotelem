@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -56,6 +55,7 @@ type service interface {
 var serveThings = []service{
 	&XBeeService{},
 	&CanLoggerService{},
+	&rpcService{},
 }
 
 
@@ -71,50 +71,38 @@ func serve(cCtx *cli.Context) error {
 	slog.SetDefault(logger)
 	broker := gotelem.NewBroker(3, logger.WithGroup("broker"))
 
-	done := make(chan struct{})
-	// start the can listener
-
-
-
 	wg := sync.WaitGroup{}
 	for _, svc := range serveThings {
-		svcLogger := deriveLogger(logger, svc)
 		logger.Info("starting service", "svc", svc.String())
-		go func(mySvc service) {
-			wg.Add(1)
+		wg.Add(1)
+		go func(mySvc service, baseLogger *slog.Logger) {
+			svcLogger := logger.With("svc", mySvc.String())
 			defer wg.Done()
 			err := mySvc.Start(cCtx, broker, svcLogger)
 			if err != nil {
 				logger.Error("service stopped!", "err", err, "svc", mySvc.String())
 			}
-		}(svc)
+		}(svc, logger)
 	}
 
 
 	wg.Wait()
 
 
-	// tcp listener server.
-	ln, err := net.Listen("tcp", ":8082")
-	if err != nil {
-		fmt.Printf("Error listening: %v\n", err)
-	}
-	logger.Info("TCP listener started", "addr", ln.Addr().String())
-
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			fmt.Printf("error accepting: %v\n", err)
-		}
-		go handleCon(conn, broker, logger.WithGroup("tcp"), done)
-	}
+	return nil
 }
 
 
 type rpcService struct {
 }
 
-func tcpSvc(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error {
+func (r *rpcService) Status() {
+}
+func (r *rpcService) String() string {
+	return "rpcService"
+}
+
+func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) error {
 	// TODO: extract port/ip from cli context.
 	ln, err := net.Listen("tcp", ":8082")
 	if err != nil {
@@ -130,30 +118,30 @@ func tcpSvc(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error
 	}
 }
 
-func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
+func handleCon(conn net.Conn, broker *gotelem.JBroker, l *slog.Logger, done <-chan struct{}) {
 	//	reader := msgp.NewReader(conn)
 
 	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
 
 	l.Info("started handling", "name", subname)
-
-	rxCh := broker.Subscribe(subname)
-	defer broker.Unsubscribe(subname)
 	defer conn.Close()
 
+	rxCh, err := broker.Subscribe(subname)
+	if err != nil {
+		l.Error("error subscribing to connection", "err", err)
+		return
+	}
+	defer broker.Unsubscribe(subname)
+
+	jEncode := json.NewEncoder(conn)
 	for {
 		select {
 		case msg := <-rxCh:
 			l.Info("got packet")
 			// FIXME: poorly optimized
-			buf := make([]byte, 0)
-			buf = binary.BigEndian.AppendUint32(buf, msg.Id)
-			buf = append(buf, msg.Data...)
-
-			_, err := conn.Write(buf)
+			err := jEncode.Encode(msg)
 			if err != nil {
-				l.Error("error writing tcp packet", "err", err)
-				return
+				l.Warn("error encoding json", "err", err)
 			}
 		case <-done:
 			return
@@ -165,7 +153,6 @@ func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-cha
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
 
 type CanLoggerService struct {
-	cw gotelem.CanWriter
 }
 
 func (c *CanLoggerService) String() string {

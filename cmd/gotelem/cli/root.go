@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -20,8 +19,6 @@ func Execute() {
 		Usage: "see everything",
 		Commands: subCmds,
 	}
-
-	fmt.Println(serveFlags)
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
@@ -53,10 +54,11 @@ func (s *socketCANService) String() string {
 	return s.name
 }
 
-func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
+func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
 	// vcan0 demo
 
 	if cCtx.String("can") == "" {
+		logger.Info("no can device provided")
 		return
 	}
 
@@ -73,7 +75,10 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logg
 	s.name = sock.Name()
 
 	// connect to the broker
-	rxCh := broker.Subscribe("socketCAN")
+	rxCh, err := broker.Subscribe("socketCAN")
+	if err != nil {
+		return err
+	}
 	defer broker.Unsubscribe("socketCAN")
 
 
@@ -90,12 +95,30 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logg
 		}
 	}()
 
+	var frame gotelem.Frame
 	for {
 		select {
 		case msg := <-rxCh:
-			sock.Send(&msg)
+			
+			id, d, _ := skylab.CanSend(msg.Data)
+
+			frame.Id = id
+			frame.Data = d
+
+			sock.Send(&frame)
+
 		case msg := <-rxCan:
-			broker.Publish("socketCAN", msg)
+			p, err := skylab.FromCanFrame(msg.Id, msg.Data)
+			if err != nil {
+				logger.Warn("error parsing can packet", "id", msg.Id)
+				continue
+			}
+			cde := gotelem.CANDumpEntry{
+				Timestamp: float64(time.Now().Unix()),
+				Id: uint64(msg.Id),
+				Data: p,
+			}
+			broker.Publish("socketCAN", cde)
 		case <-cCtx.Done():
 			return
 		}
@@ -133,15 +156,22 @@ func vcanTest(devname string) {
 		slog.Error("error opening socket", "err", err)
 		return
 	}
-	testFrame := &gotelem.Frame{
-		Id:   0x234,
-		Kind: gotelem.CanSFFFrame,
-		Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
+	testPkt := skylab.WslMotorCurrentVector{
+		Iq: 0.1,
+		Id: 0.2,
 	}
-	for {
 
+	id, data, err := skylab.CanSend(&testPkt)
+	testFrame := gotelem.Frame{
+		Id: id,
+		Data: data,
+		Kind: gotelem.CanSFFFrame,
+	}
+
+
+	for {
 		slog.Info("sending test packet")
-		sock.Send(testFrame)
+		sock.Send(&testFrame)
 		time.Sleep(1 * time.Second)
 	}
 }
