@@ -104,7 +104,7 @@ func (r *rpcService) String() string {
 
 func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) error {
 	// TODO: extract port/ip from cli context.
-	ln, err := net.Listen("tcp", ":8082")
+	ln, err := net.Listen("tcp", "0.0.0.0:8082")
 	if err != nil {
 		logger.Warn("error listening", "err", err)
 		return err
