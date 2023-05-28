@@ -6,6 +6,7 @@ import (
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/mprpc"
 	"github.com/urfave/cli/v2"
+	imgui "github.com/AllenDang/cimgui-go"
 )
 
 
@@ -29,6 +30,19 @@ var clientCmd = &cli.Command{
 	Description: `
 Connects to a gotelem server or relay. Can be used to 
 	`,
+	Action: client,
+}
+
+
+func loop() {
+	imgui.ShowDemoWindow()	
+}
+
+func client(ctx *cli.Context) error {
+	backend := imgui.CreateBackend()
+	backend.CreateWindow("hi there", 1200, 900, 0)
+	backend.Run(loop)
+	return nil
 }
 
 
