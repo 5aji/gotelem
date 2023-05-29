@@ -11,6 +11,7 @@ require (
 	go.bug.st/serial v1.5.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 	golang.org/x/sys v0.7.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -20,5 +21,4 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

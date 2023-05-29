@@ -4,6 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+
+	// this is needed so that we can run make_skylab.go
+	// without this, the yaml library will be removed
+	// when we run `go mod tidy`
+	_ "gopkg.in/yaml.v3"
 )
 
 /*
@@ -90,7 +95,6 @@ type BusEvent struct {
 	Data      Packet  `json:"data"`
 }
 
-// FIXME: handle Name field.
 func (e *BusEvent) MarshalJSON() (b []byte, err error) {
 	// create the underlying raw event
 	j := &jsonRawEvent{
@@ -125,7 +129,6 @@ func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// FIXME: handle name field.
 func (e *BusEvent) MarshalMsg(b []byte) ([]byte, error) {
 
 	// we need to send the bytes as a []byte instead of
