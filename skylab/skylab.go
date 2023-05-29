@@ -38,6 +38,7 @@ type Packet interface {
 	UnmarshalPacket(p []byte) error
 	CANId() (uint32, error)
 	Size() uint
+	String() string
 }
 
 // Marshaler is a packet that can be marshalled into bytes.
@@ -81,7 +82,7 @@ type jsonRawEvent struct {
 	Data      json.RawMessage
 }
 
-// BusEvent is a timestamped Skylab packet designed to be serialized.
+// BusEvent is a timestamped Skylab packet
 type BusEvent struct {
 	Timestamp float64 `json:"ts"`
 	Id        uint64  `json:"id"`
@@ -95,6 +96,7 @@ func (e *BusEvent) MarshalJSON() (b []byte, err error) {
 	j := &jsonRawEvent{
 		Timestamp: e.Timestamp,
 		Id:        uint32(e.Id),
+		Name:      e.Data.String(),
 	}
 	// now we use the magic Packet -> map[string]interface{} function
 	j.Data, err = json.Marshal(e.Data)
@@ -118,6 +120,7 @@ func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	e.Timestamp = jRaw.Timestamp
 	e.Id = uint64(jRaw.Id)
 	e.Data, err = FromJson(jRaw.Id, jRaw.Data)
+	e.Name = e.Data.String()
 
 	return err
 }
@@ -149,6 +152,7 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 	e.Timestamp = rawEv.Timestamp
 	e.Id = uint64(rawEv.Id)
 	e.Data, err = FromCanFrame(rawEv.Id, rawEv.Data)
+	e.Name = e.Data.String()
 
 	return remain, err
 }
