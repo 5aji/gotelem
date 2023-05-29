@@ -11,7 +11,7 @@ type {{$bfname}} struct {
 	{{- end}}
 }
 
-func (p *{{$bfname}}) Marshal() byte {
+func (p *{{$bfname}}) MarshalByte() byte {
 	var b byte
 	{{- range $idx, $el := .Bits}}
 	{{- $bitName := camelCase $el.Name true}}
@@ -22,7 +22,7 @@ func (p *{{$bfname}}) Marshal() byte {
 	return b
 }
 
-func (p *{{$bfname}}) Unmarshal(b byte) {
+func (p *{{$bfname}}) UnmarshalByte(b byte) {
 	{{- range $idx, $el := .Bits}}	
 	{{- $bitName := camelCase $el.Name true }}
 	p.{{$bitName}} = (b & (1 << {{ $idx }})) != 0
@@ -114,7 +114,7 @@ var idMap = map[uint32]bool{
 // If the CAN ID is unknown, it will return an error.
 func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	if !idMap[id] {
-		return nil, errors.New("Unknown Id")
+		return nil, errors.New("unknown id")
 	}
 	switch id {
 {{- range $p := .Packets }}
@@ -133,34 +133,32 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 {{- end}}
 	}
 
-	return nil, errors.New("failed to match Id, something is really wrong!")
+	return nil, errors.New("failed to match Id, something is really wrong")
 }
 
-func FromJson (raw []byte) (Packet, error) {
-	// attempt to parse the JSON to a JSONPacket
-	jp := &JSONPacket{}
-	err := json.Unmarshal(raw, jp)
-	if err != nil {
-		return nil, err
+
+func FromJson (id uint32, raw []byte) (Packet, error) {
+	if !idMap[id] {
+		return nil, errors.New("unknown id")
 	}
-	switch jp.Id {
+	switch id {
 {{- range $p := .Packets }}
 	{{- if $p.Repeat }}
 	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
 		var res = &{{camelCase $p.Name true}}{}
-		err := json.Unmarshal(jp.Data, res)
-		res.Idx = jp.Id -  {{ $p.Id | printf "0x%X" }}
+		err := json.Unmarshal(raw, res)
+		res.Idx = id -  {{ $p.Id | printf "0x%X" }}
 		return res, err
 	{{- else }}
 	case {{ $p.Id | printf "0x%X" }}:
 		var res = &{{camelCase $p.Name true}}{}
-		err := json.Unmarshal(jp.Data, res)
+		err := json.Unmarshal(raw, res)
 		return res, err
 	{{- end }}
 {{- end }}
 	}
 
-	return nil, errors.New("aaa")
+	return nil, errors.New("failed to match id")
 }
 
 {{range .Packets -}}

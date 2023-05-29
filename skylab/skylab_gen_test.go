@@ -22,17 +22,14 @@ func TestMarshalUnmarshalBmsMeasurement(t *testing.T) {
 func TestJSONBmsMeasurement(t *testing.T) {
 
 	v := &BmsMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,17 +58,14 @@ func TestMarshalUnmarshalBatteryStatus(t *testing.T) {
 func TestJSONBatteryStatus(t *testing.T) {
 
 	v := &BatteryStatus{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,17 +94,14 @@ func TestMarshalUnmarshalBmsKillReason(t *testing.T) {
 func TestJSONBmsKillReason(t *testing.T) {
 
 	v := &BmsKillReason{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,17 +130,14 @@ func TestMarshalUnmarshalBmsModuleMinMax(t *testing.T) {
 func TestJSONBmsModuleMinMax(t *testing.T) {
 
 	v := &BmsModuleMinMax{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,17 +166,14 @@ func TestMarshalUnmarshalBmsSoc(t *testing.T) {
 func TestJSONBmsSoc(t *testing.T) {
 
 	v := &BmsSoc{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,17 +202,14 @@ func TestMarshalUnmarshalBmsCapacity(t *testing.T) {
 func TestJSONBmsCapacity(t *testing.T) {
 
 	v := &BmsCapacity{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -256,17 +238,14 @@ func TestMarshalUnmarshalBmsCurrentlimit(t *testing.T) {
 func TestJSONBmsCurrentlimit(t *testing.T) {
 
 	v := &BmsCurrentlimit{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,17 +274,14 @@ func TestMarshalUnmarshalBmsFanInfo(t *testing.T) {
 func TestJSONBmsFanInfo(t *testing.T) {
 
 	v := &BmsFanInfo{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,17 +310,14 @@ func TestMarshalUnmarshalBmsSetMinFanSpeed(t *testing.T) {
 func TestJSONBmsSetMinFanSpeed(t *testing.T) {
 
 	v := &BmsSetMinFanSpeed{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -373,17 +346,14 @@ func TestMarshalUnmarshalBmsModule(t *testing.T) {
 func TestJSONBmsModule(t *testing.T) {
 
 	v := &BmsModule{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -412,17 +382,14 @@ func TestMarshalUnmarshalBmsChargerResponse(t *testing.T) {
 func TestJSONBmsChargerResponse(t *testing.T) {
 
 	v := &BmsChargerResponse{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -451,17 +418,14 @@ func TestMarshalUnmarshalDashboardPedalPercentages(t *testing.T) {
 func TestJSONDashboardPedalPercentages(t *testing.T) {
 
 	v := &DashboardPedalPercentages{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -490,17 +454,14 @@ func TestMarshalUnmarshalCarState(t *testing.T) {
 func TestJSONCarState(t *testing.T) {
 
 	v := &CarState{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -529,17 +490,14 @@ func TestMarshalUnmarshalDashboardPedalFault(t *testing.T) {
 func TestJSONDashboardPedalFault(t *testing.T) {
 
 	v := &DashboardPedalFault{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -568,17 +526,14 @@ func TestMarshalUnmarshalDashboardSystemTimeoutTest(t *testing.T) {
 func TestJSONDashboardSystemTimeoutTest(t *testing.T) {
 
 	v := &DashboardSystemTimeoutTest{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -607,17 +562,14 @@ func TestMarshalUnmarshalCarSpeed(t *testing.T) {
 func TestJSONCarSpeed(t *testing.T) {
 
 	v := &CarSpeed{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -646,17 +598,14 @@ func TestMarshalUnmarshalFlightComputerLvBoardDisconnectCounts(t *testing.T) {
 func TestJSONFlightComputerLvBoardDisconnectCounts(t *testing.T) {
 
 	v := &FlightComputerLvBoardDisconnectCounts{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -685,17 +634,14 @@ func TestMarshalUnmarshalFlightComputerHvBoardDisconnectCounts(t *testing.T) {
 func TestJSONFlightComputerHvBoardDisconnectCounts(t *testing.T) {
 
 	v := &FlightComputerHvBoardDisconnectCounts{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -724,17 +670,14 @@ func TestMarshalUnmarshalFlightComputerInternalState(t *testing.T) {
 func TestJSONFlightComputerInternalState(t *testing.T) {
 
 	v := &FlightComputerInternalState{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -763,17 +706,14 @@ func TestMarshalUnmarshalPowerToDrive(t *testing.T) {
 func TestJSONPowerToDrive(t *testing.T) {
 
 	v := &PowerToDrive{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -802,17 +742,14 @@ func TestMarshalUnmarshalArrayPower(t *testing.T) {
 func TestJSONArrayPower(t *testing.T) {
 
 	v := &ArrayPower{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -841,17 +778,14 @@ func TestMarshalUnmarshalVisionTurnSignalsCommand(t *testing.T) {
 func TestJSONVisionTurnSignalsCommand(t *testing.T) {
 
 	v := &VisionTurnSignalsCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -880,17 +814,14 @@ func TestMarshalUnmarshalVisionBrakeLightsCommand(t *testing.T) {
 func TestJSONVisionBrakeLightsCommand(t *testing.T) {
 
 	v := &VisionBrakeLightsCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -919,17 +850,14 @@ func TestMarshalUnmarshalVisionHeadlightsCommand(t *testing.T) {
 func TestJSONVisionHeadlightsCommand(t *testing.T) {
 
 	v := &VisionHeadlightsCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -958,17 +886,14 @@ func TestMarshalUnmarshalVisionHornCommand(t *testing.T) {
 func TestJSONVisionHornCommand(t *testing.T) {
 
 	v := &VisionHornCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -997,17 +922,14 @@ func TestMarshalUnmarshalVisionArrayLatchesCommand(t *testing.T) {
 func TestJSONVisionArrayLatchesCommand(t *testing.T) {
 
 	v := &VisionArrayLatchesCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1036,17 +958,14 @@ func TestMarshalUnmarshalVisionRearviewCommand(t *testing.T) {
 func TestJSONVisionRearviewCommand(t *testing.T) {
 
 	v := &VisionRearviewCommand{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1075,17 +994,14 @@ func TestMarshalUnmarshalTrackerEnable(t *testing.T) {
 func TestJSONTrackerEnable(t *testing.T) {
 
 	v := &TrackerEnable{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1114,17 +1030,14 @@ func TestMarshalUnmarshalDistanceTraveled(t *testing.T) {
 func TestJSONDistanceTraveled(t *testing.T) {
 
 	v := &DistanceTraveled{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1153,17 +1066,14 @@ func TestMarshalUnmarshalChargerState(t *testing.T) {
 func TestJSONChargerState(t *testing.T) {
 
 	v := &ChargerState{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1192,17 +1102,14 @@ func TestMarshalUnmarshalChargerBmsRequest(t *testing.T) {
 func TestJSONChargerBmsRequest(t *testing.T) {
 
 	v := &ChargerBmsRequest{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1231,17 +1138,14 @@ func TestMarshalUnmarshalChargerCurrentVoltage(t *testing.T) {
 func TestJSONChargerCurrentVoltage(t *testing.T) {
 
 	v := &ChargerCurrentVoltage{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1270,17 +1174,14 @@ func TestMarshalUnmarshalChargerPower(t *testing.T) {
 func TestJSONChargerPower(t *testing.T) {
 
 	v := &ChargerPower{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1309,17 +1210,14 @@ func TestMarshalUnmarshalThunderstruckControlMessage(t *testing.T) {
 func TestJSONThunderstruckControlMessage(t *testing.T) {
 
 	v := &ThunderstruckControlMessage{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1348,17 +1246,14 @@ func TestMarshalUnmarshalVisionStatusFront(t *testing.T) {
 func TestJSONVisionStatusFront(t *testing.T) {
 
 	v := &VisionStatusFront{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1387,17 +1282,14 @@ func TestMarshalUnmarshalVisionStatusRear(t *testing.T) {
 func TestJSONVisionStatusRear(t *testing.T) {
 
 	v := &VisionStatusRear{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1426,17 +1318,14 @@ func TestMarshalUnmarshalLightsFrontId(t *testing.T) {
 func TestJSONLightsFrontId(t *testing.T) {
 
 	v := &LightsFrontId{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1465,17 +1354,14 @@ func TestMarshalUnmarshalLightsBackId(t *testing.T) {
 func TestJSONLightsBackId(t *testing.T) {
 
 	v := &LightsBackId{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1504,17 +1390,14 @@ func TestMarshalUnmarshalVisionId(t *testing.T) {
 func TestJSONVisionId(t *testing.T) {
 
 	v := &VisionId{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1543,17 +1426,14 @@ func TestMarshalUnmarshalSteeringPressCount1(t *testing.T) {
 func TestJSONSteeringPressCount1(t *testing.T) {
 
 	v := &SteeringPressCount1{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1582,17 +1462,14 @@ func TestMarshalUnmarshalSteeringPressCount2(t *testing.T) {
 func TestJSONSteeringPressCount2(t *testing.T) {
 
 	v := &SteeringPressCount2{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1621,17 +1498,14 @@ func TestMarshalUnmarshalSteeringButtonColors1(t *testing.T) {
 func TestJSONSteeringButtonColors1(t *testing.T) {
 
 	v := &SteeringButtonColors1{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1660,17 +1534,14 @@ func TestMarshalUnmarshalSteeringButtonColors2(t *testing.T) {
 func TestJSONSteeringButtonColors2(t *testing.T) {
 
 	v := &SteeringButtonColors2{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1699,17 +1570,14 @@ func TestMarshalUnmarshalSteeringHorn(t *testing.T) {
 func TestJSONSteeringHorn(t *testing.T) {
 
 	v := &SteeringHorn{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1738,17 +1606,14 @@ func TestMarshalUnmarshalThunderstruckStatusMessage(t *testing.T) {
 func TestJSONThunderstruckStatusMessage(t *testing.T) {
 
 	v := &ThunderstruckStatusMessage{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1777,17 +1642,14 @@ func TestMarshalUnmarshalTrackerData(t *testing.T) {
 func TestJSONTrackerData(t *testing.T) {
 
 	v := &TrackerData{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1816,17 +1678,14 @@ func TestMarshalUnmarshalTritiumMotorDrive(t *testing.T) {
 func TestJSONTritiumMotorDrive(t *testing.T) {
 
 	v := &TritiumMotorDrive{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1855,17 +1714,14 @@ func TestMarshalUnmarshalTritiumMotorPower(t *testing.T) {
 func TestJSONTritiumMotorPower(t *testing.T) {
 
 	v := &TritiumMotorPower{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1894,17 +1750,14 @@ func TestMarshalUnmarshalTritiumReset(t *testing.T) {
 func TestJSONTritiumReset(t *testing.T) {
 
 	v := &TritiumReset{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1933,17 +1786,14 @@ func TestMarshalUnmarshalBmsAhSet(t *testing.T) {
 func TestJSONBmsAhSet(t *testing.T) {
 
 	v := &BmsAhSet{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1972,17 +1822,14 @@ func TestMarshalUnmarshalBmsWhSet(t *testing.T) {
 func TestJSONBmsWhSet(t *testing.T) {
 
 	v := &BmsWhSet{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2011,17 +1858,14 @@ func TestMarshalUnmarshalBmsKill(t *testing.T) {
 func TestJSONBmsKill(t *testing.T) {
 
 	v := &BmsKill{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2050,17 +1894,14 @@ func TestMarshalUnmarshalTelemetryRtcReset(t *testing.T) {
 func TestJSONTelemetryRtcReset(t *testing.T) {
 
 	v := &TelemetryRtcReset{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2089,17 +1930,14 @@ func TestMarshalUnmarshalWsrIdentification(t *testing.T) {
 func TestJSONWsrIdentification(t *testing.T) {
 
 	v := &WsrIdentification{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2128,17 +1966,14 @@ func TestMarshalUnmarshalWsrStatusInformation(t *testing.T) {
 func TestJSONWsrStatusInformation(t *testing.T) {
 
 	v := &WsrStatusInformation{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2167,17 +2002,14 @@ func TestMarshalUnmarshalWsrBusMeasurement(t *testing.T) {
 func TestJSONWsrBusMeasurement(t *testing.T) {
 
 	v := &WsrBusMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2206,17 +2038,14 @@ func TestMarshalUnmarshalWsrVelocity(t *testing.T) {
 func TestJSONWsrVelocity(t *testing.T) {
 
 	v := &WsrVelocity{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2245,17 +2074,14 @@ func TestMarshalUnmarshalWsrPhaseCurrent(t *testing.T) {
 func TestJSONWsrPhaseCurrent(t *testing.T) {
 
 	v := &WsrPhaseCurrent{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2284,17 +2110,14 @@ func TestMarshalUnmarshalWsrMotorVoltageVector(t *testing.T) {
 func TestJSONWsrMotorVoltageVector(t *testing.T) {
 
 	v := &WsrMotorVoltageVector{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2323,17 +2146,14 @@ func TestMarshalUnmarshalWsrMotorCurrentVector(t *testing.T) {
 func TestJSONWsrMotorCurrentVector(t *testing.T) {
 
 	v := &WsrMotorCurrentVector{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2362,17 +2182,14 @@ func TestMarshalUnmarshalWsrMotorBackemf(t *testing.T) {
 func TestJSONWsrMotorBackemf(t *testing.T) {
 
 	v := &WsrMotorBackemf{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2401,17 +2218,14 @@ func TestMarshalUnmarshalWsr15165VoltageRail(t *testing.T) {
 func TestJSONWsr15165VoltageRail(t *testing.T) {
 
 	v := &Wsr15165VoltageRail{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2440,17 +2254,14 @@ func TestMarshalUnmarshalWsr2512VoltageRail(t *testing.T) {
 func TestJSONWsr2512VoltageRail(t *testing.T) {
 
 	v := &Wsr2512VoltageRail{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2479,17 +2290,14 @@ func TestMarshalUnmarshalWsrHeatsinkMotorTemp(t *testing.T) {
 func TestJSONWsrHeatsinkMotorTemp(t *testing.T) {
 
 	v := &WsrHeatsinkMotorTemp{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2518,17 +2326,14 @@ func TestMarshalUnmarshalWsrDspBoardTemp(t *testing.T) {
 func TestJSONWsrDspBoardTemp(t *testing.T) {
 
 	v := &WsrDspBoardTemp{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2557,17 +2362,14 @@ func TestMarshalUnmarshalWsrReserved(t *testing.T) {
 func TestJSONWsrReserved(t *testing.T) {
 
 	v := &WsrReserved{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2596,17 +2398,14 @@ func TestMarshalUnmarshalWsrOdometerBusAmphoursMeasurement(t *testing.T) {
 func TestJSONWsrOdometerBusAmphoursMeasurement(t *testing.T) {
 
 	v := &WsrOdometerBusAmphoursMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2635,17 +2434,14 @@ func TestMarshalUnmarshalWsrSlipSpeedMeasurement(t *testing.T) {
 func TestJSONWsrSlipSpeedMeasurement(t *testing.T) {
 
 	v := &WsrSlipSpeedMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2674,17 +2470,14 @@ func TestMarshalUnmarshalWslIdentification(t *testing.T) {
 func TestJSONWslIdentification(t *testing.T) {
 
 	v := &WslIdentification{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2713,17 +2506,14 @@ func TestMarshalUnmarshalWslStatusInformation(t *testing.T) {
 func TestJSONWslStatusInformation(t *testing.T) {
 
 	v := &WslStatusInformation{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2752,17 +2542,14 @@ func TestMarshalUnmarshalWslBusMeasurement(t *testing.T) {
 func TestJSONWslBusMeasurement(t *testing.T) {
 
 	v := &WslBusMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2791,17 +2578,14 @@ func TestMarshalUnmarshalWslVelocity(t *testing.T) {
 func TestJSONWslVelocity(t *testing.T) {
 
 	v := &WslVelocity{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2830,17 +2614,14 @@ func TestMarshalUnmarshalWslPhaseCurrent(t *testing.T) {
 func TestJSONWslPhaseCurrent(t *testing.T) {
 
 	v := &WslPhaseCurrent{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2869,17 +2650,14 @@ func TestMarshalUnmarshalWslMotorVoltageVector(t *testing.T) {
 func TestJSONWslMotorVoltageVector(t *testing.T) {
 
 	v := &WslMotorVoltageVector{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2908,17 +2686,14 @@ func TestMarshalUnmarshalWslMotorCurrentVector(t *testing.T) {
 func TestJSONWslMotorCurrentVector(t *testing.T) {
 
 	v := &WslMotorCurrentVector{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2947,17 +2722,14 @@ func TestMarshalUnmarshalWslMotorBackemf(t *testing.T) {
 func TestJSONWslMotorBackemf(t *testing.T) {
 
 	v := &WslMotorBackemf{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2986,17 +2758,14 @@ func TestMarshalUnmarshalWsl15165VoltageRail(t *testing.T) {
 func TestJSONWsl15165VoltageRail(t *testing.T) {
 
 	v := &Wsl15165VoltageRail{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3025,17 +2794,14 @@ func TestMarshalUnmarshalWsl2512VoltageRail(t *testing.T) {
 func TestJSONWsl2512VoltageRail(t *testing.T) {
 
 	v := &Wsl2512VoltageRail{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3064,17 +2830,14 @@ func TestMarshalUnmarshalWslHeatsinkMotorTemp(t *testing.T) {
 func TestJSONWslHeatsinkMotorTemp(t *testing.T) {
 
 	v := &WslHeatsinkMotorTemp{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3103,17 +2866,14 @@ func TestMarshalUnmarshalWslDspBoardTemp(t *testing.T) {
 func TestJSONWslDspBoardTemp(t *testing.T) {
 
 	v := &WslDspBoardTemp{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3142,17 +2902,14 @@ func TestMarshalUnmarshalWslOdometerBusAmphoursMeasurement(t *testing.T) {
 func TestJSONWslOdometerBusAmphoursMeasurement(t *testing.T) {
 
 	v := &WslOdometerBusAmphoursMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3181,17 +2938,14 @@ func TestMarshalUnmarshalWslReserved(t *testing.T) {
 func TestJSONWslReserved(t *testing.T) {
 
 	v := &WslReserved{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -3220,17 +2974,14 @@ func TestMarshalUnmarshalWslSlipSpeedMeasurement(t *testing.T) {
 func TestJSONWslSlipSpeedMeasurement(t *testing.T) {
 
 	v := &WslSlipSpeedMeasurement{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}

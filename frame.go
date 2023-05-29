@@ -6,7 +6,6 @@
 // by writing "adapters" to various devices/formats (xbee, sqlite, network socket, socketcan)
 package gotelem
 
-
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.
 type Frame struct {
@@ -15,7 +14,6 @@ type Frame struct {
 	Kind Kind
 }
 
-//go:generate msgp
 type CANFrame interface {
 	Id() uint32
 	Data() []byte
@@ -58,4 +56,3 @@ type CanTransciever interface {
 	CanSink
 	CanSource
 }
-

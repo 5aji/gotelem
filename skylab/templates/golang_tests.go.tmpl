@@ -23,17 +23,14 @@ func TestMarshalUnmarshal{{$structName}}(t *testing.T) {
 func TestJSON{{$structName}}(t *testing.T) {
 
 	v := &{{$structName}}{}
-	jp, err := ToJson(v)
+
+	rawData, err := json.Marshal(v)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rawData, err := json.Marshal(jp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := FromJson(rawData)
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,10 +17,10 @@ import (
 // It is an example of the modular architecture of the command line and server stack.
 
 var canDevFlag = &cli.StringFlag{
-	Name:        "can",
-	Aliases:     []string{"c"},
-	Usage:       "CAN device string",
-	EnvVars:     []string{"CAN_DEVICE"},
+	Name:    "can",
+	Aliases: []string{"c"},
+	Usage:   "CAN device string",
+	EnvVars: []string{"CAN_DEVICE"},
 }
 
 // this function sets up the `serve` flags and services that use socketCAN
@@ -37,10 +37,9 @@ func init() {
 	subCmds = append(subCmds, socketCANCmd)
 }
 
-
 type socketCANService struct {
 	name string
-	sock socketcan.CanSocket
+	sock *socketcan.CanSocket
 }
 
 func (s *socketCANService) Status() {
@@ -66,13 +65,13 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 		go vcanTest(cCtx.String("can"))
 	}
 
-	sock, err := socketcan.NewCanSocket(cCtx.String("can"))
+	s.sock, err = socketcan.NewCanSocket(cCtx.String("can"))
 	if err != nil {
 		logger.Error("error opening socket", "err", err)
 		return
 	}
-	defer sock.Close()
-	s.name = sock.Name()
+	defer s.sock.Close()
+	s.name = s.sock.Name()
 
 	// connect to the broker
 	rxCh, err := broker.Subscribe("socketCAN")
@@ -81,13 +80,12 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 	}
 	defer broker.Unsubscribe("socketCAN")
 
-
 	// make a channel to receive socketCAN frames.
 	rxCan := make(chan gotelem.Frame)
 
 	go func() {
 		for {
-			pkt, err := sock.Recv()
+			pkt, err := s.sock.Recv()
 			if err != nil {
 				logger.Warn("error receiving CAN packet", "err", err)
 			}
@@ -99,13 +97,13 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 	for {
 		select {
 		case msg := <-rxCh:
-			
-			id, d, _ := skylab.CanSend(msg.Data)
+
+			id, d, _ := skylab.ToCanFrame(msg.Data)
 
 			frame.Id = id
 			frame.Data = d
 
-			sock.Send(&frame)
+			s.sock.Send(&frame)
 
 		case msg := <-rxCan:
 			p, err := skylab.FromCanFrame(msg.Id, msg.Data)
@@ -113,10 +111,10 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 				logger.Warn("error parsing can packet", "id", msg.Id)
 				continue
 			}
-			cde := gotelem.CANDumpEntry{
+			cde := skylab.BusEvent{
 				Timestamp: float64(time.Now().UnixNano()) / 1e9,
-				Id: uint64(msg.Id),
-				Data: p,
+				Id:        uint64(msg.Id),
+				Data:      p,
 			}
 			broker.Publish("socketCAN", cde)
 		case <-cCtx.Done():
@@ -161,13 +159,12 @@ func vcanTest(devname string) {
 		Id: 0.2,
 	}
 
-	id, data, err := skylab.CanSend(&testPkt)
+	id, data, err := skylab.ToCanFrame(&testPkt)
 	testFrame := gotelem.Frame{
-		Id: id,
+		Id:   id,
 		Data: data,
 		Kind: gotelem.CanSFFFrame,
 	}
-
 
 	for {
 		slog.Info("sending test packet")

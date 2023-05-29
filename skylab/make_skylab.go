@@ -18,14 +18,13 @@ import (
 // SkylabFile is a yaml file from skylab.
 type SkylabFile struct {
 	Packets []PacketDef
-	Boards []BoardSpec
-
+	Boards  []BoardSpec
 }
 
 type BoardSpec struct {
-	Name string
+	Name     string
 	Transmit []string
-	Recieve []string
+	Recieve  []string
 }
 
 // data field.
@@ -80,8 +79,12 @@ var typeSizeMap = map[string]uint{
 	"bitfield": 1,
 }
 
+func MapType(ctype string) string {
+	return typeMap[ctype]
+}
+
 func (d *DataField) ToStructMember(parentName string) string {
-	
+
 	if d.Type == "bitfield" {
 		bfStructName := parentName + toCamelInitCase(d.Name, true)
 		return toCamelInitCase(d.Name, true) + " " + bfStructName
@@ -96,24 +99,23 @@ func (d *DataField) MakeMarshal(offset int) string {
 	if d.Type == "uint8_t" || d.Type == "int8_t" {
 		return fmt.Sprintf("b[%d] = p.%s", offset, fieldName)
 	} else if d.Type == "bitfield" {
-		return fmt.Sprintf("b[%d] = p.%s.Marshal()", offset,fieldName)
+		return fmt.Sprintf("b[%d] = p.%s.MarshalByte()", offset, fieldName)
 	} else if d.Type == "float" {
 
 		return fmt.Sprintf("float32ToBytes(b[%d:], p.%s, false)", offset, fieldName)
 
-	} else if t ,ok := typeMap[d.Type]; ok {
+	} else if t, ok := typeMap[d.Type]; ok {
 		// it's uint or int of some kind, use endian to write it.
 		if strings.HasPrefix(t, "i") {
 			// this means it's a signed integer.
 			// encoding/binary does not support putting signed ints, instead
 			// we should cast it to unsigned and then use the unsigned int functions.
 			return fmt.Sprintf("binary.LittleEndian.PutU%s(b[%d:], u%s(p.%s))", t, offset, t, fieldName)
-		} 
+		}
 		return fmt.Sprintf("binary.LittleEndian.Put%s(b[%d:], p.%s)", toCamelInitCase(t, true), offset, fieldName)
 	}
 	return "panic(\"failed to do it\")\n"
 }
-
 
 func (d *DataField) MakeUnmarshal(offset int) string {
 
@@ -121,7 +123,7 @@ func (d *DataField) MakeUnmarshal(offset int) string {
 	if d.Type == "uint8_t" || d.Type == "int8_t" {
 		return fmt.Sprintf("p.%s = b[%d]", fieldName, offset)
 	} else if d.Type == "bitfield" {
-		return fmt.Sprintf("p.%s.Unmarshal(b[%d])", fieldName, offset)
+		return fmt.Sprintf("p.%s.UnmarshalByte(b[%d])", fieldName, offset)
 	} else if d.Type == "float" {
 
 		return fmt.Sprintf("p.%s = float32FromBytes(b[%d:], false)", fieldName, offset)
@@ -134,13 +136,11 @@ func (d *DataField) MakeUnmarshal(offset int) string {
 			// encoding/binary does not support putting signed ints, instead
 			// we should cast it to unsigned and then use the unsigned int functions.
 			return fmt.Sprintf("p.%s = %s(binary.LittleEndian.U%s(b[%d:]))", fieldName, t, t, offset)
-		} 
+		}
 		return fmt.Sprintf("p.%s = binary.LittleEndian.%s(b[%d:])", fieldName, toCamelInitCase(t, true), offset)
 	}
 	panic("unhandled type")
 }
-
-
 
 func (p PacketDef) CalcSize() int {
 	// makes a function that returns the size of the code.
@@ -152,7 +152,6 @@ func (p PacketDef) CalcSize() int {
 
 	return size
 }
-
 
 func (p PacketDef) MakeMarshal() string {
 	var buf strings.Builder
@@ -170,13 +169,11 @@ func (p PacketDef) MakeMarshal() string {
 		offset += int(typeSizeMap[val.Type])
 	}
 
-
 	return buf.String()
 }
 
 func (p PacketDef) MakeUnmarshal() string {
 	var buf strings.Builder
-
 
 	var offset int = 0
 	for _, val := range p.Data {
@@ -189,7 +186,6 @@ func (p PacketDef) MakeUnmarshal() string {
 
 	return buf.String()
 }
-
 
 // stolen camelCaser code. initCase = true means CamelCase, false means camelCase
 func toCamelInitCase(s string, initCase bool) string {
@@ -228,29 +224,28 @@ func toCamelInitCase(s string, initCase bool) string {
 	return n.String()
 }
 
-// N takes a start and stop value and returns a stream of 
+// N takes a start and stop value and returns a stream of
 // [start, end), including the starting value but excluding the end value.
 func N(start, end int) (stream chan int) {
-    stream = make(chan int)
-    go func() {
-        for i := start; i < end; i++ {
-            stream <- i
-        }
-        close(stream)
-    }()
-    return
+	stream = make(chan int)
+	go func() {
+		for i := start; i < end; i++ {
+			stream <- i
+		}
+		close(stream)
+	}()
+	return
 }
-
 
 // Nx takes a start, a quantity, and an offset and returns a stream
 // of `times` values which count from start and increment by `offset` each
 // time.
-func Nx (start, times, offset int) (elems []int) {
+func Nx(start, times, offset int) (elems []int) {
 	elems = make([]int, times)
 	for i := 0; i < times; i++ {
-		elems[i] = start + offset * i
+		elems[i] = start + offset*i
 	}
-	return 
+	return
 }
 
 // dumb function for type conversion between uint32 to integer
@@ -259,10 +254,10 @@ func uint32ToInt(i uint32) (o int) {
 	return int(i)
 }
 
-
 // strJoin is a remapping of strings.Join so that we can use
 // it in a pipeline.
-// 		{{.Names | strJoin ", " }}
+//
+//	{{.Names | strJoin ", " }}
 func strJoin(delim string, elems []string) string {
 	return strings.Join(elems, delim)
 }
@@ -276,7 +271,6 @@ func mapf(format string, els []int) []string {
 	}
 	return resp
 }
-
 
 func main() {
 	// read path as the first arg, glob it for yamls, read each yaml into a skylabFile.
@@ -312,15 +306,16 @@ func main() {
 		v.Boards = append(v.Boards, newFile.Boards...)
 	}
 
-	// we add any functions mapping we need here. 
+	// we add any functions mapping we need here.
 	fnMap := template.FuncMap{
 		"camelCase": toCamelInitCase,
-		"Time": time.Now,
-		"N": N,
-		"Nx": Nx,
-		"int": uint32ToInt,
-		"strJoin": strJoin,
-		"mapf": mapf,
+		"Time":      time.Now,
+		"N":         N,
+		"Nx":        Nx,
+		"int":       uint32ToInt,
+		"strJoin":   strJoin,
+		"mapf":      mapf,
+		"maptype":   MapType,
 	}
 
 	tmpl, err := template.New("golang.go.tmpl").Funcs(fnMap).ParseGlob("templates/*.go.tmpl")
@@ -335,7 +330,6 @@ func main() {
 		panic(err)
 	}
 	err = tmpl.Execute(f, v)
-
 
 	if err != nil {
 		panic(err)
@@ -354,4 +348,3 @@ func main() {
 	tests.Execute(testF, v)
 
 }
-

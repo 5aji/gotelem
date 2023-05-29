@@ -61,7 +61,7 @@ type Sizer interface {
 }
 
 // CanSend takes a packet and makes CAN framing data.
-func CanSend(p Packet) (id uint32, data []byte, err error) {
+func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
 
 	id, err = p.CANId()
 	if err != nil {
@@ -71,29 +71,86 @@ func CanSend(p Packet) (id uint32, data []byte, err error) {
 	return
 }
 
-// ---- JSON encoding business ----
+// ---- other wire encoding business ----
 
-type JSONPacket struct {
-	Id   uint32
-	Data json.RawMessage
+// internal structure for partially decoding json object.
+type jsonRawEvent struct {
+	Timestamp float64
+	Id        uint32
+	Name      string
+	Data      json.RawMessage
 }
 
-func ToJson(p Packet) (*JSONPacket, error) {
+// BusEvent is a timestamped Skylab packet designed to be serialized.
+type BusEvent struct {
+	Timestamp float64 `json:"ts"`
+	Id        uint64  `json:"id"`
+	Name      string  `json:"name"`
+	Data      Packet  `json:"data"`
+}
 
-	d, err := json.Marshal(p)
-
+// FIXME: handle Name field.
+func (e *BusEvent) MarshalJSON() (b []byte, err error) {
+	// create the underlying raw event
+	j := &jsonRawEvent{
+		Timestamp: e.Timestamp,
+		Id:        uint32(e.Id),
+	}
+	// now we use the magic Packet -> map[string]interface{} function
+	j.Data, err = json.Marshal(e.Data)
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := p.CANId()
+	return json.Marshal(j)
+
+}
+
+func (e *BusEvent) UnmarshalJSON(b []byte) error {
+	var jRaw *jsonRawEvent
+
+	err := json.Unmarshal(b, jRaw)
+
+	if err != nil {
+		return err
+	}
+
+	e.Timestamp = jRaw.Timestamp
+	e.Id = uint64(jRaw.Id)
+	e.Data, err = FromJson(jRaw.Id, jRaw.Data)
+
+	return err
+}
+
+// FIXME: handle name field.
+func (e *BusEvent) MarshalMsg(b []byte) ([]byte, error) {
+
+	// we need to send the bytes as a []byte instead of
+	// an object like the JSON one (lose self-documenting)
+	data, err := e.Data.MarshalPacket()
 	if err != nil {
 		return nil, err
 	}
+	rawEv := &msgpRawEvent{
+		Timestamp: e.Timestamp,
+		Id:        uint32(e.Id),
+		Data:      data,
+	}
 
-	jp := &JSONPacket{Id: id, Data: d}
+	return rawEv.MarshalMsg(b)
+}
 
-	return jp, nil
+func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
+	rawEv := &msgpRawEvent{}
+	remain, err := rawEv.UnmarshalMsg(b)
+	if err != nil {
+		return remain, err
+	}
+	e.Timestamp = rawEv.Timestamp
+	e.Id = uint64(rawEv.Id)
+	e.Data, err = FromCanFrame(rawEv.Id, rawEv.Data)
+
+	return remain, err
 }
 
 // we need to be able to parse the JSON as well.  this is done using the

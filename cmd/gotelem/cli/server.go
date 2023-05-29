@@ -37,11 +37,9 @@ var serveCmd = &cli.Command{
 	Action:  serve,
 }
 
-
 // FIXME: naming
 // this is a server handler for i.e tcp socket, http server, socketCAN, xbee,
 // etc. we can register them in init() functions.
-type testThing func(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
 
 type service interface {
 	fmt.Stringer
@@ -56,12 +54,6 @@ var serveThings = []service{
 	&XBeeService{},
 	&CanLoggerService{},
 	&rpcService{},
-}
-
-
-func deriveLogger (oldLogger *slog.Logger, svc service) (newLogger *slog.Logger) {
-	newLogger = oldLogger.With("svc", svc.String())
-	return
 }
 
 func serve(cCtx *cli.Context) error {
@@ -85,13 +77,10 @@ func serve(cCtx *cli.Context) error {
 		}(svc, logger)
 	}
 
-
 	wg.Wait()
-
 
 	return nil
 }
-
 
 type rpcService struct {
 }
@@ -162,8 +151,7 @@ func (c *CanLoggerService) String() string {
 func (c *CanLoggerService) Status() {
 }
 
-
-func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
+func (c *CanLoggerService) Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
 	rxCh, err := broker.Subscribe("canDump")
 	if err != nil {
 		return err
@@ -171,7 +159,7 @@ func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l 
 	t := time.Now()
 	fname := fmt.Sprintf("candump_%d-%02d-%02dT%02d.%02d.%02d.txt",
 		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
-	
+
 	l.Info("logging to file", "filename", fname)
 
 	f, err := os.Create(fname)
@@ -194,7 +182,6 @@ func (c *CanLoggerService)  Start(cCtx *cli.Context, broker *gotelem.JBroker, l 
 	}
 }
 
-
 // XBeeService provides data over an Xbee device, either by serial or TCP
 // based on the url provided in the xbee flag. see the description for details.
 type XBeeService struct {
@@ -206,7 +193,6 @@ func (x *XBeeService) String() string {
 }
 func (x *XBeeService) Status() {
 }
-
 
 func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
 	if cCtx.String("xbee") == "" {
@@ -245,7 +231,5 @@ func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *
 			}
 		}
 
-
 	}
 }
-

@@ -12,7 +12,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
 )
@@ -92,7 +91,7 @@ func run(ctx *cli.Context) (err error) {
 
 		segments := strings.Split(dumpLine, " ")
 
-		var cd gotelem.CANDumpEntry
+		var cd skylab.BusEvent
 		// this is cursed but easiest way to get a float from a string.
 		fmt.Sscanf(segments[0], "(%g)", &cd.Timestamp)
 
