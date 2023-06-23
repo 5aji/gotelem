@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -51,9 +52,10 @@ type service interface {
 // can be extended on certain platforms (see cli/socketcan.go)
 // or if certain features are present (see cli/sqlite.go)
 var serveThings = []service{
-	&XBeeService{},
-	&CanLoggerService{},
+	&xBeeService{},
+	&canLoggerService{},
 	&rpcService{},
+	&httpService{},
 }
 
 func serve(cCtx *cli.Context) error {
@@ -141,17 +143,17 @@ func handleCon(conn net.Conn, broker *gotelem.JBroker, l *slog.Logger, done <-ch
 
 // this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
 
-type CanLoggerService struct {
+type canLoggerService struct {
 }
 
-func (c *CanLoggerService) String() string {
+func (c *canLoggerService) String() string {
 	return "CanLoggerService"
 }
 
-func (c *CanLoggerService) Status() {
+func (c *canLoggerService) Status() {
 }
 
-func (c *CanLoggerService) Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
+func (c *canLoggerService) Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
 	rxCh, err := broker.Subscribe("canDump")
 	if err != nil {
 		return err
@@ -182,19 +184,19 @@ func (c *CanLoggerService) Start(cCtx *cli.Context, broker *gotelem.JBroker, l *
 	}
 }
 
-// XBeeService provides data over an Xbee device, either by serial or TCP
+// xBeeService provides data over an Xbee device, either by serial or TCP
 // based on the url provided in the xbee flag. see the description for details.
-type XBeeService struct {
+type xBeeService struct {
 	session *xbee.Session
 }
 
-func (x *XBeeService) String() string {
+func (x *xBeeService) String() string {
 	return "hello"
 }
-func (x *XBeeService) Status() {
+func (x *xBeeService) Status() {
 }
 
-func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
+func (x *xBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
@@ -232,4 +234,23 @@ func (x *XBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *
 		}
 
 	}
+}
+
+type httpService struct {
+}
+
+func (h *httpService) String() string {
+	return "HttpService"
+}
+
+func (h *httpService) Status() {
+
+}
+
+func (h *httpService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
+
+	r := gotelem.TelemRouter(logger)
+
+	http.ListenAndServe(":8080", r)
+	return
 }

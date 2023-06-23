@@ -165,3 +165,6 @@ func FromJson (id uint32, raw []byte) (Packet, error) {
 {{template "packet" .}}
 {{- end}}
 
+// The json representation that was used to generate this data.
+// can be used to share the parsing data for i.e dynamic python gui.
+const SkylabDefinitions = `{{json . | printf "%s" }}`

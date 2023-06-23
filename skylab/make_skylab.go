@@ -5,6 +5,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,36 +18,36 @@ import (
 
 // SkylabFile is a yaml file from skylab.
 type SkylabFile struct {
-	Packets []PacketDef
-	Boards  []BoardSpec
+	Packets []PacketDef `json:"packets"`
+	Boards  []BoardDef  `json:"boards"`
 }
 
-type BoardSpec struct {
-	Name     string
-	Transmit []string
-	Recieve  []string
+type BoardDef struct {
+	Name     string   `json:"name"`
+	Transmit []string `json:"transmit"`
+	Receive  []string `json:"receive"`
 }
 
 // data field.
-type DataField struct {
-	Name       string
-	Type       string
-	Units      string // mostly for documentation
-	Conversion float32
+type FieldDef struct {
+	Name       string  `json:"name"`
+	Type       string  `json:"type"`
+	Units      string  `json:"units"`
+	Conversion float32 `json:"conversion"`
 	Bits       []struct {
-		Name string
-	}
+		Name string `json:"name"`
+	} `json:"bits"`
 }
 
 // a PacketDef is a full can packet.
 type PacketDef struct {
-	Name        string
-	Description string
-	Id          uint32
-	BigEndian   bool
-	Repeat      int
-	Offset      int
-	Data        []DataField
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Id          uint32     `json:"id"`
+	Endian      string     `json:"endian"`
+	Repeat      int        `json:"repeat"`
+	Offset      int        `json:"offset"`
+	Data        []FieldDef `json:"data"`
 }
 
 // we need to generate bitfield types.
@@ -83,7 +84,7 @@ func MapType(ctype string) string {
 	return typeMap[ctype]
 }
 
-func (d *DataField) ToStructMember(parentName string) string {
+func (d *FieldDef) ToStructMember(parentName string) string {
 
 	if d.Type == "bitfield" {
 		bfStructName := parentName + toCamelInitCase(d.Name, true)
@@ -93,7 +94,7 @@ func (d *DataField) ToStructMember(parentName string) string {
 	}
 }
 
-func (d *DataField) MakeMarshal(offset int) string {
+func (d *FieldDef) MakeMarshal(offset int) string {
 
 	fieldName := toCamelInitCase(d.Name, true)
 	if d.Type == "uint8_t" || d.Type == "int8_t" {
@@ -117,7 +118,7 @@ func (d *DataField) MakeMarshal(offset int) string {
 	return "panic(\"failed to do it\")\n"
 }
 
-func (d *DataField) MakeUnmarshal(offset int) string {
+func (d *FieldDef) MakeUnmarshal(offset int) string {
 
 	fieldName := toCamelInitCase(d.Name, true)
 	if d.Type == "uint8_t" || d.Type == "int8_t" {
@@ -316,6 +317,7 @@ func main() {
 		"strJoin":   strJoin,
 		"mapf":      mapf,
 		"maptype":   MapType,
+		"json":      json.Marshal,
 	}
 
 	tmpl, err := template.New("golang.go.tmpl").Funcs(fnMap).ParseGlob("templates/*.go.tmpl")
