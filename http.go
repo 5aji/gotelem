@@ -29,9 +29,11 @@ func TelemRouter(log *slog.Logger, broker *JBroker) http.Handler {
 		w.Write([]byte(skylab.SkylabDefinitions))
 	})
 
+	// heartbeat request.
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
 	})
+
 	r.Mount("/api/v1", apiV1(broker))
 
 	// To future residents - you can add new API calls/systems in /api/v2

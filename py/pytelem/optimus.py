@@ -1,11 +1,12 @@
 # hyperspeed forward and backwards analytics engine
 
-import numpy.typing as npt
-from scipy.integrate import solve_bvp, solve_ivp
 
-from jax import jit, grad, vmap
+import numpy as np
 
-import jax.numpy as np
+from numba import jit
+
+
+# import jax.numpy as np
 
 
 # TODO: define 3d vector space - x,y,z oriented around car/world?
@@ -48,16 +49,16 @@ EARTH_AXIS_INCLINATION = 23.45  # degrees
 
 @jit
 def get_pressure_el(
-    el: float,
-    Ps=STANDARD_PRES,
-    Ts: float = STANDARD_TEMP,
-    T_lapse: float = EARTH_TEMP_LAPSE,
+        el: float,
+        Ps=STANDARD_PRES,
+        Ts: float = STANDARD_TEMP,
+        T_lapse: float = EARTH_TEMP_LAPSE,
 ):
     """Gets the pressure at a point given eleveation - assumes
     standard pressure,temperature, gas constants, etc"""
 
     return Ps * (Ts / (Ts + T_lapse * el)) ** (
-        (ATM_MOLAR_MASS * EARTH_GRAVITY) / (AIR_GAS_CONSTANT / T_lapse)
+            (ATM_MOLAR_MASS * EARTH_GRAVITY) / (AIR_GAS_CONSTANT / T_lapse)
     )
 
 
@@ -70,7 +71,7 @@ def make_cubic(a, b, c, d):
     """returns a simple cubic function"""
 
     def poly(x):
-        return a + b * x + c * (x**2) + (x**3) / d
+        return a + b * x + c * (x ** 2) + (x ** 3) / d
 
     return jit(poly)
 
@@ -484,16 +485,18 @@ def helio_vector(vec, jme):
     )
 
 
-def solar_position(timestamp, latitude, longitude):
+def solar_position(timestamp, latitude, longitude, elevation):
     """Calculate the position of the sun at a given location and time.
 
     Args:
-        timestamp (array-like): The timestamp(s) to calculate.
+        timestamp (array-like): The timestamp(s) at each point.
+        latitude (array-like): The latitude(s) of each point.
+        longitude (array-like): The longitude(s) of each point.
+        elevation (array-like): The elevation of each point.
 
     Returns:
-        ndarray: An array containing the altitude and azimuth for each timestamp.
+        ndarray: An array containing the altitude and azimuth for each point.
     """
-    timestamp = np.array(timestamp)
     jd = timestamp / 86400.0 + 2440587.5
     jc = (jd - 2451545) / 36525
 
@@ -509,7 +512,7 @@ def solar_position(timestamp, latitude, longitude):
     # heliocentric longitude
     l_rad = np.zeros_like(timestamp)
     for idx, vec in enumerate(HELIO_L):
-        l_rad = l_rad + helio_vector(vec, jme) * jme**idx
+        l_rad = l_rad + helio_vector(vec, jme) * jme ** idx
 
     l_rad = l_rad / 10e8
     l_deg = np.rad2deg(l_rad) % 360
@@ -517,14 +520,14 @@ def solar_position(timestamp, latitude, longitude):
     # heliocentric latitude
     b_rad = np.zeros_like(timestamp)
     for idx, vec in enumerate(HELIO_B):
-        b_rad = b_rad + helio_vector(vec, jme) * jme**idx
+        b_rad = b_rad + helio_vector(vec, jme) * jme ** idx
     b_rad = b_rad / 10e8
     b_deg = np.rad2deg(b_rad) % 360
 
     # heliocentric radius
     r_rad = np.zeros_like(timestamp)
     for idx, vec in enumerate(HELIO_R):
-        r_rad = r_rad + helio_vector(vec, jme) * jme**idx
+        r_rad = r_rad + helio_vector(vec, jme) * jme ** idx
     r_rad = r_rad / 10e8
     r_deg = np.rad2deg(r_rad) % 360
 
@@ -532,7 +535,7 @@ def solar_position(timestamp, latitude, longitude):
     beta = -1 * b_deg
 
     def cubic_poly(a, b, c, d):
-        return a + b * jce + c * jce**2 + (jce**3) / d
+        return a + b * jce + c * jce ** 2 + (jce ** 3) / d
 
     X0 = cubic_poly(297.85036, 445267.111480, -0.0019142, 189474)
     X1 = cubic_poly(357.52772, 35999.050340, -0.0001603, -300000)
@@ -544,19 +547,19 @@ def solar_position(timestamp, latitude, longitude):
 
     nut = NUTATION_ABCD_ARRAY
 
-    ## TODO: these are gross - use loops instead of broadcasting?
+    # TODO: these are gross - use loops instead of broadcasting?
+    # FIXME: use guvectorize, treat jce as a scalar.
     d_psi = (nut[:, 0] + jce[..., np.newaxis] * nut[:, 1]) * np.sin(
         np.sum(X[:, np.newaxis, :] * NUTATION_YTERM_ARRAY[np.newaxis, ...], axis=2)
     )
     d_psi = np.sum(d_psi, axis=-1) / 36, 000, 000
-
 
     d_epsilon = (nut[:, 2] + jce[..., np.newaxis] * nut[:, 3]) * np.cos(
         np.sum(X[:, np.newaxis, :] * NUTATION_YTERM_ARRAY[np.newaxis, ...], axis=2)
     )
     d_epsilon = np.sum(d_epsilon, axis=-1) / 36, 000, 000
 
-    u = jme[:, np.newaxis] / 10 * np.arange(0,10).reshape((1,-1))
+    u = jme[:, np.newaxis] / 10 * np.arange(0, 10).reshape((1, -1))
     epsilon_0 = np.array(
         [
             84381.448,
@@ -575,4 +578,39 @@ def solar_position(timestamp, latitude, longitude):
     epsilon = np.sum(u * epsilon_0, axis=-1) / 3600 + d_epsilon
     d_tau = -20.4898 / (3600 * r_deg)
     sun_longitude = theta + d_psi + d_tau
-    
+
+    v_0 = 280.46061837 + 360.98564736629 * (jd - 2451545) + 0.000387933 * jc ** 2 - jc ** 3 / 38710000
+    v_0 = v_0 % 360
+
+    v = v_0 + d_psi * np.cos(np.deg2rad(epsilon))
+
+    alpha = np.arctan2(np.sin(np.radians(sun_longitude)) *
+                       np.cos(np.radians(epsilon)) -
+                       np.tan(np.radians(beta)) *
+                       np.sin(np.radians(epsilon)),
+                       np.cos(np.radians(sun_longitude)))
+    alpha_deg = np.rad2deg(alpha) % 360
+    delta = np.arcsin(
+        np.sin(np.radians(beta)) *
+        np.cos(np.radians(epsilon)) +
+        np.cos(np.radians(beta)) *
+        np.sin(np.radians(epsilon)) *
+        np.cos(np.radians(sun_longitude))
+    )
+    delta_deg = np.rad2deg(delta) % 360
+
+    h = v + latitude - alpha_deg
+
+    xi_deg = 8.794 / (3600 * r_deg)
+    u = np.arctan(0.99664719 * np.tan(latitude))
+
+    x = np.cos(u) + elevation / 6378140 * np.cos(latitude)
+
+    y = 0.99664719 * np.sin(u) + elevation / 6378140 * np.sin(latitude)
+
+    d_alpha = np.arctan2(-1 * x * np.sin(np.radians(xi_deg)) * np.sin(np.radians(h)), np.cos(delta))
+    d_alpha = np.rad2deg(d_alpha)
+    alpha_prime = alpha_deg + d_alpha
+    delta_prime = np.arctan2((np.sin(delta) - y * np.sin(np.radians(xi_deg))) * np.cos(np.radians(d_alpha)),
+                             np.cos(delta) - x * np.sin(np.radians(xi_deg)) * np.cos(np.radians(h)))
+    topo_local_hour_angle_deg = h - d_alpha
