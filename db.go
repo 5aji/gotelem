@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS "bus_events" (
 	"ts"	REAL NOT NULL, -- timestamp
 	"id"	INTEGER NOT NULL, -- can ID
 	"name"	TEXT NOT NULL, -- name of base packet
+	"index" INTEGER, -- index of the repeated packet (base_id = id - index)
 	"packet"	TEXT NOT NULL CHECK(json_valid(packet)) -- JSON object describing the data
 );
 
@@ -74,7 +75,7 @@ DROP INDEX "times";
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `
-INSERT INTO "bus_events" (time, can_id, name, packet) VALUES ($1, $2, $3, json($4));
+INSERT INTO "bus_events" (time, can_id, name, index, packet) VALUES ($1, $2, $3, json($4));
 `
 
 // AddEvent adds the bus event to the database.
@@ -157,7 +158,7 @@ type EventsQuery struct {
 
 	Names []QueryNameString
 
-	Limit uint //  asdf
+	Limit uint //  max number of results.
 }
 
 // GetEvents is the mechanism to request underlying event data.
