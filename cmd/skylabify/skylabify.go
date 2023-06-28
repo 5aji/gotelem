@@ -14,6 +14,7 @@ import (
 
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 // this command can be used to decode candump logs and dump json output.
@@ -112,7 +113,11 @@ func run(ctx *cli.Context) (err error) {
 
 		// parse the data []byte to a skylab packet
 		cd.Data, err = skylab.FromCanFrame(uint32(cd.Id), rawData)
-		if err != nil {
+		var idErr *skylab.UnknownIdError
+		if errors.As(err, &idErr) {
+			// unknown id
+			slog.Info("unknown id", "err", err)
+		} else if err != nil {
 			return err
 		}
 

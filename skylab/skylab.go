@@ -3,6 +3,7 @@ package skylab
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math"
 
 	// this is needed so that we can run make_skylab.go
@@ -162,3 +163,12 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 
 // we need to be able to parse the JSON as well.  this is done using the
 // generator since we can use the switch/case thing since it's the fastest
+
+
+type UnknownIdError struct {
+	id uint64
+}
+
+func (e *UnknownIdError) Error() string {
+	return fmt.Sprintf("unknown id: %x", e.id)
+}

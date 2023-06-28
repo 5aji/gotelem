@@ -48,7 +48,7 @@ type {{$structName}} struct {
 func (p *{{$structName}}) CANId() (uint32, error) {
 {{- if .Repeat }}
 	if p.Idx >= {{.Repeat}} {
-		return 0, errors.New("invalid packet index")
+		return 0, &UnknownIdError{ {{ printf "0x%X" .Id }} }
 	}
 	return {{ printf "0x%X" .Id }} + p.Idx, nil
 {{- else }}
@@ -114,7 +114,7 @@ var idMap = map[uint32]bool{
 // If the CAN ID is unknown, it will return an error.
 func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	if !idMap[id] {
-		return nil, errors.New("unknown id")
+		return nil, &UnknownIdError{ id }
 	}
 	switch id {
 {{- range $p := .Packets }}
