@@ -114,7 +114,7 @@ var idMap = map[uint32]bool{
 // If the CAN ID is unknown, it will return an error.
 func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	if !idMap[id] {
-		return nil, &UnknownIdError{ id }
+		return nil, &UnknownIdError{ uint64(id) }
 	}
 	switch id {
 {{- range $p := .Packets }}
