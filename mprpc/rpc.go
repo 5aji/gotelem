@@ -67,7 +67,7 @@ type ServiceFunc func(params msgp.Raw) (res msgp.Raw, err error)
 // "server" aka listener, and client.
 type RPCConn struct {
 	// TODO: use io.readwritecloser?
-	rwc     io.ReadWriteCloser
+	rwc      io.ReadWriteCloser
 	handlers map[string]ServiceFunc
 
 	ct rpcConnTrack
@@ -75,22 +75,20 @@ type RPCConn struct {
 	logger slog.Logger
 }
 
-
 // creates a new RPC connection on top of an io.ReadWriteCloser. Can be
 // pre-seeded with handlers.
 func NewRPC(rwc io.ReadWriteCloser, logger *slog.Logger, initialHandlers map[string]ServiceFunc) (rpc *RPCConn, err error) {
 
 	rpc = &RPCConn{
-		rwc: rwc,
+		rwc:      rwc,
 		handlers: make(map[string]ServiceFunc),
-		ct: NewRPCConnTrack(),
+		ct:       NewRPCConnTrack(),
 	}
 	if initialHandlers != nil {
-		for k,v := range initialHandlers {
+		for k, v := range initialHandlers {
 			rpc.handlers[k] = v
 		}
 	}
-
 
 	return
 
@@ -140,7 +138,6 @@ func (rpc *RPCConn) RegisterHandler(name string, fn ServiceFunc) error {
 
 	return nil
 }
-
 
 // Removes a handler, if it exists. Never errors. No-op if the name
 // is not a registered handler.
@@ -199,9 +196,6 @@ func (rpc *RPCConn) Serve() {
 	}
 }
 
-
-
-
 // INTERNAL functions for rpcConn
 
 // dispatch is an internal method used to execute a Request sent by the remote:w
@@ -238,6 +232,7 @@ func (rpc *RPCConn) dispatchNotif(req Notification) {
 // Next, we define some helper generic functions that can be used to make
 // implementing a msg wrapper easier.
 
+// msgpackObject is anything that has implemented all the msgpack interfaces.
 type msgpackObject interface {
 	msgp.Decodable
 	msgp.Encodable
@@ -248,7 +243,7 @@ type msgpackObject interface {
 // MakeService is a generic wrapper function. It takes a function with the signature
 // of func(T msgpObject)(R msgpObject, error) where T and R can be *concrete* types.
 // and returns a new function that handles conversion to/from msgp.Raw.
-// the function returned can be used by the RPCConn as a handler function.
+// The function returned can be used by the RPCConn as a handler function.
 // This function can typically have it's paramters inferred.
 func MakeService[T, R msgpackObject](fn func(T) (R, error)) ServiceFunc {
 	return func(p msgp.Raw) (msgp.Raw, error) {
@@ -339,9 +334,11 @@ func MakeBoundCaller[T, R msgpackObject](rpc *RPCConn, method string) func(T) (R
 	}
 }
 
-func MakeNotifier[T msgpackObject]() func(string, T, *RPCConn) {
-	return func(method string, param T, rpc *RPCConn) {
-		rawParam, _ := param.MarshalMsg([]byte{})
+// MakeNotifier creates a new notification function that notifies the remote
+func MakeNotifier[T msgpackObject](method string) func(T, *RPCConn) error {
+	return func(param T, rpc *RPCConn) error {
+		rawParam, err := param.MarshalMsg([]byte{})
 		rpc.Notify(method, rawParam)
+		return err
 	}
 }

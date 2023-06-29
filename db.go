@@ -62,6 +62,15 @@ CREATE INDEX IF NOT EXISTS "times" ON "bus_events" (
 	"ts" DESC
 );
 
+-- this table shows when we started/stopped logging.
+CREATE TABLE "bus_records" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"start_time"	INTEGER NOT NULL,
+	"end_time"	INTEGER,
+	"note"	TEXT,
+	PRIMARY KEY("id" AUTOINCREMENT),
+	CONSTRAINT "duration_valid" CHECK(end_time is null or start_time < end_time)
+);
 `
 
 // sql sequence to tear down the database.
@@ -71,6 +80,8 @@ const sqlDbDown = `
 DROP TABLE "bus_events";
 DROP INDEX "ids_timestamped";
 DROP INDEX "times";
+
+DROP TABLE "bus_records";
 `
 
 // sql expression to insert a bus event into the packets database.1

@@ -15,7 +15,6 @@ import (
 	"nhooyr.io/websocket"
 )
 
-
 type slogHttpLogger struct {
 	slog.Logger
 }
@@ -23,6 +22,8 @@ type slogHttpLogger struct {
 func TelemRouter(log *slog.Logger, broker *JBroker, db *TelemDb) http.Handler {
 	r := chi.NewRouter()
 
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger) // TODO: integrate with slog
 	r.Use(middleware.Recoverer)
 
@@ -58,34 +59,47 @@ func apiV1(broker *JBroker, db *TelemDb) chi.Router {
 		w.Write([]byte(skylab.SkylabDefinitions))
 	})
 
-	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		c, err := websocket.Accept(w, r, nil)
-		if err != nil {
-			return
-		}
-		
-	})
-
 	r.Route("/packets", func(r chi.Router) {
 		r.Get("/subscribe", apiV1PacketSubscribe(broker, db))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			var pkgs []skylab.BusEvent
 			decoder := json.NewDecoder(r.Body)
-			if err := decoder.Decode(&pkgs); err != nil{
+			if err := decoder.Decode(&pkgs); err != nil {
 				w.WriteHeader(http.StatusTeapot)
 				return
 			}
 			// we have a list of packets now. let's commit them.
 			db.AddEvents(pkgs...)
-			return 
+			return
 		})
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			// this should use query params to return a list of packets.
+
+		})
+
+		// this is to get packets by a name.
+		r.Get("/{name:[a-z_]+}", func(w http.ResponseWriter, r *http.Request) {
+
+		})
+
 	})
 
+	// records are driving segments/runs.
+	r.Route("/records", func(r chi.Router) {
+		r.Get("/")       // get all runs
+		r.Get("/active") // get current run (no end time)
+		r.Post("/")      // create a new run (with note). Ends active run if any, and creates new active run (no end time)
+		r.Get("/{id}")   // get details on a specific run
+		r.Put("/{id}")   // update a specific run. Can only be used to add notes/metadata, and not to change time/id.
 
+	})
+
+	r.Get("/stats") // v1 api stats (calls, clients, xbee connected, meta health ok)
+
+	r.
 
 	return r
 }
-
 
 // apiV1Subscriber is a websocket session for the v1 api.
 type apiV1Subscriber struct {
@@ -105,16 +119,18 @@ func apiV1PacketSubscribe(broker *JBroker, db *TelemDb) http.HandlerFunc {
 		// attempt to upgrade.
 		c, err := websocket.Accept(w, r, nil)
 		if err != nil {
+			// TODO: is this the correct option?
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "error ws handshake: %s", err)
 			return
 		}
 
+		// TODO: use K/V with session token?
 		sess := &apiV1Subscriber{}
 
 		for {
 			select {
-			case <- r.Context().Done():
+			case <-r.Context().Done():
 				return
 			case msgIn := <-sub:
 				if len(sess.idFilter) == 0 {
@@ -126,16 +142,12 @@ func apiV1PacketSubscribe(broker *JBroker, db *TelemDb) http.HandlerFunc {
 						// send it
 					}
 				}
-				escapeFilter:
+			escapeFilter:
 				return
 
 			}
 
-
 		}
-		
-
 
 	}
 }
-
