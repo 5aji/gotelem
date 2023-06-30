@@ -54,14 +54,17 @@ func (s *socketCANService) String() string {
 }
 
 // Start starts the socketCAN service - emitting packets sent from the broker.
-func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
-	// vcan0 demo
+func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+
+	logger := deps.Logger
+	broker := deps.Broker
 
 	if cCtx.String("can") == "" {
 		logger.Info("no can device provided")
 		return
 	}
 
+	// vcan demo system - make fake packets.
 	if strings.HasPrefix(cCtx.String("can"), "v") {
 		go vcanTest(cCtx.String("can"))
 	}
@@ -160,7 +163,7 @@ func vcanTest(devname string) {
 		Id: 0.2,
 	}
 
-	id, data, err := skylab.ToCanFrame(&testPkt)
+	id, data, _ := skylab.ToCanFrame(&testPkt)
 	testFrame := gotelem.Frame{
 		Id:   id,
 		Data: data,

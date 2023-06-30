@@ -1,4 +1,4 @@
-package gotelem
+package db
 
 import (
 	"reflect"

@@ -1,3 +1,5 @@
+// Package skylab provides CAN packet encoding and decoding information based off
+// of skylab.yaml. It can convert packets to/from CAN raw bytes and JSON objects.
 package skylab
 
 import (

@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
@@ -22,11 +24,16 @@ var serveFlags = []cli.Flag{
 		Usage:   "The XBee to connect to. Leave blank to not use XBee",
 		EnvVars: []string{"XBEE_DEVICE"},
 	},
-	&cli.StringFlag{
-		Name:    "logfile",
-		Aliases: []string{"l"},
-		Value:   "log.txt",
-		Usage:   "file to store log to",
+	&cli.PathFlag{
+		Name:        "logfile",
+		Aliases:     []string{"l"},
+		DefaultText: "log.txt",
+		Usage:       "file to store log to",
+	},
+	&cli.PathFlag{
+		Name:  "db",
+		Value: "gotelem.db",
+		Usage: "database to serve",
 	},
 }
 
@@ -44,8 +51,14 @@ var serveCmd = &cli.Command{
 
 type service interface {
 	fmt.Stringer
-	Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
+	Start(cCtx *cli.Context, deps svcDeps) (err error)
 	Status()
+}
+
+type svcDeps struct {
+	Broker *gotelem.Broker
+	Db     *db.TelemDb
+	Logger *slog.Logger
 }
 
 // this variable stores all the hanlders. It has some basic ones, but also
@@ -60,19 +73,52 @@ var serveThings = []service{
 
 func serve(cCtx *cli.Context) error {
 	// TODO: output both to stderr and a file.
-	logger := slog.New(slog.NewTextHandler(os.Stderr))
+	var output io.Writer = os.Stderr
+
+	if cCtx.IsSet("logfile") {
+		// open the file.
+		p := cCtx.Path("logfile")
+		f, err := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+		output = io.MultiWriter(os.Stderr, f)
+	}
+	// create a new logger
+	logger := slog.New(slog.NewTextHandler(output))
 
 	slog.SetDefault(logger)
+
 	broker := gotelem.NewBroker(3, logger.WithGroup("broker"))
 
+	// open database
+	dbPath := "file::memory:?cache=shared"
+	if cCtx.IsSet("db") {
+		dbPath = cCtx.Path("db")
+	}
+	db, err := db.OpenTelemDb(dbPath)
+	if err != nil {
+		return err
+	}
+
 	wg := sync.WaitGroup{}
+
+	deps := svcDeps{
+		Logger: logger,
+		Broker: broker,
+		Db:     db,
+	}
+
 	for _, svc := range serveThings {
 		logger.Info("starting service", "svc", svc.String())
 		wg.Add(1)
 		go func(mySvc service, baseLogger *slog.Logger) {
 			svcLogger := logger.With("svc", mySvc.String())
+			s := deps
+			s.Logger = svcLogger
 			defer wg.Done()
-			err := mySvc.Start(cCtx, broker, svcLogger)
+			// TODO: recover
+			err := mySvc.Start(cCtx, s)
 			if err != nil {
 				logger.Error("service stopped!", "err", err, "svc", mySvc.String())
 			}
@@ -93,7 +139,9 @@ func (r *rpcService) String() string {
 	return "rpcService"
 }
 
-func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error {
+func (r *rpcService) Start(ctx *cli.Context, deps svcDeps) error {
+	logger := deps.Logger
+	broker := deps.Broker
 	// TODO: extract port/ip from cli context.
 	ln, err := net.Listen("tcp", "0.0.0.0:8082")
 	if err != nil {
@@ -153,7 +201,9 @@ func (c *canLoggerService) String() string {
 func (c *canLoggerService) Status() {
 }
 
-func (c *canLoggerService) Start(cCtx *cli.Context, broker *gotelem.Broker, l *slog.Logger) (err error) {
+func (c *canLoggerService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+	broker := deps.Broker
+	l := deps.Logger
 	rxCh, err := broker.Subscribe("canDump")
 	if err != nil {
 		return err
@@ -196,7 +246,9 @@ func (x *xBeeService) String() string {
 func (x *xBeeService) Status() {
 }
 
-func (x *xBeeService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
+func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+	logger := deps.Logger
+	broker := deps.Broker
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
@@ -247,9 +299,13 @@ func (h *httpService) Status() {
 
 }
 
-func (h *httpService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
+func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
-	r := gotelem.TelemRouter(logger)
+	logger := deps.Logger
+	broker := deps.Broker
+	db := deps.Db
+
+	r := gotelem.TelemRouter(logger, broker, db)
 
 	http.ListenAndServe(":8080", r)
 	return

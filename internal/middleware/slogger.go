@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -39,7 +40,7 @@ func Slogger(sl *slog.Logger) func(next http.Handler) http.Handler {
 			}()
 
 			// embed the logger and the attrs for later items in the chain.
-
+			r = r.WithContext(context.WithValue(r.Context(), SloggerAttrsKey, attrs))
 			next.ServeHTTP(ww, r)
 		}
 
@@ -54,13 +55,12 @@ const (
 	SloggerAttrsKey
 )
 
-func addSlogAttr(r *http.Request, attr slog.Attr) {
+func AddSlogAttr(r *http.Request, attr slog.Attr) {
 	ctx := r.Context()
 	attrs, ok := ctx.Value(SloggerAttrsKey).([]slog.Attr)
 	if !ok {
 		return
 	}
 	attrs = append(attrs, attr)
-	
-	
+
 }

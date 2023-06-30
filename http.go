@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"golang.org/x/exp/slog"
 	"nhooyr.io/websocket"
@@ -19,7 +20,7 @@ type slogHttpLogger struct {
 	slog.Logger
 }
 
-func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
+func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -50,7 +51,7 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 }
 
 // define API version 1 routes.
-func apiV1(broker *Broker, db *TelemDb) chi.Router {
+func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 	r := chi.NewRouter()
 	// this API only accepts JSON.
 	r.Use(middleware.AllowContentType("application/json"))
@@ -110,7 +111,7 @@ type apiV1Subscriber struct {
 	idFilter []uint32 // list of Ids to subscribe to. If it's empty, subscribes to all.
 }
 
-func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
+func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn_id := r.RemoteAddr + uuid.New().String()
 		sub, err := broker.Subscribe(conn_id)
@@ -122,7 +123,6 @@ func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
 		defer broker.Unsubscribe(conn_id)
 		// attempt to upgrade.
 		c, err := websocket.Accept(w, r, nil)
-		c.Ping(r.Context())
 		if err != nil {
 			// TODO: is this the correct option?
 			w.WriteHeader(http.StatusInternalServerError)
@@ -158,26 +158,26 @@ func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
 }
 
 // TODO: rename. record is not a clear name. Runs? drives? segments?
-func apiV1GetRecords(db *TelemDb) http.HandlerFunc {
+func apiV1GetRecords(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func apiV1GetActiveRecord(db *TelemDb) http.HandlerFunc {
+func apiV1GetActiveRecord(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func apiV1StartRecord(db *TelemDb) http.HandlerFunc {
+func apiV1StartRecord(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func apiV1GetRecord(db *TelemDb) http.HandlerFunc {
+func apiV1GetRecord(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func apiV1UpdateRecord(db *TelemDb) http.HandlerFunc {
+func apiV1UpdateRecord(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }

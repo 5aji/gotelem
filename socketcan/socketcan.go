@@ -23,6 +23,7 @@ type CanSocket struct {
 	fd    int
 }
 
+// CanFilter is a filter for an interface.
 type CanFilter interface {
 	Inverted() bool
 	Mask() uint32

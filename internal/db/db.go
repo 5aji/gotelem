@@ -1,4 +1,4 @@
-package gotelem
+package db
 
 // this file implements the database functions to load/store/read from a sql database.
 
