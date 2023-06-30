@@ -44,7 +44,7 @@ var serveCmd = &cli.Command{
 
 type service interface {
 	fmt.Stringer
-	Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error)
+	Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error)
 	Status()
 }
 
@@ -93,7 +93,7 @@ func (r *rpcService) String() string {
 	return "rpcService"
 }
 
-func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) error {
+func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) error {
 	// TODO: extract port/ip from cli context.
 	ln, err := net.Listen("tcp", "0.0.0.0:8082")
 	if err != nil {
@@ -109,7 +109,7 @@ func (r *rpcService) Start(ctx *cli.Context, broker *gotelem.JBroker, logger *sl
 	}
 }
 
-func handleCon(conn net.Conn, broker *gotelem.JBroker, l *slog.Logger, done <-chan struct{}) {
+func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
 	//	reader := msgp.NewReader(conn)
 
 	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
@@ -153,7 +153,7 @@ func (c *canLoggerService) String() string {
 func (c *canLoggerService) Status() {
 }
 
-func (c *canLoggerService) Start(cCtx *cli.Context, broker *gotelem.JBroker, l *slog.Logger) (err error) {
+func (c *canLoggerService) Start(cCtx *cli.Context, broker *gotelem.Broker, l *slog.Logger) (err error) {
 	rxCh, err := broker.Subscribe("canDump")
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ func (x *xBeeService) String() string {
 func (x *xBeeService) Status() {
 }
 
-func (x *xBeeService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
+func (x *xBeeService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
@@ -247,7 +247,7 @@ func (h *httpService) Status() {
 
 }
 
-func (h *httpService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
+func (h *httpService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 
 	r := gotelem.TelemRouter(logger)
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"time"
 
 	// this is needed so that we can run make_skylab.go
 	// without this, the yaml library will be removed
@@ -81,25 +82,25 @@ func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
 // ---- other wire encoding business ----
 
 // internal structure for partially decoding json object.
-type jsonRawEvent struct {
-	Timestamp uint32
-	Id        uint32
-	Name      string
-	Data      json.RawMessage
+// includes
+type RawJsonEvent struct {
+	Timestamp uint32          `json:"ts" db:"ts"`
+	Id        uint32          `json:"id"`
+	Name      string          `json:"name"`
+	Data      json.RawMessage `json:"data"`
 }
 
 // BusEvent is a timestamped Skylab packet
 type BusEvent struct {
-	Timestamp uint32 `json:"ts"`
-	Id        uint32 `json:"id"`
-	Name      string `json:"name"`
-	Data      Packet `json:"data"`
+	Timestamp time.Time `json:"ts"`
+	Id        uint32    `json:"id"`
+	Data      Packet    `json:"data"`
 }
 
 func (e *BusEvent) MarshalJSON() (b []byte, err error) {
 	// create the underlying raw event
-	j := &jsonRawEvent{
-		Timestamp: e.Timestamp,
+	j := &RawJsonEvent{
+		Timestamp: uint32(e.Timestamp.UnixMilli()),
 		Id:        uint32(e.Id),
 		Name:      e.Data.String(),
 	}
@@ -114,18 +115,17 @@ func (e *BusEvent) MarshalJSON() (b []byte, err error) {
 }
 
 func (e *BusEvent) UnmarshalJSON(b []byte) error {
-	var jRaw *jsonRawEvent
+	j := &RawJsonEvent{}
 
-	err := json.Unmarshal(b, jRaw)
+	err := json.Unmarshal(b, j)
 
 	if err != nil {
 		return err
 	}
 
-	e.Timestamp = jRaw.Timestamp
-	e.Id = jRaw.Id
-	e.Data, err = FromJson(jRaw.Id, jRaw.Data)
-	e.Name = e.Data.String()
+	e.Timestamp = time.UnixMilli(int64(j.Timestamp))
+	e.Id = j.Id
+	e.Data, err = FromJson(j.Id, j.Data)
 
 	return err
 }
@@ -139,7 +139,7 @@ func (e *BusEvent) MarshalMsg(b []byte) ([]byte, error) {
 		return nil, err
 	}
 	rawEv := &msgpRawEvent{
-		Timestamp: e.Timestamp,
+		Timestamp: uint32(e.Timestamp.UnixMilli()),
 		Id:        uint32(e.Id),
 		Data:      data,
 	}
@@ -153,10 +153,9 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 	if err != nil {
 		return remain, err
 	}
-	e.Timestamp = rawEv.Timestamp
+	e.Timestamp = time.UnixMilli(int64(rawEv.Timestamp))
 	e.Id = rawEv.Id
 	e.Data, err = FromCanFrame(rawEv.Id, rawEv.Data)
-	e.Name = e.Data.String()
 
 	return remain, err
 }

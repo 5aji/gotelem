@@ -53,7 +53,8 @@ func (s *socketCANService) String() string {
 	return s.name
 }
 
-func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, logger *slog.Logger) (err error) {
+// Start starts the socketCAN service - emitting packets sent from the broker.
+func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.Broker, logger *slog.Logger) (err error) {
 	// vcan0 demo
 
 	if cCtx.String("can") == "" {
@@ -112,8 +113,8 @@ func (s *socketCANService) Start(cCtx *cli.Context, broker *gotelem.JBroker, log
 				continue
 			}
 			cde := skylab.BusEvent{
-				Timestamp: float64(time.Now().UnixNano()) / 1e9,
-				Id:        uint64(msg.Id),
+				Timestamp: time.Now(),
+				Id:        msg.Id,
 				Data:      p,
 			}
 			broker.Publish("socketCAN", cde)

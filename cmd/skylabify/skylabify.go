@@ -100,10 +100,11 @@ func run(ctx *cli.Context) (err error) {
 		hexes := strings.Split(segments[2], "#")
 
 		// get the id
-		cd.Id, err = strconv.ParseUint(hexes[0], 16, 64)
+		id, err := strconv.ParseUint(hexes[0], 16, 64)
 		if err != nil {
 			return err
 		}
+		cd.Id = uint32(id)
 
 		// get the data to a []byte
 		rawData, err := hex.DecodeString(hexes[1])
