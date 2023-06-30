@@ -4,9 +4,9 @@ package skylab
 
 // internal structure for handling
 type msgpRawEvent struct {
-	Timestamp float64 `msg:"ts"`
-	Id        uint32  `msg:"id"`
-	Data      []byte  `msg:"data"`
+	Timestamp uint32 `msg:"ts"`
+	Id        uint32 `msg:"id"`
+	Data      []byte `msg:"data"`
 }
 
 // internal structure to represent a raw can packet over the network.

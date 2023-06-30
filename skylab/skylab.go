@@ -82,7 +82,7 @@ func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
 
 // internal structure for partially decoding json object.
 type jsonRawEvent struct {
-	Timestamp float64
+	Timestamp uint32
 	Id        uint32
 	Name      string
 	Data      json.RawMessage
@@ -90,10 +90,10 @@ type jsonRawEvent struct {
 
 // BusEvent is a timestamped Skylab packet
 type BusEvent struct {
-	Timestamp float64 `json:"ts"`
-	Id        uint64  `json:"id"`
-	Name      string  `json:"name"`
-	Data      Packet  `json:"data"`
+	Timestamp uint32 `json:"ts"`
+	Id        uint32 `json:"id"`
+	Name      string `json:"name"`
+	Data      Packet `json:"data"`
 }
 
 func (e *BusEvent) MarshalJSON() (b []byte, err error) {
@@ -123,7 +123,7 @@ func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	}
 
 	e.Timestamp = jRaw.Timestamp
-	e.Id = uint64(jRaw.Id)
+	e.Id = jRaw.Id
 	e.Data, err = FromJson(jRaw.Id, jRaw.Data)
 	e.Name = e.Data.String()
 
@@ -154,7 +154,7 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 		return remain, err
 	}
 	e.Timestamp = rawEv.Timestamp
-	e.Id = uint64(rawEv.Id)
+	e.Id = rawEv.Id
 	e.Data, err = FromCanFrame(rawEv.Id, rawEv.Data)
 	e.Name = e.Data.String()
 
@@ -163,7 +163,6 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 
 // we need to be able to parse the JSON as well.  this is done using the
 // generator since we can use the switch/case thing since it's the fastest
-
 
 type UnknownIdError struct {
 	id uint64
