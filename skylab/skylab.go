@@ -41,11 +41,11 @@ func float32FromBytes(b []byte, bigEndian bool) (f float32) {
 
 // Packet is any Skylab-generated packet.
 type Packet interface {
-	MarshalPacket() ([]byte, error)
-	UnmarshalPacket(p []byte) error
-	CANId() (uint32, error)
-	Size() uint
-	String() string
+	Marshaler
+	Unmarshaler
+	Ider
+	Sizer
+	fmt.Stringer // to get the name
 }
 
 // Marshaler is a packet that can be marshalled into bytes.
@@ -164,7 +164,7 @@ func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
 // generator since we can use the switch/case thing since it's the fastest
 
 type UnknownIdError struct {
-	id uint64
+	id uint32
 }
 
 func (e *UnknownIdError) Error() string {

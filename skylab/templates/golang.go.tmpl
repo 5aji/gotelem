@@ -84,7 +84,6 @@ func (p *{{$structName}}) String() string {
 package skylab
 
 import (
-	"errors"
 	"encoding/binary"
 	"encoding/json"
 )
@@ -114,7 +113,7 @@ var idMap = map[uint32]bool{
 // If the CAN ID is unknown, it will return an error.
 func FromCanFrame(id uint32, data []byte) (Packet, error) {
 	if !idMap[id] {
-		return nil, &UnknownIdError{ uint64(id) }
+		return nil, &UnknownIdError{ id }
 	}
 	switch id {
 {{- range $p := .Packets }}
@@ -133,13 +132,13 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 {{- end}}
 	}
 
-	return nil, errors.New("failed to match Id, something is really wrong")
+	panic("This should never happen. CAN ID didn't match but was in ID map")
 }
 
 
 func FromJson (id uint32, raw []byte) (Packet, error) {
 	if !idMap[id] {
-		return nil, errors.New("unknown id")
+		return nil, &UnknownIdError{ id }
 	}
 	switch id {
 {{- range $p := .Packets }}
@@ -158,7 +157,7 @@ func FromJson (id uint32, raw []byte) (Packet, error) {
 {{- end }}
 	}
 
-	return nil, errors.New("failed to match id")
+	panic("This should never happen. CAN ID didn't match but was in ID map")
 }
 
 {{range .Packets -}}
