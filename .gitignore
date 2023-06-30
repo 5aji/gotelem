@@ -21,3 +21,9 @@
 go.work
 
 .vscode/
+
+
+gotelem
+skylabify
+*.db
+*.db-journal
