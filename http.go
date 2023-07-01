@@ -123,6 +123,7 @@ func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 		defer broker.Unsubscribe(conn_id)
 		// attempt to upgrade.
 		c, err := websocket.Accept(w, r, nil)
+		c.Ping(r.Context())
 		if err != nil {
 			// TODO: is this the correct option?
 			w.WriteHeader(http.StatusInternalServerError)

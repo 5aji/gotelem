@@ -89,7 +89,7 @@ func serve(cCtx *cli.Context) error {
 
 	slog.SetDefault(logger)
 
-	broker := gotelem.NewBroker(3, logger.WithGroup("broker"))
+	broker := gotelem.NewBroker(20, logger.WithGroup("broker"))
 
 	// open database
 	dbPath := "file::memory:?cache=shared"

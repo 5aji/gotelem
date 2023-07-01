@@ -118,12 +118,13 @@ func run(ctx *cli.Context) (err error) {
 		if errors.As(err, &idErr) {
 			// unknown id
 			slog.Info("unknown id", "err", err)
+			continue
 		} else if err != nil {
 			return err
 		}
 
 		// format and print out the JSON.
-		out, _ := json.Marshal(cd)
+		out, _ := json.Marshal(&cd)
 		fmt.Println(string(out))
 
 	}
