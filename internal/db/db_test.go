@@ -3,6 +3,7 @@ package db
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/kschamplin/gotelem/skylab"
@@ -10,7 +11,17 @@ import (
 
 // helper func to get a random bus event with random data.
 func GetRandomBusEvent() skylab.BusEvent {
-	return
+	data := skylab.WsrVelocity{
+		MotorVelocity:   1.0,
+		VehicleVelocity: 4.0,
+	}
+	ev := skylab.BusEvent{
+		Timestamp: time.Now(),
+		Data:      &data,
+	}
+	ev.Id, _ = data.CANId()
+
+	return ev
 }
 
 func TestTelemDb(t *testing.T) {

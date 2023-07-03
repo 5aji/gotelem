@@ -27,3 +27,4 @@ go.work
 /skylabify
 *.db
 *.db-journal
+/logs/
