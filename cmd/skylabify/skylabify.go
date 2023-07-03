@@ -94,11 +94,9 @@ func run(ctx *cli.Context) (err error) {
 		segments := strings.Split(dumpLine, " ")
 
 		var cd skylab.BusEvent
-		// this is cursed but easiest way to get a float from a string.
-		var unixSeconds, unixNanos int64
-		fmt.Sscanf(segments[0], "(%d.%d)", &unixSeconds, &unixNanos)
-		slog.Info("hihi hi", "time", unixSeconds)
-		cd.Timestamp = time.Unix(unixSeconds, unixNanos)
+		var unixSeconds, unixMicros int64
+		fmt.Sscanf(segments[0], "(%d.%d)", &unixSeconds, &unixMicros)
+		cd.Timestamp = time.Unix(unixSeconds, unixMicros*1000) // the canlog does usec precision for the decimal part.
 
 		// this is for the latter part, we need to split id/data
 		hexes := strings.Split(segments[2], "#")
