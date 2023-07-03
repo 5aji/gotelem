@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
@@ -94,7 +95,10 @@ func run(ctx *cli.Context) (err error) {
 
 		var cd skylab.BusEvent
 		// this is cursed but easiest way to get a float from a string.
-		fmt.Sscanf(segments[0], "(%g)", &cd.Timestamp)
+		var unixSeconds, unixNanos int64
+		fmt.Sscanf(segments[0], "(%d.%d)", &unixSeconds, &unixNanos)
+		slog.Info("hihi hi", "time", unixSeconds)
+		cd.Timestamp = time.Unix(unixSeconds, unixNanos)
 
 		// this is for the latter part, we need to split id/data
 		hexes := strings.Split(segments[2], "#")
