@@ -56,7 +56,7 @@ func TestTelemDb(t *testing.T) {
 			{
 				name: "add single packet",
 				args: args{
-					events: []skylab.BusEvent{},
+					events: []skylab.BusEvent{GetRandomBusEvent()},
 				},
 				wantErr: false,
 			},
