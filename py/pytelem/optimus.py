@@ -77,7 +77,6 @@ def make_cubic(a, b, c, d):
 
 
 @jit
-@vmap
 def get_radiation_direct(yday, altitude_deg):
     """Calculate the direct radiation at a given day of the year given the angle of the sun
     from the horizon."""

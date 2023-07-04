@@ -30,7 +30,7 @@ class PacketTree(QWidget):
         splitter = QtWidgets.QSplitter(self)
         layout = QtWidgets.QVBoxLayout()
 
-        splitter.setOrientation(Qt.Vertical)
+#        splitter.setOrientation(Qt.Vertical)
         self.tree = QTreeView()
         self.prop_table = pyqtgraph.parametertree.ParameterTree()
         splitter.addWidget(self.tree)
