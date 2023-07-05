@@ -11,14 +11,21 @@ from PySide6.QtWidgets import (
     QDockWidget,
 )
 
+from bms import BMSOverview
+
 
 class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Hey there")
+        layout = QtWidgets.QVBoxLayout()
 
-        ptree = PacketTree(self)
-        self.setCentralWidget(ptree)
+        bms = BMSOverview()
+        dw = QDockWidget('bms', self)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dw)
+        dw.setWidget(PacketTree())
+        self.setCentralWidget(bms)
+
 
 
 class PacketTree(QWidget):
