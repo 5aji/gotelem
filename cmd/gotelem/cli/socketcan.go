@@ -3,14 +3,12 @@
 package cli
 
 import (
-	"strings"
 	"time"
 
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 // this file adds socketCAN commands and functionality when building on linux.
@@ -43,7 +41,6 @@ type socketCANService struct {
 }
 
 func (s *socketCANService) Status() {
-	return
 }
 
 func (s *socketCANService) String() string {
@@ -59,14 +56,9 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	logger := deps.Logger
 	broker := deps.Broker
 
-	if cCtx.String("can") == "" {
+	if cCtx.IsSet("can") {
 		logger.Info("no can device provided")
 		return
-	}
-
-	// vcan demo system - make fake packets.
-	if strings.HasPrefix(cCtx.String("can"), "v") {
-		go vcanTest(cCtx.String("can"))
 	}
 
 	s.sock, err = socketcan.NewCanSocket(cCtx.String("can"))
@@ -150,29 +142,4 @@ Various helper utilties for CAN bus on sockets.
 			},
 		},
 	},
-}
-
-func vcanTest(devname string) {
-	sock, err := socketcan.NewCanSocket(devname)
-	if err != nil {
-		slog.Error("error opening socket", "err", err)
-		return
-	}
-	testPkt := skylab.WslMotorCurrentVector{
-		Iq: 0.1,
-		Id: 0.2,
-	}
-
-	id, data, _ := skylab.ToCanFrame(&testPkt)
-	testFrame := gotelem.Frame{
-		Id:   id,
-		Data: data,
-		Kind: gotelem.CanSFFFrame,
-	}
-
-	for {
-		slog.Info("sending test packet")
-		sock.Send(&testFrame)
-		time.Sleep(1 * time.Second)
-	}
 }
