@@ -1,8 +1,9 @@
 import sys
+import logging
 
 import pyqtgraph.parametertree
 from PySide6 import QtWidgets, QtCore
-from PySide6.QtCore import QDir, Qt
+from PySide6.QtCore import QDir, Qt, QObject
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -13,6 +14,27 @@ from PySide6.QtWidgets import (
 
 from bms import BMSOverview
 
+class QtLogger(logging.Handler, QObject):
+    appendLog = QtCore.Signal(str)
+    
+    def __init__(self, parent):
+        super().__init__()
+        QtCore.QObject.__init__(self)
+        self.widget = QtWidgets.QPlainTextEdit(parent)
+        self.widget.setReadOnly(True)
+        self.appendLog.connect(self.widget.appendPlainText)
+    
+    def emit(self, record):
+        msg = self.format(record)
+        self.appendLog.emit(msg)
+
+
+class DataStore:
+    """Stores all packets and timestamps for display and logging.
+    Queries the upstreams for the packets as they come in as well as historical"""
+    
+    def __init__(self, remote):
+        pass
 
 class MainApp(QMainWindow):
     def __init__(self):
