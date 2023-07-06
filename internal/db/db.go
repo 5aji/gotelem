@@ -5,11 +5,8 @@ package db
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -23,75 +20,6 @@ func init() {
 	sql.Register("custom_sqlite3", &sqlite3.SQLiteDriver{
 		// TODO: add functions that convert between unix milliseconds and ISO 8601
 	})
-}
-
-// embed the migrations into applications so they can update databases.
-
-//go:embed migrations
-var migrations embed.FS
-
-var migrationRegex = regexp.MustCompile(`^([0-9]+)_(.*)_(down|up)\.sql$`)
-
-type Migration struct {
-	Name     string
-	Version  uint
-	FileName string
-}
-
-// GetMigrations returns a list of migrations, which are correctly index. zero is nil.
-
-// use len to get the highest number migration.
-func RunMigrations(currentVer int) (finalVer int) {
-
-	res := make(map[int]map[string]Migration) // version number -> direction -> migration.
-
-	fs.WalkDir(migrations, ".", func(path string, d fs.DirEntry, err error) error {
-
-		if d.IsDir() {
-			return nil
-		}
-		m := migrationRegex.FindStringSubmatch(d.Name())
-		if len(m) != 4 {
-			panic("error parsing migration name")
-		}
-		migrationVer, _ := strconv.ParseInt(m[1], 10, 64)
-
-		mig := Migration{
-			Name:     m[2],
-			Version:  uint(migrationVer),
-			FileName: d.Name(),
-		}
-
-		var mMap map[string]Migration
-		mMap, ok := res[int(migrationVer)]
-		if !ok {
-			mMap = make(map[string]Migration)
-		}
-		mMap[m[3]] = mig
-		
-		res[int(migrationVer)] = mMap
-
-		return nil
-	})
-
-	// now apply the mappings based on current ver.
-
-	for v := currentVer; v < finalVer; v++ {
-		// attempt to get the "up" migration.
-		mMap, ok := res[v]
-		if !ok {
-			panic("aa")
-		}
-		upMigration, ok := mMap["up"]
-		if !ok {
-			panic("aaa")
-		}
-		// open the file name
-		// execute the file.
-
-	}
-
-	return res
 }
 
 type TelemDb struct {
@@ -126,8 +54,10 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 	}
 
 	// get latest version of migrations - then run the SQL in order.
+	fmt.Printf("starting version %d\n", version)
 
-	_, err = tdb.db.Exec(sqlDbUp)
+	version, err = RunMigrations(version, tdb)
+	fmt.Printf("ending version %d\n", version)
 
 	return tdb, err
 }
