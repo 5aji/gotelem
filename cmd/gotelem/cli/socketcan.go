@@ -56,7 +56,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	logger := deps.Logger
 	broker := deps.Broker
 
-	if cCtx.IsSet("can") {
+	if !cCtx.IsSet("can") {
 		logger.Info("no can device provided")
 		return
 	}
