@@ -100,7 +100,7 @@ func RunMigrations(tdb *TelemDb) (finalVer int, err error) {
 	if err != nil {
 		return
 	}
-	for v := currentVer + 1; v < finalVer; v++ {
+	for v := currentVer + 1; v <= finalVer; v++ {
 		// attempt to get the "up" migration.
 		mMap, ok := migrations[v]
 		if !ok {

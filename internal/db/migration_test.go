@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+// import just the first and second migrations to ensure stability.
+//
 //go:embed migrations/1_*.sql
 //go:embed migrations/2_*.sql
 var testFs embed.FS

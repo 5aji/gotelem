@@ -65,7 +65,7 @@ func (tdb *TelemDb) GetVersion() (int, error) {
 }
 
 func (tdb *TelemDb) SetVersion(version int) error {
-	stmt := fmt.Sprintf("PRAGMA user_version %d", version)
+	stmt := fmt.Sprintf("PRAGMA user_version = %d", version)
 	_, err := tdb.db.Exec(stmt)
 	return err
 }
