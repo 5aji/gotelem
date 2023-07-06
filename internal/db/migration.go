@@ -24,6 +24,9 @@ type Migration struct {
 	FileName string
 }
 
+type MigrationError struct {
+}
+
 // getMigrations returns a list of migrations, which are correctly index. zero is nil.
 func getMigrations(files fs.FS) map[int]map[string]Migration {
 
@@ -60,8 +63,12 @@ func getMigrations(files fs.FS) map[int]map[string]Migration {
 	return res
 }
 
-// use len to get the highest number migration.
-func RunMigrations(currentVer int, tdb *TelemDb) (finalVer int, err error) {
+func RunMigrations(tdb *TelemDb) (finalVer int, err error) {
+
+	currentVer, err := tdb.GetVersion()
+	if err != nil {
+		return
+	}
 
 	migrations := getMigrations(migrationsFs)
 
@@ -122,10 +129,12 @@ func RunMigrations(currentVer int, tdb *TelemDb) (finalVer int, err error) {
 		}
 
 	}
+	// if all the versions applied correctly, update the PRAGMA user_version in the database.
 	tx.Commit()
+	err = tdb.SetVersion(finalVer)
 
 	return
-
+	// yeah, we use goto. Deal with it.
 rollback:
 	tx.Rollback()
 	return

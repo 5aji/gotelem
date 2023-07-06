@@ -43,10 +43,6 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 		}
 	}
 
-	// execute database up statement (better hope it is idempotent!)
-	// FIXME: only do this when it's a new database (instead warn the user about potential version mismatches)
-	// TODO: store gotelem version (commit hash?) in DB (PRAGMA user_version)
-
 	var version int
 	err = tdb.db.Get(&version, "PRAGMA user_version")
 	if err != nil {
@@ -56,66 +52,23 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 	// get latest version of migrations - then run the SQL in order.
 	fmt.Printf("starting version %d\n", version)
 
-	version, err = RunMigrations(version, tdb)
+	version, err = RunMigrations(tdb)
 	fmt.Printf("ending version %d\n", version)
 
 	return tdb, err
 }
 
-// the sql commands to create the database.
-const sqlDbUp = `
-CREATE TABLE IF NOT EXISTS "bus_events" (
-	"ts"	INTEGER NOT NULL, -- timestamp, unix milliseconds
-	"id"	INTEGER NOT NULL, -- can ID
-	"name"	TEXT NOT NULL, -- name of base packet
-	"data"	TEXT NOT NULL CHECK(json_valid(data)) -- JSON object describing the data, including index if any
-);
+func (tdb *TelemDb) GetVersion() (int, error) {
+	var version int
+	err := tdb.db.Get(&version, "PRAGMA user_version")
+	return version, err
+}
 
-CREATE INDEX IF NOT EXISTS "ids_timestamped" ON "bus_events" (
-	"id",
-	"ts"	DESC
-);
-
-CREATE INDEX IF NOT EXISTS "times" ON "bus_events" (
-	"ts" DESC
-);
-
--- this table shows when we started/stopped logging.
-CREATE TABLE "drive_records" (
-	"id"	INTEGER NOT NULL UNIQUE, -- unique ID of the drive.
-	"start_time"	INTEGER NOT NULL, -- when the drive started
-	"end_time"	INTEGER, -- when it ended, or NULL if it's ongoing.
-	"note"	TEXT, -- optional description of the segment/experiment/drive
-	PRIMARY KEY("id" AUTOINCREMENT),
-	CONSTRAINT "duration_valid" CHECK(end_time is null or start_time < end_time)
-);
- 
-
-
--- gps logs TODO: use GEOJSON/Spatialite tracks instead?
-CREATE TABLE "position_logs" (
-	"ts"	INTEGER NOT NULL,
-	"source"	TEXT NOT NULL,
-	"lat"	REAL NOT NULL,
-	"lon"	REAL NOT NULL,
-	"elevation"	REAL,
-	CONSTRAINT "no_empty_source" CHECK(source is not "")
-);
-
--- TODO: ensure only one "active" (end_time == null) drive record at a time using triggers/constraints/index
-`
-
-// sql sequence to tear down the database.
-// not used often, but good to keep track of what's going on.
-// Up() then Down() should result in an empty database.
-const sqlDbDown = `
-DROP TABLE "bus_events";
-DROP INDEX "ids_timestamped";
-DROP INDEX "times";
-
-DROP TABLE "drive_records";
-DROP TABLE "position_logs";
-`
+func (tdb *TelemDb) SetVersion(version int) error {
+	stmt := fmt.Sprintf("PRAGMA user_version %d", version)
+	_, err := tdb.db.Exec(stmt)
+	return err
+}
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `

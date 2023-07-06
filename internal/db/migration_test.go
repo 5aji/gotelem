@@ -57,8 +57,7 @@ func Test_getMigrations(t *testing.T) {
 
 func TestRunMigrations(t *testing.T) {
 	type args struct {
-		currentVer int
-		tdb        *TelemDb
+		tdb *TelemDb
 	}
 	tests := []struct {
 		name         string
@@ -70,7 +69,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFinalVer, err := RunMigrations(tt.args.currentVer, tt.args.tdb)
+			gotFinalVer, err := RunMigrations(tt.args.tdb)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RunMigrations() error = %v, wantErr %v", err, tt.wantErr)
 				return
