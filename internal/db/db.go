@@ -51,7 +51,7 @@ func RunMigrations(currentVer int) (finalVer int) {
 			return nil
 		}
 		m := migrationRegex.FindStringSubmatch(d.Name())
-		if len(m) != 5 {
+		if len(m) != 4 {
 			panic("error parsing migration name")
 		}
 		migrationVer, _ := strconv.ParseInt(m[1], 10, 64)
@@ -62,10 +62,34 @@ func RunMigrations(currentVer int) (finalVer int) {
 			FileName: d.Name(),
 		}
 
-		res[int(migrationVer)][m]
+		var mMap map[string]Migration
+		mMap, ok := res[int(migrationVer)]
+		if !ok {
+			mMap = make(map[string]Migration)
+		}
+		mMap[m[3]] = mig
+		
+		res[int(migrationVer)] = mMap
 
 		return nil
 	})
+
+	// now apply the mappings based on current ver.
+
+	for v := currentVer; v < finalVer; v++ {
+		// attempt to get the "up" migration.
+		mMap, ok := res[v]
+		if !ok {
+			panic("aa")
+		}
+		upMigration, ok := mMap["up"]
+		if !ok {
+			panic("aaa")
+		}
+		// open the file name
+		// execute the file.
+
+	}
 
 	return res
 }
