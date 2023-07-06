@@ -68,6 +68,7 @@ var serveThings = []service{
 	&xBeeService{},
 	&canLoggerService{},
 	&rpcService{},
+	&dbLoggingService{},
 	&httpService{},
 }
 
@@ -96,6 +97,7 @@ func serve(cCtx *cli.Context) error {
 	if cCtx.IsSet("db") {
 		dbPath = cCtx.Path("db")
 	}
+	logger.Info("opening database", "path", dbPath)
 	db, err := db.OpenTelemDb(dbPath)
 	if err != nil {
 		return err
@@ -309,4 +311,34 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	http.ListenAndServe(":8080", r)
 	return
+}
+
+// dbLoggingService listens to the CAN packet broker and saves packets to the database.
+type dbLoggingService struct {
+}
+
+func (d *dbLoggingService) Status() {
+
+}
+
+func (d *dbLoggingService) String() string {
+	return "db logger"
+}
+
+func (d *dbLoggingService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+
+	// put CAN packets from the broker into the database.
+	tdb := deps.Db
+	rxCh, err := deps.Broker.Subscribe("dbRecorder")
+	defer deps.Broker.Unsubscribe("dbRecorder")
+
+	for {
+		select {
+		case msg := <-rxCh:
+			deps.Logger.Info("boop", "msg", msg)
+			tdb.AddEventsCtx(cCtx.Context, msg)
+		case <-cCtx.Done():
+			return
+		}
+	}
 }

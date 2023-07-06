@@ -5,8 +5,11 @@ package db
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +23,51 @@ func init() {
 	sql.Register("custom_sqlite3", &sqlite3.SQLiteDriver{
 		// TODO: add functions that convert between unix milliseconds and ISO 8601
 	})
+}
+
+// embed the migrations into applications so they can update databases.
+
+//go:embed migrations
+var migrations embed.FS
+
+var migrationRegex = regexp.MustCompile(`^([0-9]+)_(.*)_(down|up)\.sql$`)
+
+type Migration struct {
+	Name     string
+	Version  uint
+	FileName string
+}
+
+// GetMigrations returns a list of migrations, which are correctly index. zero is nil.
+
+// use len to get the highest number migration.
+func RunMigrations(currentVer int) (finalVer int) {
+
+	res := make(map[int]map[string]Migration) // version number -> direction -> migration.
+
+	fs.WalkDir(migrations, ".", func(path string, d fs.DirEntry, err error) error {
+
+		if d.IsDir() {
+			return nil
+		}
+		m := migrationRegex.FindStringSubmatch(d.Name())
+		if len(m) != 5 {
+			panic("error parsing migration name")
+		}
+		migrationVer, _ := strconv.ParseInt(m[1], 10, 64)
+
+		mig := Migration{
+			Name:     m[2],
+			Version:  uint(migrationVer),
+			FileName: d.Name(),
+		}
+
+		res[int(migrationVer)][m]
+
+		return nil
+	})
+
+	return res
 }
 
 type TelemDb struct {
@@ -46,6 +94,15 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 	// execute database up statement (better hope it is idempotent!)
 	// FIXME: only do this when it's a new database (instead warn the user about potential version mismatches)
 	// TODO: store gotelem version (commit hash?) in DB (PRAGMA user_version)
+
+	var version int
+	err = tdb.db.Get(&version, "PRAGMA user_version")
+	if err != nil {
+		return
+	}
+
+	// get latest version of migrations - then run the SQL in order.
+
 	_, err = tdb.db.Exec(sqlDbUp)
 
 	return tdb, err
@@ -78,6 +135,8 @@ CREATE TABLE "drive_records" (
 	PRIMARY KEY("id" AUTOINCREMENT),
 	CONSTRAINT "duration_valid" CHECK(end_time is null or start_time < end_time)
 );
+ 
+
 
 -- gps logs TODO: use GEOJSON/Spatialite tracks instead?
 CREATE TABLE "position_logs" (
@@ -106,7 +165,7 @@ DROP TABLE "position_logs";
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `
-INSERT INTO "bus_events" (time, can_id, name, packet) VALUES ($1, $2, $3, json($4));
+INSERT INTO "bus_events" (ts, id, name, data) VALUES ($1, $2, $3, json($4));
 `
 
 // AddEvent adds the bus event to the database.
@@ -126,7 +185,13 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 			tx.Rollback()
 			return
 		}
-		tx.ExecContext(ctx, sqlInsertEvent, b.Timestamp.UnixMilli(), b.Id, b.Data.String(), j)
+		_, err = tx.ExecContext(ctx, sqlInsertEvent, b.Timestamp.UnixMilli(), b.Id, b.Data.String(), j)
+
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+
 	}
 	tx.Commit()
 	return
@@ -200,8 +265,6 @@ func (q QueryOr) Query() string {
 	return fmt.Sprintf("(%s)", strings.Join(qStrings, " OR "))
 }
 
-const eventQueryFmtString = `SELECT * FROM "bus_events" WHERE %s LIMIT %d`
-
 // GetEvents is the mechanism to request underlying event data.
 // it takes functions (which are defined in db.go) that modify the query,
 // and then return the results.
@@ -212,7 +275,7 @@ func (tdb *TelemDb) GetEvents(limit int, where ...QueryFrag) (events []skylab.Bu
 	for _, f := range where {
 		fragStr = append(fragStr, f.Query())
 	}
-	qString := fmt.Sprintf("SELECT * FROM \"bus_events\" WHERE %s LIMIT %d", strings.Join(fragStr, " AND "), limit)
+	qString := fmt.Sprintf(`SELECT * FROM "bus_events" WHERE %s LIMIT %d`, strings.Join(fragStr, " AND "), limit)
 	rows, err := tdb.db.Queryx(qString)
 	if err != nil {
 		return
@@ -246,4 +309,22 @@ func (tdb *TelemDb) GetEvents(limit int, where ...QueryFrag) (events []skylab.Bu
 	err = rows.Err()
 
 	return
+}
+
+// GetActiveDrive finds the non-null drive and returns it, if any.
+func (tdb *TelemDb) GetActiveDrive() (res int, err error) {
+	err = tdb.db.Get(&res, "SELECT id FROM drive_records WHERE end_time IS NULL LIMIT 1")
+	return
+}
+
+func (tdb *TelemDb) NewDrive(start time.Time, note string) {
+
+}
+
+func (tdb *TelemDb) EndDrive() {
+
+}
+
+func (tdb *TelemDb) UpdateDrive(id int, note string) {
+
 }

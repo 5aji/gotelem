@@ -14,6 +14,7 @@ import (
 	"github.com/kschamplin/gotelem/skylab"
 	"golang.org/x/exp/slog"
 	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
 )
 
 type slogHttpLogger struct {
@@ -75,7 +76,6 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 			}
 			// we have a list of packets now. let's commit them.
 			db.AddEvents(pkgs...)
-			return
 		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			// this should use http query params o return a list of packets.
@@ -141,15 +141,14 @@ func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 			case msgIn := <-sub:
 				if len(sess.idFilter) == 0 {
 					// send it.
-					goto escapeFilter
+					wsjson.Write(r.Context(), c, msgIn)
 				}
 				for _, id := range sess.idFilter {
 					if id == msgIn.Id {
 						// send it
+						break
 					}
 				}
-			escapeFilter:
-				return
 
 			}
 
