@@ -62,9 +62,10 @@ required for piping candump into skylabify. Likewise, data should be stored with
 func run(ctx *cli.Context) (err error) {
 	path := ctx.Args().Get(0)
 	if path == "" {
-		fmt.Printf("missing input file\n")
+		fmt.Println("missing input file")
 		cli.ShowAppHelpAndExit(ctx, int(syscall.EINVAL))
 	}
+	
 
 	var istream *os.File
 	if path == "-" {

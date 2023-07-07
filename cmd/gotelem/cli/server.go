@@ -335,7 +335,6 @@ func (d *dbLoggingService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	for {
 		select {
 		case msg := <-rxCh:
-			deps.Logger.Info("boop", "msg", msg)
 			tdb.AddEventsCtx(cCtx.Context, msg)
 		case <-cCtx.Done():
 			return

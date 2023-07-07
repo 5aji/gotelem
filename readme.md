@@ -58,4 +58,7 @@ own system, and it's a single executable to share to others with the same OS/arc
 
 ## Building
 
-There are build tags to enable/disable certain features, like the graphical GUI.
+`gotelem` was designed to be all-inclusive while being easy to build and have good cross-platform support. Binaries are a single,
+statically linked file that can be shared to other users of the same OS.  Certain features, like socketCAN support, are only enabled on platforms that
+support them (Linux). This is handled automatically; builds will exclude the socketCAN files and the additional commands and features will not be present in the CLI.
+
