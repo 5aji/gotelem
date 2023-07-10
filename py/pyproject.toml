@@ -20,6 +20,8 @@ pyqtgraph = "^0.13.3"
 scipy = "^1.10.1"
 numba = "^0.57.0"
 jax = {extras = ["cpu"], version = "^0.4.12"}
+matplotlib = "^3.7.2"
+glom = "^23.3.0"
 
 
 [tool.poetry.group.dev.dependencies]

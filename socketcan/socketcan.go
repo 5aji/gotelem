@@ -195,6 +195,10 @@ func (sck *CanSocket) Recv() (*gotelem.Frame, error) {
 		k = gotelem.CanSFFFrame
 	}
 
+	if id&unix.CAN_ERR_FLAG != 0 {
+		// we got an error...
+	}
+
 	dataLength := uint8(buf[4])
 
 	result := &gotelem.Frame{

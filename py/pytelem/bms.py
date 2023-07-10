@@ -131,6 +131,7 @@ class BMSStatus(QWidget):
             label = QLabel(c, self)
             
             self.contactor_items[c] = label
+            contactor_layout.addWidget(label)
 
 
 

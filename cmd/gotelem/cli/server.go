@@ -12,6 +12,7 @@ import (
 
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/internal/db"
+	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
@@ -273,7 +274,18 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	}
 	logger.Info("connected to local xbee", "addr", x.session.LocalAddr())
 
-	encode := json.NewEncoder(x.session)
+	writeJSON := json.NewEncoder(x.session)
+	xbeePackets := make(chan skylab.BusEvent)
+	go func(){
+		decoder := json.NewDecoder(x.session)
+		for {
+			var p skylab.BusEvent
+			err := decoder.Decode(&p)
+			if err != nil {
+				logger.Error("failed to decode xbee packet")
+			}
+		}
+	}()
 	for {
 		select {
 		case <-cCtx.Done():
@@ -281,7 +293,7 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 			return
 		case msg := <-rxCh:
 			logger.Info("got msg", "msg", msg)
-			encode.Encode(msg)
+			writeJSON.Encode(msg)
 			if err != nil {
 				logger.Warn("error writing to xbee", "err", err)
 			}
