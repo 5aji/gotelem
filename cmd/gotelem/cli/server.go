@@ -274,16 +274,21 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	}
 	logger.Info("connected to local xbee", "addr", x.session.LocalAddr())
 
-	writeJSON := json.NewEncoder(x.session)
-	xbeePackets := make(chan skylab.BusEvent)
-	go func(){
-		decoder := json.NewDecoder(x.session)
+	// these are the ways we send/recieve data. we could swap for binary format
+	// TODO: buffering and/or binary encoding instead of json which is horribly ineffective.
+	xbeeTxer := json.NewEncoder(x.session)
+	xbeeRxer := json.NewDecoder(x.session)
+
+	// xbeePackets := make(chan skylab.BusEvent)
+	// background task to read json packets off of the xbee and send them to the
+	go func() {
 		for {
 			var p skylab.BusEvent
-			err := decoder.Decode(&p)
+			err := xbeeRxer.Decode(&p)
 			if err != nil {
 				logger.Error("failed to decode xbee packet")
 			}
+			broker.Publish("xbee", p)
 		}
 	}()
 	for {
@@ -293,7 +298,7 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 			return
 		case msg := <-rxCh:
 			logger.Info("got msg", "msg", msg)
-			writeJSON.Encode(msg)
+			xbeeTxer.Encode(msg)
 			if err != nil {
 				logger.Warn("error writing to xbee", "err", err)
 			}
@@ -321,6 +326,7 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	r := gotelem.TelemRouter(logger, broker, db)
 
+	/// TODO: use custom port if specified
 	http.ListenAndServe(":8080", r)
 	return
 }

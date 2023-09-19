@@ -24,14 +24,14 @@ from numba import jit
 
 
 def fsolve_discrete():
-    ...
+    """Forward compute a route segment."""
 
 
 def dist_to_pos(dist: float):
-    "convert a distance along the race path to a position in 3d space"
+    """convert a distance along the race path to a position in 3d space"""
 
 
-### All units are BASE SI (no prefix except for kilogram)
+# All units are BASE SI (no prefix except for kilogram)
 ATM_MOLAR_MASS = 0.0289644  # kg/mol
 STANDARD_TEMP = 288.15  # K
 STANDARD_PRES = 101325.0  # Pa
@@ -583,18 +583,18 @@ def solar_position(timestamp, latitude, longitude, elevation):
 
     v = v_0 + d_psi * np.cos(np.deg2rad(epsilon))
 
-    alpha = np.arctan2(np.sin(np.radians(sun_longitude)) *
-                       np.cos(np.radians(epsilon)) -
-                       np.tan(np.radians(beta)) *
-                       np.sin(np.radians(epsilon)),
-                       np.cos(np.radians(sun_longitude)))
+    alpha = np.arctan2(np.sin(np.deg2rad(sun_longitude)) *
+                       np.cos(np.deg2rad(epsilon)) -
+                       np.tan(np.deg2rad(beta)) *
+                       np.sin(np.deg2rad(epsilon)),
+                       np.cos(np.deg2rad(sun_longitude)))
     alpha_deg = np.rad2deg(alpha) % 360
     delta = np.arcsin(
-        np.sin(np.radians(beta)) *
-        np.cos(np.radians(epsilon)) +
-        np.cos(np.radians(beta)) *
-        np.sin(np.radians(epsilon)) *
-        np.cos(np.radians(sun_longitude))
+        np.sin(np.deg2rad(beta)) *
+        np.cos(np.deg2rad(epsilon)) +
+        np.cos(np.deg2rad(beta)) *
+        np.sin(np.deg2rad(epsilon)) *
+        np.cos(np.deg2rad(sun_longitude))
     )
     delta_deg = np.rad2deg(delta) % 360
 
@@ -612,4 +612,5 @@ def solar_position(timestamp, latitude, longitude, elevation):
     alpha_prime = alpha_deg + d_alpha
     delta_prime = np.arctan2((np.sin(delta) - y * np.sin(np.radians(xi_deg))) * np.cos(np.radians(d_alpha)),
                              np.cos(delta) - x * np.sin(np.radians(xi_deg)) * np.cos(np.radians(h)))
-    topo_local_hour_angle_deg = h - d_alpha
+    h_prime = h - d_alpha
+    e_0 = np.arcsin(np.sin(latitude) * np.sin(delta) + np.cos(latitude) * np.cos(delta_prime))

@@ -56,7 +56,7 @@ class BMSOverview(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.setMaximumWidth
+        # self.setMaximumWidth()
         layout = QGridLayout()
         layout.setRowStretch(0, 80)
         layout.setRowStretch(1, 20)

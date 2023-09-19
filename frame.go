@@ -35,6 +35,7 @@ const (
 // CanFilter is a basic filter for masking out data. It has an Inverted flag
 // which indicates opposite behavior (reject all packets that match Id and Mask).
 // The filter matches when (packet.Id & filter.Mask) == filter.Id
+// TODO: is this needed anymore since we are using firmware based version instead?
 type CanFilter struct {
 	Id       uint32
 	Mask     uint32

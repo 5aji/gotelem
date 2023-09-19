@@ -44,7 +44,7 @@ def rip_and_tear(fname: Path, features: list[PlotFeature]):
 
             for path in data[j['name']].keys():
                 d = glom.glom(j['data'], path)
-                ts = j['ts']
+                ts = j['ts'] - 1688756556040
                 data[j['name']][path].append([ts, d])
     # TODO: numpy the last list???
     return data
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         PlotFeature("wsr_phase_current", ["phase_b_current"]),
         PlotFeature("wsr_motor_current_vector", ["iq"]),
         PlotFeature("wsr_motor_voltage_vector", ["vq"]),
-        PlotFeature("wsr_bus_measurement", ["bus_current"])
+        PlotFeature("wsr_velocity", ["motor_velocity"])
     ]
     logs_path = Path("../../logs/")
     logfile = logs_path / "RETIME_7-2-hillstart.txt"

@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Callable, Iterable, NewType, TypedDict, List, Protocol, Union, Set
 
-from pydantic import BaseModel, validator
+from pydantic import field_validator, BaseModel, validator, model_validator
 from enum import Enum
 import yaml
 import jinja2
@@ -77,35 +77,33 @@ class SkylabField(BaseModel):
     "the name of the field. must be alphanumeric and underscores"
     type: FieldType
     "the type of the field"
-    units: str | None
+    units: str | None = None
     "optional descriptor of the unit representation"
-    conversion: float | None
+    conversion: float | None = None
     "optional conversion factor to be applied when parsing"
-    bits: List[_Bits] | None
+    bits: List[_Bits] | None = None
     "if the type if a bitfield, "
 
-    @validator("bits")
-    def bits_must_exist_if_bitfield(cls, v, values):
-        if v is None and "type" in values and values["type"] is FieldType.Bitfield:
+    @model_validator(mode='after')
+    def bits_must_exist_if_bitfield(self) -> 'SkylabField':
+        if self.bits is None and self.type == FieldType.Bitfield:
             raise ValueError("bits are not present on bitfield type")
-        if (
-            v is not None
-            and "type" in values
-            and values["type"] is not FieldType.Bitfield
-        ):
+        if self.bits is not None and self.type != FieldType.Bitfield:
             raise ValueError("bits are present on non-bitfield type")
-        return v
+        return self
 
-    @validator("name")
-    def name_valid_string(cls, v: str):
+    @field_validator("name")
+    @classmethod
+    def name_valid_string(cls, v: str) -> str:
         if not re.match(r"^[A-Za-z0-9_]+$", v):
-            return ValueError("invalid name")
+            raise ValueError("invalid name")
         return v
 
-    @validator("name")
-    def name_nonzero_length(cls, v: str):
+    @field_validator("name")
+    @classmethod
+    def name_nonzero_length(cls, v: str) -> str:
         if len(v) == 0:
-            return ValueError("name cannot be empty string")
+            raise ValueError("name cannot be empty string")
         return v
 
 
@@ -120,11 +118,11 @@ class SkylabPacket(BaseModel):
     """Represents a CAN packet. Contains SkylabFields with information on the structure of the data."""
 
     name: str
-    description: str | None
+    description: str | None = None
     id: int
     endian: Endian
-    repeat: int | None
-    offset: int | None
+    repeat: int | None = None
+    offset: int | None = None
     data: List[SkylabField]
 
     # @validator("data")
@@ -134,31 +132,37 @@ class SkylabPacket(BaseModel):
     #         return ValueError("Total packet size cannot exceed 8 bytes")
     #     return v
 
-    @validator("id")
+    @field_validator("id")
+    @classmethod
     def id_non_negative(cls, v: int) -> int:
         if v < 0:
             raise ValueError("id must be above zero")
         return v
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def name_valid_string(cls, v: str) -> str:
         if not re.match(r"^[A-Za-z0-9_]+$", v):
             raise ValueError("invalid name", v)
         return v
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def name_nonzero_length(cls, v: str) -> str:
         if len(v) == 0:
             raise ValueError("name cannot be empty string")
         return v
 
-    @validator("offset")
-    def offset_must_have_repeat(cls, v: int | None, values) -> int | None:
-        if v is not None and "repeat" in values and values["repeat"] is not None:
+    # TODO[pydantic]: We couldn't refactor the `validator`, please replace it by `field_validator` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
+    @model_validator(mode='after')
+    def offset_must_have_repeat(self) -> "SkylabPacket":
+        if self.offset is not None and self.repeat is not None:
             raise ValueError("field with offset must have repeat defined")
         return v
 
-    @validator("repeat")
+    @field_validator("repeat")
+    @classmethod
     def repeat_gt_one(cls, v: int | None):
         if v is not None and v <= 1:
             raise ValueError("repeat must be strictly greater than one")
@@ -180,13 +184,15 @@ class SkylabBoard(BaseModel):
     receive: List[str]
     "The packets received by this board."
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def name_valid_string(cls, v: str):
         if not re.match(r"^[A-Za-z0-9_]+$", v):
             return ValueError("invalid name", v)
         return v
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def name_nonzero_length(cls, v: str):
         if len(v) == 0:
             return ValueError("name cannot be empty string")
@@ -201,13 +207,15 @@ class SkylabBus(BaseModel):
     extended_id: bool
     "If the bus uses extended ids"
 
-    @validator("name")
+    @field_validator("name")
+    @classmethod
     def name_valid_string(cls, v: str):
         if not re.match(r"^[A-Za-z0-9_]+$", v):
             return ValueError("invalid name", v)
         return v
 
-    @validator("baud_rate")
+    @field_validator("baud_rate")
+    @classmethod
     def baud_rate_supported(cls, v: int):
         if v not in [125000, 250000, 500000, 750000, 1000000]:
             raise ValueError("unsupported baud rate", v)

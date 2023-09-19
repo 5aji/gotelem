@@ -101,7 +101,9 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 
 	})
 
-	r.Get("/stats", func(w http.ResponseWriter, r *http.Request) {}) // v1 api stats (calls, clients, xbee connected, meta health ok)
+	r.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
+
+	}) // v1 api stats (calls, clients, xbee connected, meta health ok)
 
 	return r
 }

@@ -40,7 +40,10 @@ func Slogger(sl *slog.Logger) func(next http.Handler) http.Handler {
 			}()
 
 			// embed the logger and the attrs for later items in the chain.
-			r = r.WithContext(context.WithValue(r.Context(), SloggerAttrsKey, attrs))
+			ctx := context.WithValue(r.Context(), SloggerAttrsKey, attrs)
+			ctx = context.WithValue(ctx, SloggerLogKey, logger)
+			// push it to the request and serve the next handler
+			r = r.WithContext(ctx)
 			next.ServeHTTP(ww, r)
 		}
 
@@ -64,3 +67,5 @@ func AddSlogAttr(r *http.Request, attr slog.Attr) {
 	attrs = append(attrs, attr)
 
 }
+
+// TODO: write rest of functions
