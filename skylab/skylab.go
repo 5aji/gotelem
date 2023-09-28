@@ -86,7 +86,7 @@ func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
 // internal structure for partially decoding json object.
 // includes
 type RawJsonEvent struct {
-	Timestamp int64          `json:"ts" db:"ts"`
+	Timestamp int64           `json:"ts" db:"ts"`
 	Id        uint32          `json:"id"`
 	Name      string          `json:"name"`
 	Data      json.RawMessage `json:"data"`
@@ -99,7 +99,7 @@ type BusEvent struct {
 	Data      Packet    `json:"data"`
 }
 
-func (e *BusEvent) MarshalJSON() (b []byte, err error) {
+func (e BusEvent) MarshalJSON() (b []byte, err error) {
 	// create the underlying raw event
 	j := &RawJsonEvent{
 		Timestamp: e.Timestamp.UnixMilli(),
