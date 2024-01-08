@@ -22,6 +22,8 @@ numba = "^0.57.0"
 jax = {extras = ["cpu"], version = "^0.4.12"}
 matplotlib = "^3.7.2"
 glom = "^23.3.0"
+cattrs = "^23.2.3"
+attrs = "^23.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
