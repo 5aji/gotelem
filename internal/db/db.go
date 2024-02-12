@@ -49,7 +49,7 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 		return
 	}
 
-	// get latest version of migrations - then run the SQL in order.
+	// get latest version of migrations - then run the SQL in order to perform them
 	fmt.Printf("starting version %d\n", version)
 
 	version, err = RunMigrations(tdb)
@@ -72,7 +72,7 @@ func (tdb *TelemDb) SetVersion(version int) error {
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `
-INSERT INTO "bus_events" (ts, id, name, data) VALUES ($1, $2, $3, json($4));
+INSERT INTO "bus_events" (ts, name, data) VALUES ($1, $2, json($3));
 `
 
 // AddEvent adds the bus event to the database.
@@ -84,7 +84,12 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 		return
 	}
 
-	for _, b := range events {
+	sqlStmt := sqlInsertEvent
+	const rowSql = "(?, ?, json(?))"
+	inserts := make([]string, len(events))
+	vals := []interface{}{}
+	for idx, b := range events {
+		inserts[idx] = rowSql
 		var j []byte
 		j, err = json.Marshal(b.Data)
 
@@ -92,14 +97,23 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 			tx.Rollback()
 			return
 		}
-		_, err = tx.ExecContext(ctx, sqlInsertEvent, b.Timestamp.UnixMilli(), b.Id, b.Data.String(), j)
-
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-
+		vals = append(vals, b.Timestamp.UnixMilli(), b.Data.String(), j)
 	}
+
+	// construct the full statement now
+	sqlStmt = sqlStmt + strings.Join(inserts, ",")
+	stmt, err := tx.PrepareContext(ctx, sqlStmt)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	//TODO: log the number of rows modified/inserted 
+	_, err = stmt.ExecContext(ctx, vals...)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
 	tx.Commit()
 	return
 }
@@ -108,6 +122,7 @@ func (tdb *TelemDb) AddEvents(events ...skylab.BusEvent) (err error) {
 
 	return tdb.AddEventsCtx(context.Background(), events...)
 }
+
 
 /// Query fragment guide:
 /// We need to be able to easily construct safe(!) and meaningful queries programatically
@@ -119,27 +134,6 @@ func (tdb *TelemDb) AddEvents(events ...skylab.BusEvent) (err error) {
 // QueryFrag is anything that can be turned into a Query WHERE clause
 type QueryFrag interface {
 	Query() string
-}
-
-// QueryIdRange represents a range of IDs to select for, inclusive.
-type QueryIdRange struct {
-	Start uint32
-	End   uint32
-}
-
-func (q *QueryIdRange) Query() string {
-	return fmt.Sprintf("id BETWEEN %d AND %d", q.Start, q.End)
-}
-
-// QueryIds selects for individual CAN ids
-type QueryIds []uint32
-
-func (q QueryIds) Query() string {
-	var idStrings []string
-	for _, id := range q {
-		idStrings = append(idStrings, strconv.FormatUint(uint64(id), 10))
-	}
-	return fmt.Sprintf("id IN (%s)", strings.Join(idStrings, ","))
 }
 
 // QueryTimeRange represents a query of a specific time range. For "before" or "after" queries,
@@ -204,9 +198,9 @@ func (tdb *TelemDb) GetEvents(limit int, where ...QueryFrag) (events []skylab.Bu
 
 		BusEv := skylab.BusEvent{
 			Timestamp: time.UnixMilli(int64(ev.Timestamp)),
-			Id:        ev.Id,
+			Name:       ev.Name,
 		}
-		BusEv.Data, err = skylab.FromJson(ev.Id, ev.Data)
+		BusEv.Data, err = skylab.FromJson(ev.Name, ev.Data)
 
 		// FIXME: this is slow!
 		events = append(events, BusEv)

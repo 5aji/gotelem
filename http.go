@@ -57,6 +57,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 	// this API only accepts JSON.
 	r.Use(middleware.AllowContentType("application/json"))
 	// no caching - always get the latest data.
+	// TODO: add a smart short expiry cache for queries that take a while.
 	r.Use(middleware.NoCache)
 
 	r.Get("/schema", func(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +79,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 			db.AddEvents(pkgs...)
 		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			// this should use http query params o return a list of packets.
+			// this should use http query params to return a list of packets.
 
 		})
 
@@ -113,6 +114,7 @@ type apiV1Subscriber struct {
 	idFilter []uint32 // list of Ids to subscribe to. If it's empty, subscribes to all.
 }
 
+// this is a websocket stream.
 func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn_id := r.RemoteAddr + uuid.New().String()

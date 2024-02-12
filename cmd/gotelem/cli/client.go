@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/kschamplin/gotelem"
-	"github.com/kschamplin/gotelem/mprpc"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,8 +34,3 @@ func client(ctx *cli.Context) error {
 	return nil
 }
 
-// the client should connect to a TCP server and listen to packets.
-func CANFrameHandler(f *gotelem.Frame) (*mprpc.RPCEmpty, error) {
-	fmt.Printf("got frame, %v\n", f)
-	return nil, nil
-}

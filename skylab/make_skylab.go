@@ -18,36 +18,37 @@ import (
 
 // SkylabFile is a yaml file from skylab.
 type SkylabFile struct {
-	Packets []PacketDef `json:"packets"`
-	Boards  []BoardDef  `json:"boards"`
+	Packets []PacketDef `yaml:"packets"`
+	Boards  []BoardDef  `yaml:"boards"`
 }
 
 type BoardDef struct {
-	Name     string   `json:"name"`
-	Transmit []string `json:"transmit"`
-	Receive  []string `json:"receive"`
+	Name     string   `yaml:"name"`
+	Transmit []string `yaml:"transmit"`
+	Receive  []string `yaml:"receive"`
 }
 
 // data field.
 type FieldDef struct {
-	Name       string  `json:"name"`
-	Type       string  `json:"type"`
-	Units      string  `json:"units"`
-	Conversion float32 `json:"conversion"`
+	Name       string  `yaml:"name"`
+	Type       string  `yaml:"type"`
+	Units      string  `yaml:"units"`
+	Conversion float32 `yaml:"conversion"`
 	Bits       []struct {
-		Name string `json:"name"`
-	} `json:"bits"`
+		Name string `yaml:"name"`
+	} `yaml:"bits"`
 }
 
 // a PacketDef is a full can packet.
 type PacketDef struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Id          uint32     `json:"id"`
-	Endian      string     `json:"endian"`
-	Repeat      int        `json:"repeat"`
-	Offset      int        `json:"offset"`
-	Data        []FieldDef `json:"data"`
+	Name        string     `yaml:"name"`
+	Description string     `yaml:"description"`
+	Id          uint32     `yaml:"id"`
+	Endian    string      `yaml:"endian"`
+	Extended      bool     `yaml:"is_extended"`
+	Repeat      int        `yaml:"repeat"`
+	Offset      int        `yaml:"offset"`
+	Data        []FieldDef `yaml:"data"`
 }
 
 // we need to generate bitfield types.
@@ -273,6 +274,20 @@ func mapf(format string, els []int) []string {
 	return resp
 }
 
+func idToString(p PacketDef) string {
+	if p.Repeat > 0 {
+		resp := make([]string, p.Repeat)
+		for idx := 0; idx < p.Repeat; idx++ {
+			resp[idx] = fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", int(p.Id)+idx*p.Offset, p.Extended)
+		}
+
+		return strings.Join(resp, ",")
+
+	} else {
+		return fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", p.Id, p.Extended)
+	}
+}
+
 func main() {
 	// read path as the first arg, glob it for yamls, read each yaml into a skylabFile.
 	// then take each skylab file, put all the packets into one big array.
@@ -309,15 +324,16 @@ func main() {
 
 	// we add any functions mapping we need here.
 	fnMap := template.FuncMap{
-		"camelCase": toCamelInitCase,
-		"Time":      time.Now,
-		"N":         N,
-		"Nx":        Nx,
-		"int":       uint32ToInt,
-		"strJoin":   strJoin,
-		"mapf":      mapf,
-		"maptype":   MapType,
-		"json":      json.Marshal,
+		"camelCase":  toCamelInitCase,
+		"Time":       time.Now,
+		"N":          N,
+		"Nx":         Nx,
+		"int":        uint32ToInt,
+		"strJoin":    strJoin,
+		"mapf":       mapf,
+		"maptype":    MapType,
+		"json":       json.Marshal,
+		"idToString": idToString,
 	}
 
 	tmpl, err := template.New("golang.go.tmpl").Funcs(fnMap).ParseGlob("templates/*.go.tmpl")

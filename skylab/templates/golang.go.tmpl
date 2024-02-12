@@ -84,7 +84,9 @@ func (p *{{$structName}}) String() string {
 package skylab
 
 import (
+	"errors"
 	"encoding/binary"
+	"github.com/kschamplin/gotelem/internal/can"
 	"encoding/json"
 )
 
@@ -96,37 +98,42 @@ const (
 {{- end}}
 )
 
+var nameToIdMap = map[string]can.CanID{
+
+}
+
 // list of every packet ID. can be used for O(1) checks.
-var idMap = map[uint32]bool{
+var idMap = map[can.CanID]bool{
 	{{ range $p := .Packets -}}
 	{{ if $p.Repeat }} 
 	{{ range $idx := Nx (int $p.Id) $p.Repeat $p.Offset -}}
-	{{ $idx | printf "0x%X"}}: true,
+	can.CanID{ Id: {{ $idx | printf "0x%X"}}, Extended: {{$p.Extended}} }: true,
 	{{ end }}
 	{{- else }}
-	{{ $p.Id | printf "0x%X" }}: true,
+	can.CanID{ Id: {{ $p.Id | printf "0x%X" }}, Extended: {{$p.Extended}} }: true,
 	{{- end}}
 	{{- end}}
 }
 
 // FromCanFrame creates a Packet from a given CAN ID and data payload.
 // If the CAN ID is unknown, it will return an error.
-func FromCanFrame(id uint32, data []byte) (Packet, error) {
+func FromCanFrame(f can.Frame) (Packet, error) {
+	id := f.Id
 	if !idMap[id] {
-		return nil, &UnknownIdError{ id }
+		return nil, &UnknownIdError{ id.Id }
 	}
 	switch id {
 {{- range $p := .Packets }}
 	{{- if $p.Repeat }}
-	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
+	case {{ $p | idToString -}}:
 		var res = &{{camelCase $p.Name true}}{}
-		res.UnmarshalPacket(data)
-		res.Idx = id - {{$p.Id | printf "0x%X" }}
+		res.UnmarshalPacket(f.Data)
+		res.Idx = id.Id - {{$p.Id | printf "0x%X" }}
 		return res, nil
 	{{- else }}
-	case {{ $p.Id | printf "0x%X" }}:
+	case {{ $p | idToString }}:
 		var res = &{{camelCase $p.Name true}}{}
-		res.UnmarshalPacket(data)
+		res.UnmarshalPacket(f.Data)
 		return res, nil
 	{{- end}}
 {{- end}}
@@ -136,28 +143,18 @@ func FromCanFrame(id uint32, data []byte) (Packet, error) {
 }
 
 
-func FromJson (id uint32, raw []byte) (Packet, error) {
-	if !idMap[id] {
-		return nil, &UnknownIdError{ id }
-	}
-	switch id {
+func FromJson (name string, raw []byte) (Packet, error) {
+	switch name {
 {{- range $p := .Packets }}
-	{{- if $p.Repeat }}
-	case {{ Nx (int $p.Id) $p.Repeat $p.Offset | mapf "0x%X" | strJoin ", " -}}:
-		var res = &{{camelCase $p.Name true}}{}
-		err := json.Unmarshal(raw, res)
-		res.Idx = id -  {{ $p.Id | printf "0x%X" }}
-		return res, err
-	{{- else }}
-	case {{ $p.Id | printf "0x%X" }}:
+	case "{{ $p.Name }}":
 		var res = &{{camelCase $p.Name true}}{}
 		err := json.Unmarshal(raw, res)
 		return res, err
-	{{- end }}
 {{- end }}
 	}
 
-	panic("This should never happen. CAN ID didn't match but was in ID map")
+	return nil, errors.New("unknown packet name")
+
 }
 
 {{range .Packets -}}

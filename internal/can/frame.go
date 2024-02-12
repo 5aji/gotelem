@@ -2,20 +2,27 @@
 //
 // It has a generic can Frame (packet), as well as a filter type.
 // we also define standard interfaces for objects that can accept
-// can frames. We can use this pattern to easily extend the capabiltiies of the program
-// by writing "adapters" to various devices/formats (xbee, sqlite, network socket, socketcan)
-package gotelem
+// can frames. We can use this pattern to easily extend the capabilities of the program
+// by writing "adapters" to various devices/formats (xbee, socketcan)
+package can
 
+
+type CanID struct {
+	Id uint32
+	Extended bool // since the id itself is not enough.
+}
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.
 type Frame struct {
-	Id   uint32
+	Id CanID
 	Data []byte
 	Kind Kind
 }
 
+
+// TODO: should this be replaced
 type CANFrame interface {
-	Id() uint32
+	Id() 
 	Data() []byte
 	Type() Kind
 }
@@ -26,8 +33,7 @@ type CANFrame interface {
 type Kind uint8
 
 const (
-	CanSFFFrame Kind = iota // Standard ID Frame
-	CanEFFFrame             // Extended ID Frame
+	CanDataFrame Kind = iota // Standard ID Frame
 	CanRTRFrame             // Remote Transmission Request Frame
 	CanErrFrame             // Error Frame
 )

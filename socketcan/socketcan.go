@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/internal/can"
 	"golang.org/x/sys/unix"
 )
 
@@ -128,21 +128,22 @@ func (sck *CanSocket) SetFilters(filters []CanFilter) error {
 }
 
 // Send sends a CAN frame
-func (sck *CanSocket) Send(msg *gotelem.Frame) error {
+func (sck *CanSocket) Send(msg *can.Frame) error {
 
 	buf := make([]byte, fdFrameSize)
 
-	idToWrite := msg.Id
+	idToWrite := msg.Id.Id
 
-	switch msg.Kind {
-	case gotelem.CanSFFFrame:
-		idToWrite &= unix.CAN_SFF_MASK
-	case gotelem.CanEFFFrame:
+	if (msg.Id.Extended) {
 		idToWrite &= unix.CAN_EFF_MASK
 		idToWrite |= unix.CAN_EFF_FLAG
-	case gotelem.CanRTRFrame:
+	}
+		
+
+	switch msg.Kind {
+	case can.CanRTRFrame:
 		idToWrite |= unix.CAN_RTR_FLAG
-	case gotelem.CanErrFrame:
+	case can.CanErrFrame:
 		return errors.New("you can't send error frames")
 	default:
 		return errors.New("unknown frame type")
@@ -175,7 +176,7 @@ func (sck *CanSocket) Send(msg *gotelem.Frame) error {
 	return nil
 }
 
-func (sck *CanSocket) Recv() (*gotelem.Frame, error) {
+func (sck *CanSocket) Recv() (*can.Frame, error) {
 
 	// todo: support extended frames.
 	buf := make([]byte, fdFrameSize)
@@ -184,25 +185,33 @@ func (sck *CanSocket) Recv() (*gotelem.Frame, error) {
 		return nil, err
 	}
 
-	id := binary.LittleEndian.Uint32(buf[0:4])
+	raw_id := binary.LittleEndian.Uint32(buf[0:4])
 
-	var k gotelem.Kind
-	if id&unix.CAN_EFF_FLAG != 0 {
+	var id can.CanID
+	id.Id = raw_id
+	if raw_id&unix.CAN_EFF_FLAG != 0 {
 		// extended id frame
-		k = gotelem.CanEFFFrame
+		id.Extended = true;
 	} else {
 		// it's a normal can frame
-		k = gotelem.CanSFFFrame
+		id.Extended = false;
 	}
 
-	if id&unix.CAN_ERR_FLAG != 0 {
+	var k can.Kind = can.CanDataFrame
+
+	if raw_id&unix.CAN_ERR_FLAG != 0 {
 		// we got an error...
+		k = can.CanErrFrame
+	}
+	
+	if raw_id & unix.CAN_RTR_FLAG != 0 {
+		k = can.CanRTRFrame
 	}
 
 	dataLength := uint8(buf[4])
 
-	result := &gotelem.Frame{
-		Id:   id & unix.CAN_EFF_MASK,
+	result := &can.Frame{
+		Id:   id,
 		Kind: k,
 		Data: buf[8 : dataLength+8],
 	}

@@ -403,6 +403,78 @@ func TestJSONBmsChargerResponse(t *testing.T) {
 	
 
 }
+func TestMarshalUnmarshalChassisIsolationFault(t *testing.T) {
+	v := &ChassisIsolationFault{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONChassisIsolationFault(t *testing.T) {
+
+	v := &ChassisIsolationFault{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *ChassisIsolationFault:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalBmsImdInfo(t *testing.T) {
+	v := &BmsImdInfo{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONBmsImdInfo(t *testing.T) {
+
+	v := &BmsImdInfo{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *BmsImdInfo:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
 func TestMarshalUnmarshalDashboardPedalPercentages(t *testing.T) {
 	v := &DashboardPedalPercentages{}
 	bin, err := v.MarshalPacket()
@@ -756,6 +828,78 @@ func TestJSONArrayPower(t *testing.T) {
 
 	switch underlying := p.(type) {
 	case *ArrayPower:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalArrayEnergy(t *testing.T) {
+	v := &ArrayEnergy{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONArrayEnergy(t *testing.T) {
+
+	v := &ArrayEnergy{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *ArrayEnergy:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalArrayEnergyReset(t *testing.T) {
+	v := &ArrayEnergyReset{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONArrayEnergyReset(t *testing.T) {
+
+	v := &ArrayEnergyReset{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *ArrayEnergyReset:
 		break
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
@@ -1663,8 +1807,8 @@ func TestJSONTrackerData(t *testing.T) {
 	
 
 }
-func TestMarshalUnmarshalTritiumMotorDrive(t *testing.T) {
-	v := &TritiumMotorDrive{}
+func TestMarshalUnmarshalTritiumMotorDriveL(t *testing.T) {
+	v := &TritiumMotorDriveL{}
 	bin, err := v.MarshalPacket()
 	if err != nil {
 		t.Fatal(err)
@@ -1675,9 +1819,9 @@ func TestMarshalUnmarshalTritiumMotorDrive(t *testing.T) {
 	}
 }
 
-func TestJSONTritiumMotorDrive(t *testing.T) {
+func TestJSONTritiumMotorDriveL(t *testing.T) {
 
-	v := &TritiumMotorDrive{}
+	v := &TritiumMotorDriveL{}
 
 	rawData, err := json.Marshal(v)
 	if err != nil {
@@ -1691,7 +1835,7 @@ func TestJSONTritiumMotorDrive(t *testing.T) {
 	}
 
 	switch underlying := p.(type) {
-	case *TritiumMotorDrive:
+	case *TritiumMotorDriveL:
 		break
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
@@ -1699,8 +1843,8 @@ func TestJSONTritiumMotorDrive(t *testing.T) {
 	
 
 }
-func TestMarshalUnmarshalTritiumMotorPower(t *testing.T) {
-	v := &TritiumMotorPower{}
+func TestMarshalUnmarshalTritiumMotorPowerL(t *testing.T) {
+	v := &TritiumMotorPowerL{}
 	bin, err := v.MarshalPacket()
 	if err != nil {
 		t.Fatal(err)
@@ -1711,9 +1855,9 @@ func TestMarshalUnmarshalTritiumMotorPower(t *testing.T) {
 	}
 }
 
-func TestJSONTritiumMotorPower(t *testing.T) {
+func TestJSONTritiumMotorPowerL(t *testing.T) {
 
-	v := &TritiumMotorPower{}
+	v := &TritiumMotorPowerL{}
 
 	rawData, err := json.Marshal(v)
 	if err != nil {
@@ -1727,7 +1871,7 @@ func TestJSONTritiumMotorPower(t *testing.T) {
 	}
 
 	switch underlying := p.(type) {
-	case *TritiumMotorPower:
+	case *TritiumMotorPowerL:
 		break
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
@@ -1735,8 +1879,8 @@ func TestJSONTritiumMotorPower(t *testing.T) {
 	
 
 }
-func TestMarshalUnmarshalTritiumReset(t *testing.T) {
-	v := &TritiumReset{}
+func TestMarshalUnmarshalTritiumResetL(t *testing.T) {
+	v := &TritiumResetL{}
 	bin, err := v.MarshalPacket()
 	if err != nil {
 		t.Fatal(err)
@@ -1747,9 +1891,9 @@ func TestMarshalUnmarshalTritiumReset(t *testing.T) {
 	}
 }
 
-func TestJSONTritiumReset(t *testing.T) {
+func TestJSONTritiumResetL(t *testing.T) {
 
-	v := &TritiumReset{}
+	v := &TritiumResetL{}
 
 	rawData, err := json.Marshal(v)
 	if err != nil {
@@ -1763,7 +1907,115 @@ func TestJSONTritiumReset(t *testing.T) {
 	}
 
 	switch underlying := p.(type) {
-	case *TritiumReset:
+	case *TritiumResetL:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalTritiumMotorDriveR(t *testing.T) {
+	v := &TritiumMotorDriveR{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONTritiumMotorDriveR(t *testing.T) {
+
+	v := &TritiumMotorDriveR{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *TritiumMotorDriveR:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalTritiumMotorPowerR(t *testing.T) {
+	v := &TritiumMotorPowerR{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONTritiumMotorPowerR(t *testing.T) {
+
+	v := &TritiumMotorPowerR{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *TritiumMotorPowerR:
+		break
+	default:
+		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
+	}
+	
+
+}
+func TestMarshalUnmarshalTritiumResetR(t *testing.T) {
+	v := &TritiumResetR{}
+	bin, err := v.MarshalPacket()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = v.UnmarshalPacket(bin)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestJSONTritiumResetR(t *testing.T) {
+
+	v := &TritiumResetR{}
+
+	rawData, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := v.CANId()
+	p, err := FromJson(id, rawData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	switch underlying := p.(type) {
+	case *TritiumResetR:
 		break
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)

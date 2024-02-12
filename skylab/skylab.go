@@ -84,18 +84,16 @@ func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
 // ---- other wire encoding business ----
 
 // internal structure for partially decoding json object.
-// includes
 type RawJsonEvent struct {
 	Timestamp int64           `json:"ts" db:"ts"`
-	Id        uint32          `json:"id"`
 	Name      string          `json:"name"`
 	Data      json.RawMessage `json:"data"`
 }
 
-// BusEvent is a timestamped Skylab packet
+// BusEvent is a timestamped Skylab packet - it contains
 type BusEvent struct {
 	Timestamp time.Time `json:"ts"`
-	Id        uint32    `json:"id"`
+	Name      string    `json:"id"`
 	Data      Packet    `json:"data"`
 }
 
@@ -103,10 +101,10 @@ func (e BusEvent) MarshalJSON() (b []byte, err error) {
 	// create the underlying raw event
 	j := &RawJsonEvent{
 		Timestamp: e.Timestamp.UnixMilli(),
-		Id:        e.Id,
-		Name:      e.Data.String(),
+		Name:      e.Name,
 	}
 	// now we use the magic Packet -> map[string]interface{} function
+	// FIXME: this uses reflection and isn't good for the economy
 	j.Data, err = json.Marshal(e.Data)
 	if err != nil {
 		return nil, err
@@ -126,40 +124,10 @@ func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	}
 
 	e.Timestamp = time.UnixMilli(j.Timestamp)
-	e.Id = j.Id
-	e.Data, err = FromJson(j.Id, j.Data)
+	e.Name = j.Name
+	e.Data, err = FromJson(j.Name, j.Data)
 
 	return err
-}
-
-func (e *BusEvent) MarshalMsg(b []byte) ([]byte, error) {
-
-	// we need to send the bytes as a []byte instead of
-	// an object like the JSON one (lose self-documenting)
-	data, err := e.Data.MarshalPacket()
-	if err != nil {
-		return nil, err
-	}
-	rawEv := &msgpRawEvent{
-		Timestamp: uint32(e.Timestamp.UnixMilli()),
-		Id:        uint32(e.Id),
-		Data:      data,
-	}
-
-	return rawEv.MarshalMsg(b)
-}
-
-func (e *BusEvent) UnmarshalMsg(b []byte) ([]byte, error) {
-	rawEv := &msgpRawEvent{}
-	remain, err := rawEv.UnmarshalMsg(b)
-	if err != nil {
-		return remain, err
-	}
-	e.Timestamp = time.UnixMilli(int64(rawEv.Timestamp))
-	e.Id = rawEv.Id
-	e.Data, err = FromCanFrame(rawEv.Id, rawEv.Data)
-
-	return remain, err
 }
 
 // we need to be able to parse the JSON as well.  this is done using the
