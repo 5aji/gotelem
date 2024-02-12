@@ -5,7 +5,7 @@ package cli
 import (
 	"time"
 
-	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/internal/can"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/socketcan"
 	"github.com/urfave/cli/v2"
@@ -77,7 +77,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	defer broker.Unsubscribe("socketCAN")
 
 	// make a channel to receive socketCAN frames.
-	rxCan := make(chan gotelem.Frame)
+	rxCan := make(chan can.Frame)
 
 	go func() {
 		for {
@@ -89,27 +89,25 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 		}
 	}()
 
-	var frame gotelem.Frame
+	var frame can.Frame
 	for {
 		select {
 		case msg := <-rxCh:
 
-			id, d, _ := skylab.ToCanFrame(msg.Data)
+			frame, err = skylab.ToCanFrame(msg.Data)
 
-			frame.Id = id
-			frame.Data = d
 
 			s.sock.Send(&frame)
 
 		case msg := <-rxCan:
-			p, err := skylab.FromCanFrame(msg.Id, msg.Data)
+			p, err := skylab.FromCanFrame(msg)
 			if err != nil {
 				logger.Warn("error parsing can packet", "id", msg.Id)
 				continue
 			}
 			cde := skylab.BusEvent{
 				Timestamp: time.Now(),
-				Id:        msg.Id,
+				Name: p.String(),
 				Data:      p,
 			}
 			broker.Publish("socketCAN", cde)

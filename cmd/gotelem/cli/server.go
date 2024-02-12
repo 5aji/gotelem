@@ -32,9 +32,10 @@ var serveFlags = []cli.Flag{
 		Usage:       "file to store log to",
 	},
 	&cli.PathFlag{
-		Name:  "db",
-		Value: "gotelem.db",
-		Usage: "database to serve",
+		Name:        "db",
+		Aliases:     []string{"d"},
+		DefaultText: "gotelem.db",
+		Usage:       "database to serve, if not specified will use memory",
 	},
 }
 
@@ -161,7 +162,6 @@ func (r *rpcService) Start(ctx *cli.Context, deps svcDeps) error {
 }
 
 func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
-	//	reader := msgp.NewReader(conn)
 
 	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
 
@@ -353,7 +353,7 @@ func (d *dbLoggingService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	for {
 		select {
 		case msg := <-rxCh:
-			tdb.AddEventsCtx(cCtx.Context, msg)
+			tdb.AddEventsCtx(cCtx.Context, &msg)
 		case <-cCtx.Done():
 			return
 		}

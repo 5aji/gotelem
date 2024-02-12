@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -72,11 +71,11 @@ func (tdb *TelemDb) SetVersion(version int) error {
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `
-INSERT INTO "bus_events" (ts, name, data) VALUES ($1, $2, json($3));
+INSERT INTO "bus_events" (ts, name, data) VALUES
 `
 
 // AddEvent adds the bus event to the database.
-func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent) (err error) {
+func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...*skylab.BusEvent) (err error) {
 	//
 	tx, err := tdb.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -107,7 +106,7 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 		tx.Rollback()
 		return
 	}
-	//TODO: log the number of rows modified/inserted 
+	//TODO: log the number of rows modified/inserted
 	_, err = stmt.ExecContext(ctx, vals...)
 	if err != nil {
 		tx.Rollback()
@@ -118,11 +117,10 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 	return
 }
 
-func (tdb *TelemDb) AddEvents(events ...skylab.BusEvent) (err error) {
+func (tdb *TelemDb) AddEvents(events ...*skylab.BusEvent) (err error) {
 
 	return tdb.AddEventsCtx(context.Background(), events...)
 }
-
 
 /// Query fragment guide:
 /// We need to be able to easily construct safe(!) and meaningful queries programatically
@@ -198,7 +196,7 @@ func (tdb *TelemDb) GetEvents(limit int, where ...QueryFrag) (events []skylab.Bu
 
 		BusEv := skylab.BusEvent{
 			Timestamp: time.UnixMilli(int64(ev.Timestamp)),
-			Name:       ev.Name,
+			Name:      ev.Name,
 		}
 		BusEv.Data, err = skylab.FromJson(ev.Name, ev.Data)
 

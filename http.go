@@ -46,8 +46,6 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler 
 	// To future residents - you can add new API calls/systems in /api/v2
 	// Don't break anything in api v1! keep legacy code working!
 
-	// serve up a local status page.
-
 	return r
 }
 
@@ -69,7 +67,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 	r.Route("/packets", func(r chi.Router) {
 		r.Get("/subscribe", apiV1PacketSubscribe(broker, db))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			var pkgs []skylab.BusEvent
+			var pkgs []*skylab.BusEvent
 			decoder := json.NewDecoder(r.Body)
 			if err := decoder.Decode(&pkgs); err != nil {
 				w.WriteHeader(http.StatusTeapot)
@@ -111,7 +109,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 
 // apiV1Subscriber is a websocket session for the v1 api.
 type apiV1Subscriber struct {
-	idFilter []uint32 // list of Ids to subscribe to. If it's empty, subscribes to all.
+	nameFilter []string // names of packets we care about.
 }
 
 // this is a websocket stream.
@@ -143,13 +141,14 @@ func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 			case <-r.Context().Done():
 				return
 			case msgIn := <-sub:
-				if len(sess.idFilter) == 0 {
+				if len(sess.nameFilter) == 0 {
 					// send it.
 					wsjson.Write(r.Context(), c, msgIn)
 				}
-				for _, id := range sess.idFilter {
-					if id == msgIn.Id {
+				for _, name := range sess.nameFilter {
+					if name == msgIn.Name {
 						// send it
+						wsjson.Write(r.Context(), c, msgIn)
 						break
 					}
 				}

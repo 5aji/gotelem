@@ -12,6 +12,7 @@ import (
 	// this is needed so that we can run make_skylab.go
 	// without this, the yaml library will be removed
 	// when we run `go mod tidy`
+	"github.com/kschamplin/gotelem/internal/can"
 	_ "gopkg.in/yaml.v3"
 )
 
@@ -62,7 +63,7 @@ type Unmarshaler interface {
 
 // Ider is a packet that can get its ID, based on the index of the packet, if any.
 type Ider interface {
-	CANId() (uint32, error)
+	CanId() (can.CanID, error)
 }
 
 // Sizer allows for fast allocation.
@@ -71,13 +72,15 @@ type Sizer interface {
 }
 
 // CanSend takes a packet and makes CAN framing data.
-func ToCanFrame(p Packet) (id uint32, data []byte, err error) {
+func ToCanFrame(p Packet) (f can.Frame, err error) {
 
-	id, err = p.CANId()
+
+	f.Id, err = p.CanId()
 	if err != nil {
 		return
 	}
-	data, err = p.MarshalPacket()
+	f.Data, err = p.MarshalPacket()
+	f.Kind = can.CanDataFrame
 	return
 }
 

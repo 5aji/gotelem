@@ -3,6 +3,9 @@ from typing import Dict, Optional, List, Union
 from enum import Enum
 from attrs import define, field, validators
 
+# we define a validator for our names - alphanumeric and underscores
+# most things can't support numbers as the first character, so we don't either.
+name_validator = validators.matches_re(r"^[A-Za-z_][A-Za-z0-9_]?$")
 
 @define
 class Bus():
@@ -58,7 +61,7 @@ class FieldType(str, Enum):
 
 @define
 class CustomTypeDef():
-    name: str
+    name: str = field(validator=[name_validator])
     base_type: FieldType # should be a strict size
     values: Union[List[str], Dict[str, int]]
 
@@ -66,11 +69,11 @@ class CustomTypeDef():
 @define
 class BitfieldBit():
     "micro class to represent one bit in bitfields"
-    name: str
+    name: str = field(validator=[name_validator])
 
 @define
 class Field():
-    name: str = field(validator=[validators.matches_re(r"^[A-Za-z0-9_]+$")])
+    name: str = field(validator=[name_validator])
     type: FieldType
 
     #metadata
@@ -80,7 +83,7 @@ class Field():
 
 @define
 class BitField():
-    name: str = field(validator=[validators.matches_re(r"^[A-Za-z0-9_]+$")])
+    name: str = field(validator=[name_validator])
     type: str = field(default="bitfield", init=False) # it's a constant value
     bits: List[BitfieldBit]
 
