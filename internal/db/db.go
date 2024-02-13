@@ -72,8 +72,7 @@ func (tdb *TelemDb) SetVersion(version int) error {
 
 // sql expression to insert a bus event into the packets database.1
 const sqlInsertEvent = `
-INSERT INTO "bus_events" (ts, name, data) VALUES
-`
+INSERT INTO "bus_events" (ts, name, data) VALUES `
 
 // AddEvent adds the bus event to the database.
 func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent) (n int64, err error) {
@@ -150,7 +149,7 @@ func (tdb *TelemDb) AddEventStreamCtx(ctx context.Context, events <-chan skylab.
 	bulkStmt, err := makePreparedStmt(ctx, tx, BatchSize)
 
 	// this is the list of values that we use.
-	valBatch := make([]interface{}, 0, BatchSize * 3)
+	valBatch := make([]interface{}, 0, BatchSize*3)
 	batchIdx := 0
 	for {
 		e, more := <-events
