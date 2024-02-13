@@ -91,7 +91,7 @@ func importAction(ctx *cli.Context) error {
 	batchIdx := 0
 
 	// stats for imports
-	var n_pkt atomic.Int64 
+	var n_pkt atomic.Int64
 
 	delegateInsert := func(events []skylab.BusEvent) {
 		n, err := db.AddEventsCtx(ctx.Context, events...)
@@ -130,7 +130,7 @@ func importAction(ctx *cli.Context) error {
 		if batchIdx >= int(bSize) {
 			// flush it!!!!
 			wg.Add(1)
-			e := make([]skylab.BusEvent, 0, bSize)
+			e := make([]skylab.BusEvent, bSize)
 			copy(e, eventsBatch)
 			go func(e []skylab.BusEvent) {
 				delegateInsert(e)
