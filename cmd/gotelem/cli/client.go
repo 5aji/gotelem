@@ -52,7 +52,7 @@ var importCmd = &cli.Command{
 		&cli.UintFlag{
 			Name:  "batch-size",
 			Usage: "the maximum size of each SQL transaction",
-			Value: 50,
+			Value: 800,
 		},
 	},
 	Action: importAction,
@@ -84,12 +84,12 @@ func importAction(ctx *cli.Context) error {
 
 	// we should batch data, avoiding individual transactions to the database.
 	bSize := ctx.Uint("batch-size")
-	eventsBatch := make([]*skylab.BusEvent, bSize)
+	eventsBatch := make([]skylab.BusEvent, bSize)
 
 	batchIdx := 0
 
 	// stats for imports
-	n_packets := 0
+	var n_packets int64 = 0
 	n_unknown := 0
 	n_error := 0
 	for {
@@ -109,29 +109,30 @@ func importAction(ctx *cli.Context) error {
 			continue
 		} else if err != nil {
 			// TODO: we should consider absorbing all errors.
-			fmt.Printf("got an error %v\n", err)
+			fmt.Printf("got an error processing %s: %v\n", line, err)
 			n_error++
 			continue
 		}
-		n_packets++
 		eventsBatch[batchIdx] = f
 		batchIdx++
 		if batchIdx >= int(bSize) {
 			// flush it!!!!
-			err = db.AddEventsCtx(ctx.Context, eventsBatch...)
+			n, err := db.AddEventsCtx(ctx.Context, eventsBatch...)
 			if err != nil {
 				fmt.Printf("error adding to database %v\n", err)
 			}
+			n_packets += n
 			batchIdx = 0 // reset the batch
 		}
 
 	}
 	// check if we have remaining packets and flush them
 	if batchIdx > 0 {
-		err = db.AddEventsCtx(ctx.Context, eventsBatch[:batchIdx]...) // note the slice here!
+		n, err := db.AddEventsCtx(ctx.Context, eventsBatch[:batchIdx]...) // note the slice here!
 		if err != nil {
 			fmt.Printf("error adding to database %v\n", err)
 		}
+		n_packets += n
 	}
 	fmt.Printf("import status: %d successful, %d unknown, %d errors\n", n_packets, n_unknown, n_error)
 

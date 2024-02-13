@@ -17,7 +17,7 @@ import (
 
 func init() {
 	sql.Register("custom_sqlite3", &sqlite3.SQLiteDriver{
-		// TODO: add functions that convert between unix milliseconds and ISO 8601
+		// TODO: add helper that convert between unix milliseconds and sqlite times?
 	})
 }
 
@@ -25,6 +25,7 @@ type TelemDb struct {
 	db *sqlx.DB
 }
 
+// TelemDbOption lets you customize the behavior of the sqlite database
 type TelemDbOption func(*TelemDb) error
 
 func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error) {
@@ -75,11 +76,11 @@ INSERT INTO "bus_events" (ts, name, data) VALUES
 `
 
 // AddEvent adds the bus event to the database.
-func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...*skylab.BusEvent) (err error) {
+func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent) (n int64, err error) {
 	//
+	n = 0
 	tx, err := tdb.db.BeginTx(ctx, nil)
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 
@@ -87,39 +88,99 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...*skylab.BusEvent
 	const rowSql = "(?, ?, json(?))"
 	inserts := make([]string, len(events))
 	vals := []interface{}{}
-	for idx, b := range events {
+	idx := 0 // we have to manually increment, because sometimes we don't insert.
+	for _, b := range events {
 		inserts[idx] = rowSql
 		var j []byte
 		j, err = json.Marshal(b.Data)
 
 		if err != nil {
-			tx.Rollback()
-			return
+			// we had some error turning the packet into json.
+			continue // we silently skip.
 		}
+
 		vals = append(vals, b.Timestamp.UnixMilli(), b.Data.String(), j)
+		idx++
 	}
 
 	// construct the full statement now
-	sqlStmt = sqlStmt + strings.Join(inserts, ",")
+	sqlStmt = sqlStmt + strings.Join(inserts[:idx], ",")
 	stmt, err := tx.PrepareContext(ctx, sqlStmt)
 	if err != nil {
 		tx.Rollback()
 		return
 	}
-	//TODO: log the number of rows modified/inserted
-	_, err = stmt.ExecContext(ctx, vals...)
+	res, err := stmt.ExecContext(ctx, vals...)
 	if err != nil {
 		tx.Rollback()
 		return
 	}
+	n, err = res.RowsAffected()
 
 	tx.Commit()
 	return
 }
 
-func (tdb *TelemDb) AddEvents(events ...*skylab.BusEvent) (err error) {
+func (tdb *TelemDb) AddEvents(events ...skylab.BusEvent) (int64, error) {
 
 	return tdb.AddEventsCtx(context.Background(), events...)
+}
+
+// Streaming logger.
+func (tdb *TelemDb) AddEventStreamCtx(ctx context.Context, events <-chan skylab.BusEvent, done chan<- bool) error {
+	const BatchSize = 500
+
+	tx, err := tdb.db.BeginTx(ctx, nil)
+	defer tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	makePreparedStmt := func(ctx context.Context, tx *sql.Tx, n int) (*sql.Stmt, error) {
+		sqlStmt := sqlInsertEvent
+		const rowSql = "(?, ?, json(?))"
+		inserts := make([]string, n)
+		for i := 0; i < n; i++ {
+			inserts[n] = rowSql
+		}
+		sqlStmt = sqlStmt + strings.Join(inserts, ",")
+		return tx.PrepareContext(ctx, sqlStmt)
+	}
+
+	bulkStmt, err := makePreparedStmt(ctx, tx, BatchSize)
+
+	// this is the list of values that we use.
+	valBatch := make([]interface{}, 0, BatchSize * 3)
+	batchIdx := 0
+	for {
+		e, more := <-events
+		if more {
+			j, err := json.Marshal(e.Data)
+			if err != nil {
+				continue // skip things that couldn't be marshalled
+			}
+			valBatch = append(valBatch, e.Timestamp.UnixMilli(), e.Data.String(), j)
+			batchIdx++
+			if batchIdx >= BatchSize {
+				_, err := bulkStmt.ExecContext(ctx, valBatch...)
+				if err != nil {
+					continue
+				}
+			}
+		} else {
+			break
+		}
+
+	}
+	// create a statement for the remaining items.
+	lastStmt, err := makePreparedStmt(ctx, tx, batchIdx)
+	if err != nil {
+		return nil
+	}
+	_, err = lastStmt.ExecContext(ctx, valBatch...)
+	done <- true
+
+	return nil
 }
 
 /// Query fragment guide:

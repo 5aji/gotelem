@@ -37,9 +37,10 @@ func NewFormatError(msg string, err error) error {
 // A Parser takes a string containing one line of a particular log file
 // and returns an associated skylab.BusEvent representing the packet.
 // if no packet is found, an error is returned instead.
-type ParserFunc func(string) (*skylab.BusEvent, error)
+type ParserFunc func(string) (skylab.BusEvent, error)
 
-func parseCanDumpLine(dumpLine string) (b *skylab.BusEvent, err error) {
+func parseCanDumpLine(dumpLine string) (b skylab.BusEvent, err error) {
+	b = skylab.BusEvent{}
 	// dumpline looks like this:
 	// (1684538768.521889) can0 200#8D643546
 	// remove trailing newline
@@ -74,9 +75,7 @@ func parseCanDumpLine(dumpLine string) (b *skylab.BusEvent, err error) {
 		Kind: can.CanDataFrame,
 	}
 
-	b = &skylab.BusEvent{
-		Timestamp: time.Unix(unixSeconds, unixMicros),
-	}
+	b.Timestamp = time.Unix(unixSeconds, unixMicros)
 
 	b.Data, err = skylab.FromCanFrame(frame)
 
@@ -91,7 +90,8 @@ func parseCanDumpLine(dumpLine string) (b *skylab.BusEvent, err error) {
 	return
 }
 
-func parseTelemLogLine(line string) (b *skylab.BusEvent, err error) {
+func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
+	b = skylab.BusEvent{}
 	// strip trailng newline since we rely on it being gone
 	line = strings.TrimSpace(line)
 	// data is of the form
@@ -149,9 +149,8 @@ func parseTelemLogLine(line string) (b *skylab.BusEvent, err error) {
 		Kind: can.CanDataFrame,
 	}
 
-	b = &skylab.BusEvent{
-		Timestamp: ts,
-	}
+	b.Timestamp = ts
+	
 	b.Data, err = skylab.FromCanFrame(frame)
 	if err != nil {
 		err = NewFormatError("failed to parse can frame", err)
