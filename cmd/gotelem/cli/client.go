@@ -60,6 +60,8 @@ var importCmd = &cli.Command{
 	Action: importAction,
 }
 
+// importAction peforms a file import to the database. It can use any of the parsers provided
+// by logparsers. Adding new parsers there will work.
 func importAction(ctx *cli.Context) error {
 	path := ctx.Args().Get(0)
 	if path == "" {
@@ -102,6 +104,7 @@ func importAction(ctx *cli.Context) error {
 	}
 
 	var wg sync.WaitGroup
+	var linenum int64 = 0
 	n_unknown := 0
 	n_error := 0
 	for {
@@ -115,17 +118,16 @@ func importAction(ctx *cli.Context) error {
 		f, err := pfun(line)
 		var idErr *skylab.UnknownIdError
 		if errors.As(err, &idErr) {
-			// unknown id
 			fmt.Printf("unknown id %v\n", idErr.Error())
 			n_unknown++
 			continue
 		} else if err != nil {
-			// TODO: we should consider absorbing all errors.
-			fmt.Printf("got an error processing '%s': %v\n", strings.TrimSpace(line), err)
+			fmt.Printf("got an error processing line %d: %v\n", linenum, err)
 			n_error++
 			continue
 		}
 		eventsBatch[batchIdx] = f
+		linenum++
 		batchIdx++
 		if batchIdx >= int(bSize) {
 			// flush it!!!!
@@ -145,11 +147,13 @@ func importAction(ctx *cli.Context) error {
 		wg.Add(1)
 
 		go func() {
-			// n, err := db.AddEventsCtx(ctx.Context, eventsBatch[:batchIdx]...) // note the slice here!
+			// since we don't do any modification
+			// we can avoid the copy
 			delegateInsert(eventsBatch[:batchIdx])
 			wg.Done()
 		}()
 	}
+	// wait for any goroutines.
 	wg.Wait()
 	fmt.Printf("import status: %d successful, %d unknown, %d errors\n", n_pkt.Load(), n_unknown, n_error)
 
