@@ -28,14 +28,19 @@ type TelemDb struct {
 // TelemDbOption lets you customize the behavior of the sqlite database
 type TelemDbOption func(*TelemDb) error
 
+// this string is used to open the read-write db.
+// the extra options improve performance significantly.
+const rwDbPathFmt = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
+
+
 func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error) {
 	tdb = &TelemDb{}
-	tdb.db, err = sqlx.Connect("sqlite3", path)
+
+	dbStr := fmt.Sprintf(rwDbPathFmt, path)
+	tdb.db, err = sqlx.Connect("sqlite3", dbStr)
 	if err != nil {
 		return
 	}
-	// TODO: add options support.
-
 	for _, fn := range options {
 		err = fn(tdb)
 		if err != nil {
@@ -43,13 +48,12 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 		}
 	}
 
-	var version int
-	err = tdb.db.Get(&version, "PRAGMA user_version")
+	// perform any database migrations
+	version, err := tdb.GetVersion()
 	if err != nil {
 		return
 	}
-
-	// get latest version of migrations - then run the SQL in order to perform them
+	// TODO: use logging instead of printf
 	fmt.Printf("starting version %d\n", version)
 
 	version, err = RunMigrations(tdb)
