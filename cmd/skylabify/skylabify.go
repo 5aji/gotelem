@@ -120,7 +120,7 @@ func run(ctx *cli.Context) (err error) {
 			continue
 		} else if err != nil {
 			// TODO: we should consider absorbing all errors.
-			fmt.Printf("got an error %v\n", err)
+			slog.Error("got an error", "err", err)
 			n_err++
 			continue
 		}

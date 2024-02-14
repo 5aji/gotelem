@@ -90,6 +90,7 @@ func parseCanDumpLine(dumpLine string) (b skylab.BusEvent, err error) {
 	return
 }
 
+var telemRegex = regexp.MustCompile(`^(\d+).(\d{3}) (\w{3})(\w+)$`)
 func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 	b = skylab.BusEvent{}
 	// strip trailng newline since we rely on it being gone
@@ -99,7 +100,6 @@ func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 	// the second part there is 3 nibbles (12 bits, 3 hex chars) for can ID,
 	// the rest is data.
 	// this regex does the processing.
-	r := regexp.MustCompile(`^(\d+).(\d{3}) (\w{3})(\w+)$`)
 
 	// these files tend to get corrupted. there are all kinds of nasties that can happen.
 	// defense against random panics
@@ -108,7 +108,7 @@ func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 			err = NewFormatError("caught panic", nil)
 		}
 	}()
-	a := r.FindStringSubmatch(line)
+	a := telemRegex.FindStringSubmatch(line)
 	if a == nil || len(a) != 5 {
 		err = NewFormatError("no regex match", nil)
 		return

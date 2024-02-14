@@ -78,6 +78,7 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 	//
 	n = 0
 	tx, err := tdb.db.BeginTx(ctx, nil)
+	defer tx.Rollback()
 	if err != nil {
 		return
 	}
@@ -104,13 +105,12 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 	// construct the full statement now
 	sqlStmt = sqlStmt + strings.Join(inserts[:idx], ",")
 	stmt, err := tx.PrepareContext(ctx, sqlStmt)
+	defer stmt.Close()
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 	res, err := stmt.ExecContext(ctx, vals...)
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 	n, err = res.RowsAffected()
