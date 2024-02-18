@@ -70,7 +70,7 @@ var serveThings = []service{
 	&xBeeService{},
 	&canLoggerService{},
 	&rpcService{},
-	&dbLoggingService{},
+	&dbWriterService{},
 	&httpService{},
 }
 
@@ -331,24 +331,26 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	return
 }
 
-// dbLoggingService listens to the CAN packet broker and saves packets to the database.
-type dbLoggingService struct {
+// dbWriterService listens to the CAN packet broker and saves packets to the database.
+type dbWriterService struct {
 }
 
-func (d *dbLoggingService) Status() {
+func (d *dbWriterService) Status() {
 
 }
 
-func (d *dbLoggingService) String() string {
+func (d *dbWriterService) String() string {
 	return "db logger"
 }
 
-func (d *dbLoggingService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+func (d *dbWriterService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	// put CAN packets from the broker into the database.
 	tdb := deps.Db
-	rxCh, err := deps.Broker.Subscribe("dbRecorder")
-	defer deps.Broker.Unsubscribe("dbRecorder")
+	rxCh, err := deps.Broker.Subscribe("dbWriter")
+	defer deps.Broker.Unsubscribe("dbWriter")
+
+	// TODO: add buffering + timeout/backpressure
 
 	for {
 		select {
