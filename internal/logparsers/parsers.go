@@ -128,6 +128,11 @@ func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 	}
 	ts := time.Unix(unixSeconds, unixMillis*1e6)
 
+	// VALIDATION STEP: sometimes the data gets really whack.
+	// We check that the time is between 2017 and 2032.
+	// Realistically we will not be using this software then.
+	// TODO: add this
+
 	id, err := strconv.ParseUint(a[3], 16, 16)
 	if err != nil {
 		err = NewFormatError("failed to parse id", err)

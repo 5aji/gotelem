@@ -81,11 +81,11 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 
 		})
 
-		// this is to get packets by a name.
-		r.Get("/{name:[a-z_]+}", func(w http.ResponseWriter, r *http.Request) {
-			// support field getting (matching too?)
-			// support limit
+		// this is to get a single field
+		r.Get("/{name:[a-z_]+}/{field:[a-z_]}", func(w http.ResponseWriter, r *http.Request) {
 
+			// we need a start and end time. If none is provided,
+			// we use unix epoch as start, and now + 1 day as end.
 		})
 
 	})
