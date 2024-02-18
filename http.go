@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -82,10 +83,40 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 		})
 
 		// this is to get a single field
-		r.Get("/{name:[a-z_]+}/{field:[a-z_]}", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", func(w http.ResponseWriter, r *http.Request) {
+			var err error
 
 			// we need a start and end time. If none is provided,
 			// we use unix epoch as start, and now + 1 day as end.
+			start := time.Unix(0,0)
+			startString := r.URL.Query().Get("start")
+			if startString != "" {
+				start, err = time.Parse(time.RFC3339, startString)
+				if err != nil {
+
+				}
+			}
+			end := time.Now().Add(1*time.Hour)
+			endParam := r.URL.Query().Get("start")
+			if endParam != "" {
+				end, err = time.Parse(time.RFC3339, endParam)
+				if err != nil {
+				}
+			}
+			name := chi.URLParam(r, "name")
+			field := chi.URLParam(r, "field")
+			// TODO: add limit/pagination ?
+
+
+			res, err := db.GetValues(r.Context(), name, field, start, end)
+			if err != nil {
+				// 500 server error:
+				fmt.Print(err)
+			}
+			b, err := json.Marshal(res)
+			fmt.Print(b)
+			w.Write(b)
+
 		})
 
 	})

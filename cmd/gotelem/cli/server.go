@@ -69,7 +69,6 @@ type svcDeps struct {
 var serveThings = []service{
 	&xBeeService{},
 	&canLoggerService{},
-	&rpcService{},
 	&dbWriterService{},
 	&httpService{},
 }
@@ -326,8 +325,21 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	r := gotelem.TelemRouter(logger, broker, db)
 
+	// 
+
 	/// TODO: use custom port if specified
-	http.ListenAndServe(":8080", r)
+	server := &http.Server{
+		Addr: ":8080",
+		Handler: r,
+	}
+	go func() {
+		<- cCtx.Done()
+		logger.Info("shutting down server")
+		server.Shutdown(cCtx.Context)
+	}()
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		logger.ErrorCtx(cCtx.Context, "Error listening", "err", err)
+	}
 	return
 }
 

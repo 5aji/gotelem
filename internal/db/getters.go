@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"time"
 )
 
@@ -23,17 +23,16 @@ func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string , st
 	const SqlFrag = `
 	SELECT 
 	datetime(ts /1000.0, 'unixepoch', 'subsec') as timestamp,
-	json_extract(data, ?) as val,
-	FROM bus_events WHERE name IS ? AND timestamp BETWEEN ? AND ?
+	json_extract(data, ?) as val
+	FROM bus_events WHERE name IS ?;
 	`
 
-	fieldJson := "$." + field
-
-	rows, err := tdb.db.QueryxContext(ctx, fieldJson, packetName, start, end)
-	defer rows.Close()
+	rows, err := tdb.db.QueryxContext(ctx, "'$.current'", packetName)
 	if err != nil {
+		fmt.Print(err)
 		return nil, err
 	}
+	defer rows.Close()
 	data := make([]Datum, 0, 10)
 	for rows.Next() {
 		var d Datum
