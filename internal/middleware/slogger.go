@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"log/slog"
+
 	chi_middleware "github.com/go-chi/chi/v5/middleware"
-	"golang.org/x/exp/slog"
 )
 
 // Slogger is a slog-enabled logging middleware.

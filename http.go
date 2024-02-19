@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"time"
 
+	"log/slog"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
-	"golang.org/x/exp/slog"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
@@ -88,7 +89,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 
 			// we need a start and end time. If none is provided,
 			// we use unix epoch as start, and now + 1 day as end.
-			start := time.Unix(0,0)
+			start := time.Unix(0, 0)
 			startString := r.URL.Query().Get("start")
 			if startString != "" {
 				start, err = time.Parse(time.RFC3339, startString)
@@ -96,7 +97,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 
 				}
 			}
-			end := time.Now().Add(1*time.Hour)
+			end := time.Now().Add(1 * time.Hour)
 			endParam := r.URL.Query().Get("start")
 			if endParam != "" {
 				end, err = time.Parse(time.RFC3339, endParam)
@@ -107,14 +108,12 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 			field := chi.URLParam(r, "field")
 			// TODO: add limit/pagination ?
 
-
 			res, err := db.GetValues(r.Context(), name, field, start, end)
 			if err != nil {
 				// 500 server error:
 				fmt.Print(err)
 			}
 			b, err := json.Marshal(res)
-			fmt.Print(b)
 			w.Write(b)
 
 		})

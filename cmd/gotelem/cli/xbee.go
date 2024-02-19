@@ -11,9 +11,10 @@ import (
 	"os"
 	"syscall"
 
+	"log/slog"
+
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 // context key stuff to prevent collisions
@@ -92,7 +93,7 @@ writtend to stdout.
 }
 
 func xbeeInfo(ctx *cli.Context) error {
-	logger := slog.New(slog.NewTextHandler(os.Stderr))
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	transport := ctx.Context.Value(keyIODevice).(*xbee.Transport)
 	xb, err := xbee.NewSession(transport, logger.With("device", transport.Type()))
 	if err != nil {
@@ -115,7 +116,7 @@ func netcat(ctx *cli.Context) error {
 		return cli.Exit("missing [addr] argument", int(syscall.EINVAL))
 
 	}
-	logger := slog.New(slog.NewTextHandler(os.Stderr))
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	transport := ctx.Context.Value(keyIODevice).(*xbee.Transport)
 	xb, _ := xbee.NewSession(transport, logger.With("devtype", transport.Type()))

@@ -13,7 +13,7 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func TestXBeeHardware(t *testing.T) {
@@ -69,14 +69,12 @@ func TestXBeeHardware(t *testing.T) {
 		}
 	})
 
-
 	t.Run("check source address", func(t *testing.T) {
 		a := sess.LocalAddr()
 
 		t.Logf("local device address is %v", a)
-		
-	})
 
+	})
 
 	t.Run("Check device name", func(t *testing.T) {
 		a, err := sess.ATCommand([2]byte{'N', 'I'}, nil, false)
@@ -88,7 +86,6 @@ func TestXBeeHardware(t *testing.T) {
 		name := string(a)
 		t.Logf("Device Name: %s", name)
 	})
-	
 
 }
 
@@ -107,7 +104,7 @@ func TestParseDeviceString(t *testing.T) {
 			args: args{
 				dev: "blah",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 		// TODO: moar tests!

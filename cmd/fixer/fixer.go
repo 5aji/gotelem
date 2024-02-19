@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"log/slog"
+
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 // fixer resolves four major issues with CAN dumps:

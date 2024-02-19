@@ -10,10 +10,11 @@ import (
 	"strings"
 	"syscall"
 
+	"log/slog"
+
 	"github.com/kschamplin/gotelem/internal/logparsers"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 // this command can be used to decode candump logs and dump json output.
@@ -72,7 +73,6 @@ required for piping candump into skylabify. Likewise, data should be stored with
 	}
 }
 
-
 func run(ctx *cli.Context) (err error) {
 	path := ctx.Args().Get(0)
 	if path == "" {
@@ -101,7 +101,7 @@ func run(ctx *cli.Context) (err error) {
 	}
 
 	n_err := 0
-	unknown_packets := 0 
+	unknown_packets := 0
 
 	for {
 		line, err := fileReader.ReadString('\n')

@@ -4,8 +4,9 @@ import (
 	"errors"
 	"sync"
 
+	"log/slog"
+
 	"github.com/kschamplin/gotelem/skylab"
-	"golang.org/x/exp/slog"
 )
 
 type Broker struct {

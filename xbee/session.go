@@ -20,8 +20,9 @@ import (
 	"sync"
 	"time"
 
+	"log/slog"
+
 	"go.bug.st/serial"
-	"golang.org/x/exp/slog"
 )
 
 // TODO: implement net.Conn for Session/Conn. We are missing LocalAddr, RemoteAddr,
@@ -78,7 +79,6 @@ func NewSession(dev io.ReadWriteCloser, baseLog *slog.Logger) (*Session, error) 
 	// start the rx handler in the background. we close it later by closing the serial port.
 
 	go sess.rxHandler()
-
 
 	// now we should get the local address cached so LocalAddr is fast.
 	sh, err := sess.ATCommand([2]byte{'S', 'H'}, nil, false)
@@ -211,7 +211,6 @@ func (sess *Session) writeAddr(p []byte, dest uint64) (n int, err error) {
 		return 0, errors.New("timeout waiting for response")
 	}
 
-
 	// this is a tx status frame bytes, so lets parse it out.
 	if err != nil {
 		return
@@ -250,7 +249,6 @@ func (sess *Session) ATCommand(cmd [2]byte, data []byte, queued bool) (payload [
 		return nil, fmt.Errorf("error writing xbee frame: %w", err)
 	}
 
-
 	var resp *ATCmdResponse
 	select {
 	case b := <-ch:
@@ -258,7 +256,6 @@ func (sess *Session) ATCommand(cmd [2]byte, data []byte, queued bool) (payload [
 	case <-time.After(1 * time.Second):
 		return nil, errors.New("timeout waiting for response frame")
 	}
-
 
 	if err != nil {
 		return nil, err
@@ -289,7 +286,6 @@ func (sess *Session) LocalAddr() XBeeAddr {
 func (sess *Session) RemoteAddr() XBeeAddr {
 	return 0xFFFF
 }
-
 
 func (sess *Session) Dial(addr uint64) (conn *Conn, err error) {
 	if _, exist := sess.conns[addr]; exist {

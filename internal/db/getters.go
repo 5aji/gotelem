@@ -20,22 +20,20 @@ func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string, sta
 	end time.Time) ([]Datum, error) {
 	// this fragment uses json_extract from sqlite to get a single
 	// nested value.
-	const SqlFrag = `
+	SqlFrag := `
 	SELECT 
-	datetime(ts /1000.0, 'unixepoch', 'subsec') as timestamp,
-	json_extract(data, '$.' || ?) as val
-	FROM bus_events WHERE name IS ? AND timestamp IS NOT NULL
+	ts as timestamp,
+	json_extract(data, '$.current') as val
+	FROM bus_events WHERE name IS 'bms_measurement' 
 	`
-	fmt.Print(start, end, packetName, field)
-
-	rows, err := tdb.db.QueryxContext(ctx, SqlFrag, field, packetName, start, end)
+	rows, err := tdb.db.QueryxContext(ctx, SqlFrag)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	data := make([]Datum, 0, 10)
 	for rows.Next() {
-		var d Datum
+		var d Datum = Datum{}
 		err = rows.StructScan(&d)
 		if err != nil {
 			fmt.Print(err)
@@ -43,7 +41,7 @@ func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string, sta
 		}
 		data = append(data, d)
 	}
-	fmt.Print(data)
+	fmt.Print(rows.Err())
 
 	return data, nil
 }

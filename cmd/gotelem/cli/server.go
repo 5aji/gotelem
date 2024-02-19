@@ -10,12 +10,13 @@ import (
 	"sync"
 	"time"
 
+	"log/slog"
+
 	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 var serveFlags = []cli.Flag{
@@ -68,7 +69,7 @@ type svcDeps struct {
 // or if certain features are present (see cli/sqlite.go)
 var serveThings = []service{
 	&xBeeService{},
-	&canLoggerService{},
+	// &canLoggerService{},
 	&dbWriterService{},
 	&httpService{},
 }
@@ -87,7 +88,7 @@ func serve(cCtx *cli.Context) error {
 		output = io.MultiWriter(os.Stderr, f)
 	}
 	// create a new logger
-	logger := slog.New(slog.NewTextHandler(output))
+	logger := slog.New(slog.NewTextHandler(output, nil))
 
 	slog.SetDefault(logger)
 
@@ -325,20 +326,20 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	r := gotelem.TelemRouter(logger, broker, db)
 
-	// 
+	//
 
 	/// TODO: use custom port if specified
 	server := &http.Server{
-		Addr: ":8080",
+		Addr:    ":8080",
 		Handler: r,
 	}
 	go func() {
-		<- cCtx.Done()
+		<-cCtx.Done()
 		logger.Info("shutting down server")
 		server.Shutdown(cCtx.Context)
 	}()
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		logger.ErrorCtx(cCtx.Context, "Error listening", "err", err)
+		logger.ErrorContext(cCtx.Context, "Error listening", "err", err)
 	}
 	return
 }
