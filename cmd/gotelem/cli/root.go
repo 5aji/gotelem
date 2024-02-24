@@ -20,7 +20,7 @@ var f os.File
 func Execute() {
 	app := &cli.App{
 		Name:  "gotelem",
-		Usage: "see everything",
+		Usage: "The Ultimate Telemetry Tool!",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "profile",
