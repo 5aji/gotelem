@@ -31,13 +31,6 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler 
 	r.Use(middleware.Logger) // TODO: integrate with slog instead of go default logger.
 	r.Use(middleware.Recoverer)
 
-	r.Get("/schema", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		// return the spicy json response.
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(skylab.SkylabDefinitions))
-	})
-
 	// heartbeat request.
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("pong"))
@@ -84,39 +77,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 		})
 
 		// this is to get a single field
-		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", func(w http.ResponseWriter, r *http.Request) {
-			var err error
-
-			// we need a start and end time. If none is provided,
-			// we use unix epoch as start, and now + 1 day as end.
-			start := time.Unix(0, 0)
-			startString := r.URL.Query().Get("start")
-			if startString != "" {
-				start, err = time.Parse(time.RFC3339, startString)
-				if err != nil {
-
-				}
-			}
-			end := time.Now().Add(1 * time.Hour)
-			endParam := r.URL.Query().Get("start")
-			if endParam != "" {
-				end, err = time.Parse(time.RFC3339, endParam)
-				if err != nil {
-				}
-			}
-			name := chi.URLParam(r, "name")
-			field := chi.URLParam(r, "field")
-			// TODO: add limit/pagination ?
-
-			res, err := db.GetValues(r.Context(), name, field, start, end)
-			if err != nil {
-				// 500 server error:
-				fmt.Print(err)
-			}
-			b, err := json.Marshal(res)
-			w.Write(b)
-
-		})
+		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}")
 
 	})
 
@@ -188,6 +149,46 @@ func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
 		}
 
 	}
+}
+
+// apiV1GetValues is a function that creates a handler for
+// getting the specific value from a packet.
+// this is useful for OpenMCT or other viewer APIs
+func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
+
+		// we need a start and end time. If none is provided,
+		// we use unix epoch as start, and now + 1 day as end.
+		start := time.Unix(0, 0)
+		startString := r.URL.Query().Get("start")
+		if startString != "" {
+			start, err = time.Parse(time.RFC3339, startString)
+			if err != nil {
+
+			}
+		}
+		end := time.Now().Add(1 * time.Hour)
+		endParam := r.URL.Query().Get("start")
+		if endParam != "" {
+			end, err = time.Parse(time.RFC3339, endParam)
+			if err != nil {
+			}
+		}
+		name := chi.URLParam(r, "name")
+		field := chi.URLParam(r, "field")
+		
+		// TODO: add limit and pagination
+
+		res, err := db.GetValues(r.Context(), name, field, start, end)
+		if err != nil {
+			// 500 server error:
+			fmt.Print(err)
+		}
+		b, err := json.Marshal(res)
+		w.Write(b)
+	}
+
 }
 
 // TODO: rename. record is not a clear name. Runs? drives? segments?

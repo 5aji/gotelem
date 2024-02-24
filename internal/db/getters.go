@@ -3,8 +3,65 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 )
+
+// Modifier augments SQL strings.
+type Modifier interface {
+	ModifyStatement(string) string
+}
+
+
+type LimitOffsetModifier struct {
+	Limit int
+	Offset int
+}
+
+// BusEventFilter is a filter for bus events.
+type BusEventFilter struct {
+	Names []string
+	TimerangeStart time.Time
+	TimerangeEnd time.Time
+}
+
+func (bef *BusEventFilter) String() string {
+	var sb []string = make([]string, 0, 2)
+	if len(bef.Names) > 0 {
+		names := strings.Join(bef.Names, ",")
+		sb = append(sb, fmt.Sprintf("name IN (%s)", names))
+	}
+	if !bef.TimerangeStart.IsZero() && !bef.TimerangeEnd.IsZero() {
+		sb = append(sb, fmt.Sprintf(""))
+	}
+	return ""
+}
+
+type BusEventElement interface {
+	Element() string
+}
+
+type NormalExtract struct {
+	Key string
+}
+
+type JSONExtract struct {
+	Key string
+}
+
+type BusEventQuery struct {
+	Elements []BusEventElement
+	Filter BusEventFilter
+	Limits LimitOffsetModifier
+}
+
+func (beq *BusEventQuery) String() string {
+	// select
+	return ""
+}
+
+
+// now we can optionally add a limit.
 
 // Datum is a single measurement - it is more granular than a packet.
 // the classic example is bms_measurement.current
@@ -23,10 +80,10 @@ func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string, sta
 	SqlFrag := `
 	SELECT 
 	ts as timestamp,
-	json_extract(data, '$.current') as val
-	FROM bus_events WHERE name IS 'bms_measurement' 
+	json_extract(data, '$.' || ?) as val
+	FROM bus_events WHERE name IS ? 
 	`
-	rows, err := tdb.db.QueryxContext(ctx, SqlFrag)
+	rows, err := tdb.db.QueryxContext(ctx, SqlFrag, field, packetName)
 	if err != nil {
 		return nil, err
 	}
