@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -24,42 +23,6 @@ type BusEventFilter struct {
 	TimerangeStart time.Time
 	TimerangeEnd time.Time
 }
-
-func (bef *BusEventFilter) String() string {
-	var sb []string = make([]string, 0, 2)
-	if len(bef.Names) > 0 {
-		names := strings.Join(bef.Names, ",")
-		sb = append(sb, fmt.Sprintf("name IN (%s)", names))
-	}
-	if !bef.TimerangeStart.IsZero() && !bef.TimerangeEnd.IsZero() {
-		sb = append(sb, fmt.Sprintf(""))
-	}
-	return ""
-}
-
-type BusEventElement interface {
-	Element() string
-}
-
-type NormalExtract struct {
-	Key string
-}
-
-type JSONExtract struct {
-	Key string
-}
-
-type BusEventQuery struct {
-	Elements []BusEventElement
-	Filter BusEventFilter
-	Limits LimitOffsetModifier
-}
-
-func (beq *BusEventQuery) String() string {
-	// select
-	return ""
-}
-
 
 // now we can optionally add a limit.
 

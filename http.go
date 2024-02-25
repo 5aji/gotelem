@@ -77,7 +77,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 		})
 
 		// this is to get a single field
-		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}")
+		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", apiV1GetValues(db))
 
 	})
 
