@@ -9,6 +9,7 @@ Features:
 - TCP streaming system based around MessagePack-RPC for LAN control/inspection.
 - XBee integration and control for long-range communication.
 - HTTP API for easy external tool integration.
+- SQLite database format for storing telemetry, and tools to work with it.
 
 
 `GoTelem` provides a flexible system for ingesting, storing, analyzing, and distributing
@@ -20,20 +21,23 @@ telemetry information.
 
 There are probably two questions:
 
-1. Why a telemetry library that runs on an OS?
+1. What's this for?
 2. Why is it written in Go?
 
-To answer the first question, the needs of the telemetry board are ill-suited for a microcontroller
-since it requires doing multiple non-trivial tasks in parallel. The on-car system must ingest
-all can packets, write them to disk, and then transmit them over XBee if they match a filter.
-Doing fast disk I/O is difficult.
+Telemetry is an interesting system since it not only involves a microcontroller on the car acting as a transmitter,
+it also requires software running on a laptop that can recieve the data and do useful things with it. 
+Previous iterations of this PC software usually involved Python scripts that were thrown together quickly
+due to time constraints. This has a few problems, namely that performance is usually limited,
+APIs are not type-safe, and environments are not portable and require setup.
 
-There are also significant advantages to moving to using a Linux system for telemetry. We gain
-Wifi/Bluetooth/network support easily, we can integrate USB devices like a USB GPS reciever,
-and we can share common tooling between the car code and the receiver code.
+So we aught to invest in better tooling - schemas and programs that make working with 
+the data we collect easier and more consistent, as well as being [the standard](https://xkcd.com/927/).
+This tool/repo aims to package several ideas and utilities into a single, all-in-one binary.
+While that's a noble goal, design decisions are being made to support long-term evolution
+of software; we have versioned SQLite databases, that are entirely standalone.
 
 I chose to write this in Go because Go has good concurrency support, good cross-compilation,
-and relatively good performance. 
+and relatively good performance, especially when compared to interpreted languages. 
 
 C/C++ was eliminated due to being too close to the metal and having bad tooling/cross compilation.
 
@@ -44,7 +48,7 @@ robustness of the code.
 
 Rust was elminiated due to being too different from more common programming languages. Likewise
 for F#, C#, D, Zig, Nim, Julia, Racket, Elixr, and Common Lisp. Yes, I did seriouisly consider each
-of these.
+of these. C# was a viable competitor but had issues with the cross-platform story.
 
 Go has some quirks and -isms, like lacking "true" Object-Orientation, but the language is designed
 around being normal to look at, easy to write, and straightforward to understand.
@@ -58,7 +62,9 @@ own system, and it's a single executable to share to others with the same OS/arc
 
 ## Building
 
-`gotelem` was designed to be all-inclusive while being easy to build and have good cross-platform support. Binaries are a single,
-statically linked file that can be shared to other users of the same OS.  Certain features, like socketCAN support, are only enabled on platforms that
-support them (Linux). This is handled automatically; builds will exclude the socketCAN files and the additional commands and features will not be present in the CLI.
+`gotelem` was designed to be all-inclusive while being easy to build and have good cross-platform support. 
+Binaries are a single, statically linked file that can be shared to other users of the same OS.
+Certain features, like socketCAN support, are only enabled on platforms that support them (Linux). 
+This is handled automatically; builds will exclude the socketCAN files and 
+the additional commands and features will not be present in the CLI.
 
