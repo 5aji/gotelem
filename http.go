@@ -19,10 +19,6 @@ import (
 	"nhooyr.io/websocket/wsjson"
 )
 
-type slogHttpLogger struct {
-	slog.Logger
-}
-
 func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler {
 	r := chi.NewRouter()
 
@@ -165,7 +161,8 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		if startString != "" {
 			start, err = time.Parse(time.RFC3339, startString)
 			if err != nil {
-
+				// error out
+				panic("hi")
 			}
 		}
 		end := time.Now().Add(1 * time.Hour)
@@ -173,6 +170,7 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		if endParam != "" {
 			end, err = time.Parse(time.RFC3339, endParam)
 			if err != nil {
+				panic("hi")
 			}
 		}
 		name := chi.URLParam(r, "name")
@@ -186,6 +184,9 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 			fmt.Print(err)
 		}
 		b, err := json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
 		w.Write(b)
 	}
 

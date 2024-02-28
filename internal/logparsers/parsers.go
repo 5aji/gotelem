@@ -23,7 +23,7 @@ func (e *FormatError) Error() string {
 	if e.err != nil {
 		return fmt.Sprintf("%s:%s", e.msg, e.err.Error())
 	}
-	return fmt.Sprintf("%s", e.msg)
+	return e.msg
 
 }
 func (e *FormatError) Unwrap() error {

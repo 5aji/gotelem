@@ -1,6 +1,6 @@
 module github.com/kschamplin/gotelem
 
-go 1.20
+go 1.22
 
 require (
 	github.com/go-chi/chi/v5 v5.0.12
@@ -9,7 +9,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/urfave/cli/v2 v2.25.1
 	go.bug.st/serial v1.5.0
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	golang.org/x/sync v0.1.0
 	golang.org/x/sys v0.7.0
 	gopkg.in/yaml.v3 v3.0.1

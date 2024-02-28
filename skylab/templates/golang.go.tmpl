@@ -100,11 +100,7 @@ const (
 {{- end}}
 )
 
-var nameToIdMap = map[string]can.CanID{
-
-}
-
-// list of every packet ID. can be used for O(1) checks.
+// list of every packet ID. Can be used for O(1) checks.
 var idMap = map[can.CanID]bool{
 	{{ range $p := .Packets -}}
 	{{ if $p.Repeat }} 
