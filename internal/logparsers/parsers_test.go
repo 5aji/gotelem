@@ -20,13 +20,6 @@ func Test_parseCanDumpLine(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "test garbage",
-			args: args{dumpLine: "hosireoie"},
-			wantFrame: can.Frame{},
-			wantTs: time.Unix(0,0),
-			wantErr: true,
-		},
-		{
 			name: "test normal data",
 			args: args{dumpLine: "(1684538768.521889) can0 200#8D643546"},
 			wantFrame: can.Frame{
@@ -34,32 +27,8 @@ func Test_parseCanDumpLine(t *testing.T) {
 				Data: []byte{0x8d, 0x64, 0x35, 0x46},
 				Kind: can.CanDataFrame,
 			},
-			wantTs: time.Unix(1684538768, 521889),
+			wantTs: time.Unix(1684538768, 521889 * int64(time.Microsecond)),
 			wantErr: false,
-		},
-		{
-			name: "bad data length",
-			// odd number of hex data nibbles
-			args: args{dumpLine: "(1684538768.521889) can0 200#8D64354"},
-			wantFrame: can.Frame{},
-			wantTs: time.Unix(0,0),
-			wantErr: true,
-		},
-		{
-			name: "invalid hex",
-			// J is not valid hex.
-			args: args{dumpLine: "(1684538768.521889) can0 200#8D64354J"},
-			wantFrame: can.Frame{},
-			wantTs: time.Unix(0,0),
-			wantErr: true,
-		},
-		{
-			name: "bad time",
-			// we destroy the time structure.
-			args: args{dumpLine: "(badtime.521889) can0 200#8D643546"},
-			wantFrame: can.Frame{},
-			wantTs: time.Unix(0,0),
-			wantErr: true,
 		},
 		// TODO: add extended id test case
 
@@ -67,7 +36,7 @@ func Test_parseCanDumpLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotFrame, gotTs, err := parseCanDumpLine(tt.args.dumpLine)
-			if (err != nil) != tt.wantErr {
+			if (err == nil) == tt.wantErr {
 				t.Errorf("parseCanDumpLine() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -79,4 +48,48 @@ func Test_parseCanDumpLine(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_parseCanDumpLine_errors(t *testing.T) {
+	// this test tries a bunch of failure cases to ensure that they are caught and not panicking.
+
+	tests := []struct {
+		name string
+		input string
+	}{
+		{
+			name: "garbage input",
+			input: "hoiseorhijkl",
+		},
+		{
+			name: "bad data length",
+			// odd number of hex data nibbles
+			input: "(1684538768.521889) can0 200#8D64354",
+		},
+		{
+			name: "invalid hex",
+			// J is not valid hex.
+			input: "(1684538768.521889) can0 200#8D64354J",
+		},
+		{
+			name: "bad time",
+			// we destroy the time structure.
+			input: "(badtime.521889) can0 200#8D643546",
+		},
+		{
+			name: "utf8 corruption",
+			// we attempt to mess up the data with broken utf8
+			input: "(1684538768.521889) can0 200#8D6\xed\xa0\x8043546",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, ts, err := parseCanDumpLine(tt.input)
+
+			if err == nil {
+				t.Fatalf("parseCanDumpLine() expected error but instead got f = %v, ts = %v", f, ts)
+			}
+		})
+	}	
 }

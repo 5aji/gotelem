@@ -30,57 +30,66 @@ func (e *FormatError) Unwrap() error {
 	return e.err
 }
 
+// NewFormatError constructs a new format error.
 func NewFormatError(msg string, err error) error {
 	return &FormatError{msg: msg, err: err}
 }
-
 
 // type LineParserFunc is a function that takes a string
 // and returns a can frame. This is useful for common
 // can dump formats.
 type LineParserFunc func(string) (can.Frame, time.Time, error)
 
-var candumpRegex = regexp.MustCompile(`^\((\d+)\.(\d{6}) \w+ (\w+)#(\w+)$`)
+var candumpRegex = regexp.MustCompile(`^\((\d+)\.(\d{6})\) \w+ (\w+)#(\w+)$`)
 
 func parseCanDumpLine(dumpLine string) (frame can.Frame, ts time.Time, err error) {
 	frame = can.Frame{}
 	ts = time.Unix(0,0)
 	// dumpline looks like this:
 	// (1684538768.521889) can0 200#8D643546
-	// remove trailing newline
+	// remove trailing newline/whitespaces
 	dumpLine = strings.TrimSpace(dumpLine)
-	segments := strings.Split(dumpLine, " ")
-	if len(segments) != 3 {
-		err = NewFormatError("failed to split line", err)
+	m := candumpRegex.FindStringSubmatch(dumpLine)
+	if m == nil || len(m) != 5 {
+		err = NewFormatError("no regex match", nil)
 		return
 	}
 
 	var unixSeconds, unixMicros int64
-	fmt.Sscanf(segments[0], "(%d.%d)", &unixSeconds, &unixMicros)
 
-	// now we extract the remaining data:
-	hexes := strings.Split(segments[2], "#") // first portion is id, second is data
+	unixSeconds, err = strconv.ParseInt(m[1], 10, 0)
+	if err != nil {
+		err = NewFormatError("failed to parse unix seconds", err)
+		return
+	}
+	unixMicros, err = strconv.ParseInt(m[2], 10, 0)
+	if err != nil {
+		err = NewFormatError("failed to parse unix micros", err)
+		return
+	}
 
-	id, err := strconv.ParseUint(hexes[0], 16, 64)
+	id, err := strconv.ParseUint(m[3], 16, 64)
 	if err != nil {
 		err = NewFormatError("failed to parse id", err)
 		return
 	}
-	if (len(hexes[1]) % 2) != 0 {
+	if (len(m[4]) % 2) != 0 {
 		err = NewFormatError("odd number of hex characters", nil)
 		return
 	}
-	rawData, err := hex.DecodeString(hexes[1])
+	rawData, err := hex.DecodeString(m[4])
 	if err != nil {
 		err = NewFormatError("failed to decode hex data", err)
 		return
 	}
 
+	// TODO: add extended id support, need an example log and a test.
 	frame.Id =  can.CanID{Id: uint32(id), Extended: false}
 	frame.Data = rawData
 	frame.Kind = can.CanDataFrame
 
-	ts = time.Unix(unixSeconds, unixMicros)
+	ts = time.Unix(unixSeconds, unixMicros * int64(time.Microsecond))
+
 	return 
 
 }
@@ -156,10 +165,11 @@ func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
 
 }
 
-// this is how we adapt a can frame source into one that produces
-// skylab busevents
+// BusParserFunc is a function that takes a string and returns a busevent.
 type BusParserFunc func(string) (skylab.BusEvent, error)
 
+// parserBusEventMapper takes a line parser (that returns a can frame)
+// and makes it return a busEvent instead.
 func parserBusEventMapper(f LineParserFunc) BusParserFunc {
 	return func(s string) (skylab.BusEvent, error) {
 		var b = skylab.BusEvent{}
