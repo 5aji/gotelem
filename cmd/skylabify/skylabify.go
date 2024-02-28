@@ -92,7 +92,7 @@ func run(ctx *cli.Context) (err error) {
 
 	fileReader := bufio.NewReader(istream)
 
-	var pfun logparsers.ParserFunc
+	var pfun logparsers.BusParserFunc
 
 	pfun, ok := logparsers.ParsersMap[ctx.String("format")]
 	if !ok {

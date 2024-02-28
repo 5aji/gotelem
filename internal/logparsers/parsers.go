@@ -34,18 +34,26 @@ func NewFormatError(msg string, err error) error {
 	return &FormatError{msg: msg, err: err}
 }
 
-// A Parser takes a string containing one line of a particular log file
-// and returns an associated skylab.BusEvent representing the packet.
-// if no packet is found, an error is returned instead.
-type ParserFunc func(string) (skylab.BusEvent, error)
 
-func parseCanDumpLine(dumpLine string) (b skylab.BusEvent, err error) {
-	b = skylab.BusEvent{}
+// type LineParserFunc is a function that takes a string
+// and returns a can frame. This is useful for common
+// can dump formats.
+type LineParserFunc func(string) (can.Frame, time.Time, error)
+
+var candumpRegex = regexp.MustCompile(`^\((\d+)\.(\d{6}) \w+ (\w+)#(\w+)$`)
+
+func parseCanDumpLine(dumpLine string) (frame can.Frame, ts time.Time, err error) {
+	frame = can.Frame{}
+	ts = time.Unix(0,0)
 	// dumpline looks like this:
 	// (1684538768.521889) can0 200#8D643546
 	// remove trailing newline
 	dumpLine = strings.TrimSpace(dumpLine)
 	segments := strings.Split(dumpLine, " ")
+	if len(segments) != 3 {
+		err = NewFormatError("failed to split line", err)
+		return
+	}
 
 	var unixSeconds, unixMicros int64
 	fmt.Sscanf(segments[0], "(%d.%d)", &unixSeconds, &unixMicros)
@@ -68,40 +76,30 @@ func parseCanDumpLine(dumpLine string) (b skylab.BusEvent, err error) {
 		return
 	}
 
-	frame := can.Frame{
-		// TODO: fix extended ids. we assume not extended for now.
-		Id:   can.CanID{Id: uint32(id), Extended: false},
-		Data: rawData,
-		Kind: can.CanDataFrame,
-	}
+	frame.Id =  can.CanID{Id: uint32(id), Extended: false}
+	frame.Data = rawData
+	frame.Kind = can.CanDataFrame
 
-	b.Timestamp = time.Unix(unixSeconds, unixMicros)
+	ts = time.Unix(unixSeconds, unixMicros)
+	return 
 
-	b.Data, err = skylab.FromCanFrame(frame)
-
-	if err != nil {
-		err = NewFormatError("failed to parse can frame", err)
-		return
-	}
-
-	// set the name
-	b.Name = b.Data.String()
-
-	return
 }
 
-var telemRegex = regexp.MustCompile(`^(\d+).(\d{3}) (\w{3})(\w+)$`)
-func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
-	b = skylab.BusEvent{}
+// data is of the form
+// 1698180835.318 0619D80564080EBE241
+// the second part there is 3 nibbles (12 bits, 3 hex chars) for can ID,
+// the rest is data.
+// this regex does the processing. we precompile for speed.
+var telemRegex = regexp.MustCompile(`^(\d+)\.(\d{3}) (\w{3})(\w+)$`)
+
+func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
+	frame = can.Frame{}
+	ts = time.Unix(0,0)
 	// strip trailng newline since we rely on it being gone
 	line = strings.TrimSpace(line)
-	// data is of the form
-	// 1698180835.318 0619D80564080EBE241
-	// the second part there is 3 nibbles (12 bits, 3 hex chars) for can ID,
-	// the rest is data.
-	// this regex does the processing.
 
-	// these files tend to get corrupted. there are all kinds of nasties that can happen.
+	// these files tend to get corrupted.
+	// there are all kinds of nasties that can happen.
 	// defense against random panics
 	defer func() {
 		if r := recover(); r != nil {
@@ -126,7 +124,7 @@ func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 		err = NewFormatError("failed to parse unix millis", err)
 		return
 	}
-	ts := time.Unix(unixSeconds, unixMillis*1e6)
+	ts = time.Unix(unixSeconds, unixMillis*int64(time.Millisecond))
 
 	// VALIDATION STEP: sometimes the data gets really whack.
 	// We check that the time is between 2017 and 2032.
@@ -142,31 +140,44 @@ func parseTelemLogLine(line string) (b skylab.BusEvent, err error) {
 	if len(a[4])%2 != 0 {
 		// odd hex chars, protect against a panic
 		err = NewFormatError("wrong amount of hex chars", nil)
+		return
 	}
 	rawData, err := hex.DecodeString(a[4])
 	if err != nil {
 		err = NewFormatError("failed to parse hex data", err)
 		return
 	}
-	frame := can.Frame{
+	frame = can.Frame{
 		Id:   can.CanID{Id: uint32(id), Extended: false},
 		Data: rawData,
 		Kind: can.CanDataFrame,
 	}
+	return frame, ts, nil
 
-	b.Timestamp = ts
-	
-	b.Data, err = skylab.FromCanFrame(frame)
-	if err != nil {
-		err = NewFormatError("failed to parse can frame", err)
-		return
-	}
-	b.Name = b.Data.String()
-
-	return
 }
 
-var ParsersMap = map[string]ParserFunc{
-	"telem":   parseTelemLogLine,
-	"candump": parseCanDumpLine,
+// this is how we adapt a can frame source into one that produces
+// skylab busevents
+type BusParserFunc func(string) (skylab.BusEvent, error)
+
+func parserBusEventMapper(f LineParserFunc) BusParserFunc {
+	return func(s string) (skylab.BusEvent, error) {
+		var b = skylab.BusEvent{}
+		f, ts, err := f(s)
+		if err != nil {
+			return b, err
+		}
+		b.Timestamp = ts
+		b.Data, err = skylab.FromCanFrame(f)
+		if err != nil {
+			return b, err
+		}
+		b.Name = b.Data.String()
+		return b, nil
+	}
+}
+
+var ParsersMap = map[string]BusParserFunc{
+	"telem":   parserBusEventMapper(parseTelemLogLine),
+	"candump": parserBusEventMapper(parseCanDumpLine),
 }
