@@ -1,7 +1,7 @@
 CREATE TABLE "packet_definitions" (
 	"name" TEXT NOT NULL,
 	"description" TEXT,
-	"id" INTEGER NOT NULL,
+	"id" INTEGER NOT NULL
 );
 
 CREATE TABLE "field_definitions" (
