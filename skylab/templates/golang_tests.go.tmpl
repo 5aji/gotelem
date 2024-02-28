@@ -29,8 +29,7 @@ func TestJSON{{$structName}}(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	id, _ := v.CANId()
-	p, err := FromJson(id, rawData)
+	p, err := FromJson(v.String(), rawData)
 	if err != nil {
 		t.Fatal(err)
 	}

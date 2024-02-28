@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -19,7 +20,6 @@ func GetRandomBusEvent() skylab.BusEvent {
 		Timestamp: time.Now(),
 		Data:      &data,
 	}
-	ev.Id, _ = data.CANId()
 
 	return ev
 }
@@ -30,11 +30,20 @@ func TestTelemDb(t *testing.T) {
 
 	t.Run("test opening database", func(t *testing.T) {
 		var err error
-		tdb, err = OpenTelemDb("file::memory:?cache=shared")
+		// we use the underlying raw database to avoid the options.
+		tdb, err = openRawDb("file::memory:?cache=shared")
 		if err != nil {
 			t.Errorf("could not open db: %v", err)
 		}
 		tdb.db.Ping()
+		res, _ := tdb.db.Query("SELECT name FROM sqlite_master WHERE type='table'")
+
+		var table string
+
+		for res.Next() {
+			res.Scan(&table)
+			fmt.Println(table)
+		}
 	})
 
 	t.Run("test inserting bus event", func(t *testing.T) {
@@ -63,7 +72,7 @@ func TestTelemDb(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				if err := tdb.AddEvents(tt.args.events...); (err != nil) != tt.wantErr {
+				if _, err := tdb.AddEvents(tt.args.events...); (err != nil) != tt.wantErr {
 					t.Errorf("TelemDb.AddEvents() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			})

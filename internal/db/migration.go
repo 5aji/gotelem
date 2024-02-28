@@ -87,7 +87,7 @@ func RunMigrations(tdb *TelemDb) (finalVer int, err error) {
 	for _, v := range vers {
 		if v != expectedVer {
 			err = errors.New("missing update between")
-			return
+			return 0, err
 			// invalid
 		}
 		expectedVer = v + 1
@@ -97,35 +97,36 @@ func RunMigrations(tdb *TelemDb) (finalVer int, err error) {
 	// now apply the mappings based on current ver.
 
 	tx, err := tdb.db.Begin()
+	defer tx.Rollback()
 	if err != nil {
-		return
+		return 0, err
 	}
 	for v := currentVer + 1; v <= finalVer; v++ {
 		// attempt to get the "up" migration.
 		mMap, ok := migrations[v]
 		if !ok {
 			err = errors.New("could not find migration for version")
-			goto rollback
+			return 0, err
 		}
 		upMigration, ok := mMap["up"]
 		if !ok {
 			err = errors.New("could not get up migration")
-			goto rollback
+			return 0, err
 		}
 		upFile, err := migrationsFs.Open(path.Join("migrations", upMigration.FileName))
 		if err != nil {
-			goto rollback
+			return 0, err
 		}
 
 		upStmt, err := io.ReadAll(upFile)
 		if err != nil {
-			goto rollback
+			return 0, err
 		}
 		// open the file name
 		// execute the file.
 		_, err = tx.Exec(string(upStmt))
 		if err != nil {
-			goto rollback
+			return 0, err
 		}
 
 	}
@@ -133,9 +134,5 @@ func RunMigrations(tdb *TelemDb) (finalVer int, err error) {
 	tx.Commit()
 	err = tdb.SetVersion(finalVer)
 
-	return
-	// yeah, we use goto. Deal with it.
-rollback:
-	tx.Rollback()
 	return
 }

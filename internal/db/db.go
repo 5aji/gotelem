@@ -28,16 +28,12 @@ type TelemDb struct {
 // TelemDbOption lets you customize the behavior of the sqlite database
 type TelemDbOption func(*TelemDb) error
 
-// this string is used to open the read-write db.
-// the extra options improve performance significantly.
-const rwDbPathFmt = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
 
-
-func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error) {
+// this function is internal use. It actually opens the database, but uses
+// a raw path string instead of formatting one like the exported functions.
+func openRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err error) {
 	tdb = &TelemDb{}
-
-	dbStr := fmt.Sprintf(rwDbPathFmt, path)
-	tdb.db, err = sqlx.Connect("sqlite3", dbStr)
+	tdb.db, err = sqlx.Connect("sqlite3", rawpath)
 	if err != nil {
 		return
 	}
@@ -62,6 +58,17 @@ func OpenTelemDb(path string, options ...TelemDbOption) (tdb *TelemDb, err error
 	return tdb, err
 }
 
+
+// this string is used to open the read-write db.
+// the extra options improve performance significantly.
+const rwDbPathFmt = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
+
+// OpenTelemDb opens a new telemetry database at the given path.
+func OpenTelemDb(path string, options ...TelemDbOption) (*TelemDb, error) {
+	dbStr := fmt.Sprintf(rwDbPathFmt, path)
+	return openRawDb(dbStr, options...)
+}
+
 func (tdb *TelemDb) GetVersion() (int, error) {
 	var version int
 	err := tdb.db.Get(&version, "PRAGMA user_version")
@@ -79,7 +86,10 @@ const sqlInsertEvent =`INSERT INTO "bus_events" (ts, name, data) VALUES `
 
 // AddEvent adds the bus event to the database.
 func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent) (n int64, err error) {
-	//
+	// edge case - zero events.
+	if len(events) == 0 {
+		return 0, nil
+	}
 	n = 0
 	tx, err := tdb.db.BeginTx(ctx, nil)
 	defer tx.Rollback()
@@ -109,7 +119,7 @@ func (tdb *TelemDb) AddEventsCtx(ctx context.Context, events ...skylab.BusEvent)
 	// construct the full statement now
 	sqlStmt = sqlStmt + strings.Join(inserts[:idx], ",")
 	stmt, err := tx.PrepareContext(ctx, sqlStmt)
-	defer stmt.Close()
+	// defer stmt.Close()
 	if err != nil {
 		return
 	}

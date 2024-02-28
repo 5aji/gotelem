@@ -7,7 +7,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/internal/can"
 )
 
 func TestCanSocket(t *testing.T) {
@@ -43,9 +43,9 @@ func TestCanSocket(t *testing.T) {
 		defer sock.Close()
 
 		// make a packet.
-		testFrame := &gotelem.Frame{
-			Id:   0x123,
-			Kind: gotelem.CanSFFFrame,
+		testFrame := &can.Frame{
+			Id:   can.CanID{Id: 0x123, Extended: false},
+			Kind: can.CanDataFrame,
 			Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
 		}
 		err := sock.Send(testFrame)
@@ -61,9 +61,9 @@ func TestCanSocket(t *testing.T) {
 		defer sock.Close()
 		defer rsock.Close()
 
-		testFrame := &gotelem.Frame{
-			Id:   0x234,
-			Kind: gotelem.CanSFFFrame,
+		testFrame := &can.Frame{
+			Id:   can.CanID{Id: 0x234, Extended: false},
+			Kind: can.CanDataFrame,
 			Data: []byte{0, 1, 2, 3, 4, 5, 6, 7},
 		}
 		_ = sock.Send(testFrame)
