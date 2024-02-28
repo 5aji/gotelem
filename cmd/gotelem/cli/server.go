@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	"log/slog"
 
@@ -134,108 +132,6 @@ func serve(cCtx *cli.Context) error {
 	return nil
 }
 
-type rpcService struct {
-}
-
-func (r *rpcService) Status() {
-}
-func (r *rpcService) String() string {
-	return "rpcService"
-}
-
-func (r *rpcService) Start(ctx *cli.Context, deps svcDeps) error {
-	logger := deps.Logger
-	broker := deps.Broker
-	// TODO: extract port/ip from cli context.
-	ln, err := net.Listen("tcp", "0.0.0.0:8082")
-	if err != nil {
-		logger.Warn("error listening", "err", err)
-		return err
-	}
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			logger.Warn("error accepting connection", "err", err)
-		}
-		go handleCon(conn, broker, logger.With("addr", conn.RemoteAddr()), ctx.Done())
-	}
-}
-
-func handleCon(conn net.Conn, broker *gotelem.Broker, l *slog.Logger, done <-chan struct{}) {
-
-	subname := fmt.Sprint("tcp", conn.RemoteAddr().String())
-
-	l.Info("started handling", "name", subname)
-	defer conn.Close()
-
-	rxCh, err := broker.Subscribe(subname)
-	if err != nil {
-		l.Error("error subscribing to connection", "err", err)
-		return
-	}
-	defer broker.Unsubscribe(subname)
-
-	jEncode := json.NewEncoder(conn)
-	for {
-		select {
-		case msg := <-rxCh:
-			l.Info("got packet")
-			// FIXME: poorly optimized
-			err := jEncode.Encode(msg)
-			if err != nil {
-				l.Warn("error encoding json", "err", err)
-			}
-		case <-done:
-			return
-
-		}
-	}
-}
-
-// this spins up a new can socket on vcan0 and broadcasts a packet every second. for testing.
-
-type canLoggerService struct {
-}
-
-func (c *canLoggerService) String() string {
-	return "CanLoggerService"
-}
-
-func (c *canLoggerService) Status() {
-}
-
-func (c *canLoggerService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
-	broker := deps.Broker
-	l := deps.Logger
-	rxCh, err := broker.Subscribe("canDump")
-	if err != nil {
-		return err
-	}
-	t := time.Now()
-	fname := fmt.Sprintf("candump_%d-%02d-%02dT%02d.%02d.%02d.txt",
-		t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
-
-	l.Info("logging to file", "filename", fname)
-
-	f, err := os.Create(fname)
-	if err != nil {
-		l.Error("error opening file", "filename", fname, "err", err)
-		return
-	}
-	enc := json.NewEncoder(f)
-
-	for {
-		select {
-		case msg := <-rxCh:
-
-			enc.Encode(msg)
-
-		case <-cCtx.Done():
-			f.Close()
-			return
-		}
-	}
-}
 
 // xBeeService provides data over an Xbee device, either by serial or TCP
 // based on the url provided in the xbee flag. see the description for details.

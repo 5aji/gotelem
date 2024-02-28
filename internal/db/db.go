@@ -4,7 +4,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -12,14 +11,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/kschamplin/gotelem/skylab"
-	sqlite3 "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func init() {
-	sql.Register("custom_sqlite3", &sqlite3.SQLiteDriver{
-		// TODO: add helper that convert between unix milliseconds and sqlite times?
-	})
-}
 
 type TelemDb struct {
 	db *sqlx.DB

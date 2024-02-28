@@ -15,8 +15,6 @@ var subCmds = []*cli.Command{
 	xbeeCmd,
 }
 
-var f os.File
-
 func Execute() {
 	app := &cli.App{
 		Name:  "gotelem",
