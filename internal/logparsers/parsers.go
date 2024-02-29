@@ -107,14 +107,6 @@ func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
 	// strip trailng newline since we rely on it being gone
 	line = strings.TrimSpace(line)
 
-	// these files tend to get corrupted.
-	// there are all kinds of nasties that can happen.
-	// defense against random panics
-	defer func() {
-		if r := recover(); r != nil {
-			err = NewFormatError("caught panic", nil)
-		}
-	}()
 	a := telemRegex.FindStringSubmatch(line)
 	if a == nil || len(a) != 5 {
 		err = NewFormatError("no regex match", nil)
@@ -135,7 +127,7 @@ func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
 	}
 	ts = time.Unix(unixSeconds, unixMillis*int64(time.Millisecond))
 
-	// VALIDATION STEP: sometimes the data gets really whack.
+	// VALIDATION STEP: sometimes the data gets really whack, but remains valid.
 	// We check that the time is between 2017 and 2032.
 	// Realistically we will not be using this software then.
 	// TODO: add this
