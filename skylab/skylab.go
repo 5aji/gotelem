@@ -143,3 +143,11 @@ type UnknownIdError struct {
 func (e *UnknownIdError) Error() string {
 	return fmt.Sprintf("unknown id: %x", e.id)
 }
+
+type BadLengthError struct {
+	expected uint32
+	actual uint32
+}
+func (e *BadLengthError) Error() string {
+	return fmt.Sprintf("bad data length, expected %d, got %d", e.expected, e.actual)
+}

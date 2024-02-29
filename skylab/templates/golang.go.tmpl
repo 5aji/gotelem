@@ -69,6 +69,9 @@ func (p *{{$structName}}) MarshalPacket() ([]byte, error) {
 }
 
 func (p *{{$structName}}) UnmarshalPacket(b []byte) error {
+	if len(b) != {{.CalcSize}} {
+		return &BadLengthError{expected: {{.CalcSize}}, actual: uint32(len(b))}
+	}
 {{.MakeUnmarshal}}
 	return nil
 }
