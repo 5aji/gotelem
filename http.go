@@ -161,8 +161,8 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		if startString != "" {
 			start, err = time.Parse(time.RFC3339, startString)
 			if err != nil {
-				// error out
-				panic("hi")
+				http.Error(w, "error getting values", http.StatusInternalServerError)
+				return 
 			}
 		}
 		end := time.Now().Add(1 * time.Hour)
@@ -170,7 +170,8 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		if endParam != "" {
 			end, err = time.Parse(time.RFC3339, endParam)
 			if err != nil {
-				panic("hi")
+				http.Error(w, "error getting values", http.StatusInternalServerError)
+				return
 			}
 		}
 		name := chi.URLParam(r, "name")
@@ -181,11 +182,13 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		res, err := db.GetValues(r.Context(), name, field, start, end)
 		if err != nil {
 			// 500 server error:
-			fmt.Print(err)
+			http.Error(w, "error getting values", http.StatusInternalServerError)
+			return
 		}
 		b, err := json.Marshal(res)
 		if err != nil {
-			panic(err)
+			http.Error(w, "error getting values", http.StatusInternalServerError)
+			return
 		}
 		w.Write(b)
 	}
