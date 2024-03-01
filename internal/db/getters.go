@@ -93,6 +93,9 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 			Name: ev.Name,
 		}
 		BusEv.Data, err = skylab.FromJson(ev.Name, ev.Data)
+		if err != nil {
+			return events, nil
+		}
 		events = append(events, BusEv)
 	}
 

@@ -144,7 +144,9 @@ func TestTelemDb(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error getting packets: %v", err)
 		}
-		t.Log(pkt)
+		if len(pkt) != 1 {
+			t.Fatalf("expected exactly one response, got %d", len(pkt))
+		}
 	})
 
 	t.Run("test read-write packet", func(t *testing.T) {
