@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"log/slog"
 
@@ -189,32 +188,25 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
 
+		bef, err := extractBusEventFilter(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		lim, err := extractLimitModifier(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		// we need a start and end time. If none is provided,
 		// we use unix epoch as start, and now + 1 day as end.
-		start := time.Unix(0, 0)
-		startString := r.URL.Query().Get("start")
-		if startString != "" {
-			start, err = time.Parse(time.RFC3339, startString)
-			if err != nil {
-				http.Error(w, "error getting values", http.StatusInternalServerError)
-				return
-			}
-		}
-		end := time.Now().Add(1 * time.Hour)
-		endParam := r.URL.Query().Get("start")
-		if endParam != "" {
-			end, err = time.Parse(time.RFC3339, endParam)
-			if err != nil {
-				http.Error(w, "error getting values", http.StatusInternalServerError)
-				return
-			}
-		}
 		name := chi.URLParam(r, "name")
 		field := chi.URLParam(r, "field")
 
-		// TODO: add limit and pagination
+		// override the bus event filter name option
+		bef.Names = []string{name}
 
-		res, err := db.GetValues(r.Context(), name, field, start, end)
+		res, err := db.GetValues(r.Context(), *bef, field, lim)
 		if err != nil {
 			// 500 server error:
 			http.Error(w, "error getting values", http.StatusInternalServerError)

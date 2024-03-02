@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -74,7 +75,7 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 		m.ModifyStatement(&sb)
 	}
 	rows, err := tdb.db.QueryxContext(ctx, sb.String())
-	if err != nil { 
+	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
@@ -88,9 +89,9 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 			return nil, err
 		}
 
-		BusEv := skylab.BusEvent {
+		BusEv := skylab.BusEvent{
 			Timestamp: time.UnixMilli(int64(ev.Timestamp)),
-			Name: ev.Name,
+			Name:      ev.Name,
 		}
 		BusEv.Data, err = skylab.FromJson(ev.Name, ev.Data)
 		if err != nil {
@@ -103,7 +104,6 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 
 	return events, err
 }
-
 
 // We now need a different use-case: we would like to extract a value from
 // a specific packet.
@@ -118,17 +118,37 @@ type Datum struct {
 // GetValues queries the database for values in a given time range.
 // A value is a specific data point. For example, bms_measurement.current
 // would be a value.
-func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string, start time.Time,
-	end time.Time) ([]Datum, error) {
+func (tdb *TelemDb) GetValues(ctx context.Context, bef BusEventFilter,
+	field string, opts ...Modifier) ([]Datum, error) {
 	// this fragment uses json_extract from sqlite to get a single
 	// nested value.
-	SqlFrag := `
-	SELECT 
-	ts as timestamp,
-	json_extract(data, '$.' || ?) as val
-	FROM bus_events WHERE name IS ? 
-	`
-	rows, err := tdb.db.QueryxContext(ctx, SqlFrag, field, packetName)
+	sb := strings.Builder{}
+	sb.WriteString(`SELECT ts as timestamp, json_extract(data, '$.' || ?) as val FROM bus_events WHERE `)
+	if len(bef.Names) != 1 {
+		return nil, errors.New("invalid number of names")
+	}
+
+	qStrings := []string{"name is ?"}
+	// add timestamp limit.
+	if !bef.TimerangeStart.IsZero() {
+		qString := fmt.Sprintf("ts >= %d", bef.TimerangeStart.UnixMilli())
+		qStrings = append(qStrings, qString)
+	}
+
+	if !bef.TimerangeEnd.IsZero() {
+		qString := fmt.Sprintf("ts <= %d", bef.TimerangeEnd.UnixMilli())
+		qStrings = append(qStrings, qString)
+	}
+	// join qstrings with AND
+	sb.WriteString(strings.Join(qStrings, " AND "))
+
+	for _, m := range opts {
+		if m == nil {
+			continue
+		}
+		m.ModifyStatement(&sb)
+	}
+	rows, err := tdb.db.QueryxContext(ctx, sb.String(), field, bef.Names[0])
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +156,10 @@ func (tdb *TelemDb) GetValues(ctx context.Context, packetName, field string, sta
 	data := make([]Datum, 0, 10)
 	for rows.Next() {
 		var d Datum = Datum{}
-		err = rows.StructScan(&d)
+		var ts int64
+		err = rows.Scan(&ts, &d.Value)
+		d.Timestamp = time.UnixMilli(ts)
+
 		if err != nil {
 			fmt.Print(err)
 			return data, err
