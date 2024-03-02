@@ -104,6 +104,10 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 	return events, err
 }
 
+
+// We now need a different use-case: we would like to extract a value from
+// a specific packet.
+
 // Datum is a single measurement - it is more granular than a packet.
 // the classic example is bms_measurement.current
 type Datum struct {

@@ -11,6 +11,7 @@ import (
 	"log/slog"
 
 	"github.com/kschamplin/gotelem"
+	"github.com/kschamplin/gotelem/internal/api"
 	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/xbee"
@@ -132,7 +133,6 @@ func serve(cCtx *cli.Context) error {
 	return nil
 }
 
-
 // xBeeService provides data over an Xbee device, either by serial or TCP
 // based on the url provided in the xbee flag. see the description for details.
 type xBeeService struct {
@@ -220,7 +220,7 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	broker := deps.Broker
 	db := deps.Db
 
-	r := gotelem.TelemRouter(logger, broker, db)
+	r := api.TelemRouter(logger, broker, db)
 
 	//
 

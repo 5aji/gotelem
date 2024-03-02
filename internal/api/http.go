@@ -1,4 +1,4 @@
-package gotelem
+package api
 
 // this file defines the HTTP handlers and routes.
 
@@ -13,13 +13,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
-func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler {
+func TelemRouter(log *slog.Logger, broker *gotelem.Broker, db *db.TelemDb) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -41,7 +42,7 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *db.TelemDb) http.Handler 
 }
 
 // define API version 1 routes.
-func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
+func apiV1(broker *gotelem.Broker, tdb *db.TelemDb) chi.Router {
 	r := chi.NewRouter()
 	// this API only accepts JSON.
 	r.Use(middleware.AllowContentType("application/json"))
@@ -56,7 +57,7 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 	})
 
 	r.Route("/packets", func(r chi.Router) {
-		r.Get("/subscribe", apiV1PacketSubscribe(broker, db))
+		r.Get("/subscribe", apiV1PacketSubscribe(broker, tdb))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			var pkgs []skylab.BusEvent
 			decoder := json.NewDecoder(r.Body)
@@ -65,25 +66,59 @@ func apiV1(broker *Broker, db *db.TelemDb) chi.Router {
 				return
 			}
 			// we have a list of packets now. let's commit them.
-			db.AddEvents(pkgs...)
+			tdb.AddEvents(pkgs...)
 		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			// this should use http query params to return a list of packets.
+			bef, err := extractBusEventFilter(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			lim, err := extractLimitModifier(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// TODO: is the following check needed?
+			var res []skylab.BusEvent
+			if lim != nil {
+				res, err = tdb.GetPackets(r.Context(), *bef, lim)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+			} else {
+				res, err = tdb.GetPackets(r.Context(), *bef)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
+			b, err := json.Marshal(res)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Write(b)
 
 		})
 
 		// this is to get a single field
-		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", apiV1GetValues(db))
+		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", apiV1GetValues(tdb))
 
 	})
 
 	// records are driving segments/runs.
 	r.Route("/records", func(r chi.Router) {
-		r.Get("/", apiV1GetRecords(db))            // get all runs
-		r.Get("/active", apiV1GetActiveRecord(db)) // get current run (no end time)
-		r.Post("/", apiV1StartRecord(db))          // create a new run (with note). Ends active run if any, and creates new active run (no end time)
-		r.Get("/{id}", apiV1GetRecord(db))         // get details on a specific run
-		r.Put("/{id}", apiV1UpdateRecord(db))      // update a specific run. Can only be used to add notes/metadata, and not to change time/id.
+		r.Get("/", apiV1GetRecords(tdb))            // get all runs
+		r.Get("/active", apiV1GetActiveRecord(tdb)) // get current run (no end time)
+		r.Post("/", apiV1StartRecord(tdb))          // create a new run (with note). Ends active run if any, and creates new active run (no end time)
+		r.Get("/{id}", apiV1GetRecord(tdb))         // get details on a specific run
+		r.Put("/{id}", apiV1UpdateRecord(tdb))      // update a specific run. Can only be used to add notes/metadata, and not to change time/id.
 
 	})
 
@@ -100,7 +135,7 @@ type apiV1Subscriber struct {
 }
 
 // this is a websocket stream.
-func apiV1PacketSubscribe(broker *Broker, db *db.TelemDb) http.HandlerFunc {
+func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn_id := r.RemoteAddr + uuid.New().String()
 		sub, err := broker.Subscribe(conn_id)
@@ -162,7 +197,7 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 			start, err = time.Parse(time.RFC3339, startString)
 			if err != nil {
 				http.Error(w, "error getting values", http.StatusInternalServerError)
-				return 
+				return
 			}
 		}
 		end := time.Now().Add(1 * time.Hour)
@@ -176,7 +211,7 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		}
 		name := chi.URLParam(r, "name")
 		field := chi.URLParam(r, "field")
-		
+
 		// TODO: add limit and pagination
 
 		res, err := db.GetValues(r.Context(), name, field, start, end)
