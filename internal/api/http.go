@@ -61,52 +61,15 @@ func apiV1(broker *gotelem.Broker, tdb *db.TelemDb) chi.Router {
 			var pkgs []skylab.BusEvent
 			decoder := json.NewDecoder(r.Body)
 			if err := decoder.Decode(&pkgs); err != nil {
-				w.WriteHeader(http.StatusTeapot)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			// we have a list of packets now. let's commit them.
 			tdb.AddEvents(pkgs...)
 		})
-		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			// this should use http query params to return a list of packets.
-			bef, err := extractBusEventFilter(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		// general packet history get.
+		r.Get("/", apiV1GetPackets(tdb))
 
-			lim, err := extractLimitModifier(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			// TODO: is the following check needed?
-			var res []skylab.BusEvent
-			if lim != nil {
-				res, err = tdb.GetPackets(r.Context(), *bef, lim)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
-			} else {
-				res, err = tdb.GetPackets(r.Context(), *bef)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-			}
-			b, err := json.Marshal(res)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			w.Write(b)
-
-		})
-
-		// this is to get a single field
+		// this is to get a single field from a packet.
 		r.Get("/{name:[a-z_]+}/{field:[a-z_]+}", apiV1GetValues(tdb))
 
 	})
@@ -144,15 +107,12 @@ func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFu
 			return
 		}
 		defer broker.Unsubscribe(conn_id)
-		// attempt to upgrade.
 		c, err := websocket.Accept(w, r, nil)
-		c.Ping(r.Context())
 		if err != nil {
-			// TODO: is this the correct option?
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "error ws handshake: %s", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		c.Ping(r.Context())
 
 		// TODO: use K/V with session token?
 		sess := &apiV1Subscriber{}
@@ -175,8 +135,48 @@ func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFu
 				}
 
 			}
-
 		}
+
+	}
+}
+
+func apiV1GetPackets(tdb *db.TelemDb) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// this should use http query params to return a list of packets.
+		bef, err := extractBusEventFilter(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		lim, err := extractLimitModifier(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// TODO: is the following check needed?
+		var res []skylab.BusEvent
+		if lim != nil {
+			res, err = tdb.GetPackets(r.Context(), *bef, lim)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+		} else {
+			res, err = tdb.GetPackets(r.Context(), *bef)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		b, err := json.Marshal(res)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(b)
 
 	}
 }
@@ -198,8 +198,8 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// we need a start and end time. If none is provided,
-		// we use unix epoch as start, and now + 1 day as end.
+
+		// get the URL parameters, these are guaranteed to exist.
 		name := chi.URLParam(r, "name")
 		field := chi.URLParam(r, "field")
 
@@ -209,12 +209,12 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 		res, err := db.GetValues(r.Context(), *bef, field, lim)
 		if err != nil {
 			// 500 server error:
-			http.Error(w, "error getting values", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		b, err := json.Marshal(res)
 		if err != nil {
-			http.Error(w, "error getting values", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Write(b)
