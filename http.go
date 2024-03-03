@@ -1,4 +1,4 @@
-package api
+package gotelem
 
 // this file defines the HTTP handlers and routes.
 
@@ -6,20 +6,70 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	"log/slog"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
-	"github.com/kschamplin/gotelem"
-	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
 )
 
-func TelemRouter(log *slog.Logger, broker *gotelem.Broker, db *db.TelemDb) http.Handler {
+func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
+
+	bef := &BusEventFilter{}
+
+	v := r.URL.Query()
+	bef.Names = v["name"] // put all the names in.
+	if el := v.Get("start"); el != "" {
+		// parse the start time query.
+		t, err := time.Parse(time.RFC3339, el)
+		if err != nil {
+			return bef, err
+		}
+		bef.TimerangeStart = t
+	}
+	if el := v.Get("end"); el != "" {
+		// parse the start time query.
+		t, err := time.Parse(time.RFC3339, el)
+		if err != nil {
+			return bef, err
+		}
+		bef.TimerangeStart = t
+	}
+	return bef, nil
+}
+
+func extractLimitModifier(r *http.Request) (*LimitOffsetModifier, error) {
+	lim := &LimitOffsetModifier{}
+	v := r.URL.Query()
+	if el := v.Get("limit"); el != "" {
+		val, err := strconv.ParseInt(el, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		lim.Limit = int(val)
+		// next, we check if we have an offset.
+		// we only check offset if we also have a limit.
+		// offset without limit isn't valid and is ignored.
+		if el := v.Get("offset"); el != "" {
+			val, err := strconv.ParseInt(el, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			lim.Offset = int(val)
+		}
+		return lim, nil
+	}
+	// we use the nil case to indicate that no limit was provided.
+	return nil, nil
+}
+
+func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -41,7 +91,7 @@ func TelemRouter(log *slog.Logger, broker *gotelem.Broker, db *db.TelemDb) http.
 }
 
 // define API version 1 routes.
-func apiV1(broker *gotelem.Broker, tdb *db.TelemDb) chi.Router {
+func apiV1(broker *Broker, tdb *TelemDb) chi.Router {
 	r := chi.NewRouter()
 	// this API only accepts JSON.
 	r.Use(middleware.AllowContentType("application/json"))
@@ -91,9 +141,8 @@ func apiV1(broker *gotelem.Broker, tdb *db.TelemDb) chi.Router {
 	return r
 }
 
-
 // this is a websocket stream.
-func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFunc {
+func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// pull filter from url query params.
 		bef, err := extractBusEventFilter(r)
@@ -122,8 +171,6 @@ func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFu
 		// we get a context to use from it.
 		ctx := c.CloseRead(r.Context())
 
-		
-
 		for {
 			select {
 			case <-ctx.Done():
@@ -148,7 +195,7 @@ func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFu
 	}
 }
 
-func apiV1GetPackets(tdb *db.TelemDb) http.HandlerFunc {
+func apiV1GetPackets(tdb *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// this should use http query params to return a list of packets.
 		bef, err := extractBusEventFilter(r)
@@ -192,7 +239,7 @@ func apiV1GetPackets(tdb *db.TelemDb) http.HandlerFunc {
 // apiV1GetValues is a function that creates a handler for
 // getting the specific value from a packet.
 // this is useful for OpenMCT or other viewer APIs
-func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
+func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
 
@@ -231,26 +278,26 @@ func apiV1GetValues(db *db.TelemDb) http.HandlerFunc {
 }
 
 // TODO: rename. record is not a clear name. Runs? drives? segments?
-func apiV1GetRecords(db *db.TelemDb) http.HandlerFunc {
+func apiV1GetRecords(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func apiV1GetActiveRecord(db *db.TelemDb) http.HandlerFunc {
+func apiV1GetActiveRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
 
-func apiV1StartRecord(db *db.TelemDb) http.HandlerFunc {
+func apiV1StartRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func apiV1GetRecord(db *db.TelemDb) http.HandlerFunc {
+func apiV1GetRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
-func apiV1UpdateRecord(db *db.TelemDb) http.HandlerFunc {
+func apiV1UpdateRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }

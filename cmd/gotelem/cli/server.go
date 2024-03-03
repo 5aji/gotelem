@@ -11,8 +11,6 @@ import (
 	"log/slog"
 
 	"github.com/kschamplin/gotelem"
-	"github.com/kschamplin/gotelem/internal/api"
-	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/skylab"
 	"github.com/kschamplin/gotelem/xbee"
 	"github.com/urfave/cli/v2"
@@ -59,7 +57,7 @@ type service interface {
 
 type svcDeps struct {
 	Broker *gotelem.Broker
-	Db     *db.TelemDb
+	Db     *gotelem.TelemDb
 	Logger *slog.Logger
 }
 
@@ -99,7 +97,7 @@ func serve(cCtx *cli.Context) error {
 		dbPath = cCtx.Path("db")
 	}
 	logger.Info("opening database", "path", dbPath)
-	db, err := db.OpenTelemDb(dbPath)
+	db, err := gotelem.OpenTelemDb(dbPath)
 	if err != nil {
 		return err
 	}
@@ -220,7 +218,7 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	broker := deps.Broker
 	db := deps.Db
 
-	r := api.TelemRouter(logger, broker, db)
+	r := gotelem.TelemRouter(logger, broker, db)
 
 	//
 

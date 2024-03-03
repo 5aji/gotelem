@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/kschamplin/gotelem/internal/db"
 	"github.com/kschamplin/gotelem/internal/logparsers"
 	"github.com/kschamplin/gotelem/skylab"
+	"github.com/kschamplin/gotelem"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 )
@@ -81,7 +81,7 @@ func importAction(ctx *cli.Context) error {
 	}
 
 	dbPath := ctx.Path("database")
-	db, err := db.OpenTelemDb(dbPath)
+	db, err := gotelem.OpenTelemDb(dbPath)
 	if err != nil {
 		return fmt.Errorf("error opening database: %w", err)
 	}
