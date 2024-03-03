@@ -60,7 +60,7 @@ const exampleData = `1698013005.164 1455ED8FDBDFF4FC3BD
 // MakeMockDatabase creates a new dummy database.
 func MakeMockDatabase(name string) *TelemDb {
 	fstring := fmt.Sprintf("file:%s?mode=memory&cache=shared", name)
-	tdb, err := openRawDb(fstring)
+	tdb, err := OpenRawDb(fstring)
 	if err != nil {
 		panic(err)
 	}
@@ -147,6 +147,7 @@ func TestTelemDb(t *testing.T) {
 		if len(pkt) != 1 {
 			t.Fatalf("expected exactly one response, got %d", len(pkt))
 		}
+		// todo - validate what this should be.
 	})
 
 	t.Run("test read-write packet", func(t *testing.T) {

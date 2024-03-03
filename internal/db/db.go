@@ -25,7 +25,7 @@ type TelemDbOption func(*TelemDb) error
 
 // this function is internal use. It actually opens the database, but uses
 // a raw path string instead of formatting one like the exported functions.
-func openRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err error) {
+func OpenRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err error) {
 	tdb = &TelemDb{}
 	tdb.db, err = sqlx.Connect("sqlite3", rawpath)
 	if err != nil {
@@ -55,12 +55,12 @@ func openRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err erro
 
 // this string is used to open the read-write db.
 // the extra options improve performance significantly.
-const rwDbPathFmt = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
+const ProductionDbURI = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
 
 // OpenTelemDb opens a new telemetry database at the given path.
 func OpenTelemDb(path string, options ...TelemDbOption) (*TelemDb, error) {
-	dbStr := fmt.Sprintf(rwDbPathFmt, path)
-	return openRawDb(dbStr, options...)
+	dbStr := fmt.Sprintf(ProductionDbURI, path)
+	return OpenRawDb(dbStr, options...)
 }
 
 func (tdb *TelemDb) GetVersion() (int, error) {

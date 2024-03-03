@@ -91,14 +91,16 @@ func apiV1(broker *gotelem.Broker, tdb *db.TelemDb) chi.Router {
 	return r
 }
 
-// apiV1Subscriber is a websocket session for the v1 api.
-type apiV1Subscriber struct {
-	nameFilter []string // names of packets we care about.
-}
 
 // this is a websocket stream.
 func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// pull filter from url query params.
+		bef, err := extractBusEventFilter(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		// setup connection
 		conn_id := r.RemoteAddr + uuid.New().String()
 		sub, err := broker.Subscribe(conn_id)
 		if err != nil {
@@ -107,29 +109,35 @@ func apiV1PacketSubscribe(broker *gotelem.Broker, db *db.TelemDb) http.HandlerFu
 			return
 		}
 		defer broker.Unsubscribe(conn_id)
+
+		// setup websocket
 		c, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		c.Ping(r.Context())
+		// closeread handles protocol/status messages,
+		// also handles clients closing the connection.
+		// we get a context to use from it.
+		ctx := c.CloseRead(r.Context())
 
-		// TODO: use K/V with session token?
-		sess := &apiV1Subscriber{}
+		
 
 		for {
 			select {
-			case <-r.Context().Done():
+			case <-ctx.Done():
 				return
 			case msgIn := <-sub:
-				if len(sess.nameFilter) == 0 {
-					// send it.
+				// short circuit if there's no names - send everything
+				if len(bef.Names) == 0 {
 					wsjson.Write(r.Context(), c, msgIn)
 				}
-				for _, name := range sess.nameFilter {
+				// otherwise, send it if it matches one of our names.
+				for _, name := range bef.Names {
 					if name == msgIn.Name {
 						// send it
-						wsjson.Write(r.Context(), c, msgIn)
+						wsjson.Write(ctx, c, msgIn)
 						break
 					}
 				}
