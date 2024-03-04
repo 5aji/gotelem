@@ -69,6 +69,10 @@ func extractLimitModifier(r *http.Request) (*LimitOffsetModifier, error) {
 	return nil, nil
 }
 
+type RouterMod func (chi.Router)
+var RouterMods = []RouterMod{}
+
+
 func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 	r := chi.NewRouter()
 
@@ -84,6 +88,9 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 
 	r.Mount("/api/v1", apiV1(broker, db))
 
+	for _, mod := range RouterMods {
+		mod(r)
+	}
 	// To future residents - you can add new API calls/systems in /api/v2
 	// Don't break anything in api v1! keep legacy code working!
 
@@ -301,3 +308,4 @@ func apiV1GetRecord(db *TelemDb) http.HandlerFunc {
 func apiV1UpdateRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
+
