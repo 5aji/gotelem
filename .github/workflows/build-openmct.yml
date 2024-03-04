@@ -14,7 +14,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.22
-      - name: Build
+      - name: Set up Node
+        uses: actions/setup-node@v4
+      - name: Install OpenMCT
+        run: npm install
+        working-directory: web/
+      - name: Build OpenMCT bundle
+        run: npm run build
+        working-directory: web/
+      - name: Build Gotelem
         run: go build -v -tags openmct ./cmd/gotelem
       - name: Use Go Action
         id: use-go-action
