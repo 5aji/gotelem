@@ -1,0 +1,25 @@
+name: release
+
+on: 
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release-openmct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+      - name: Build
+        run: go build -v -tags openmct ./cmd/gotelem
+      - name: Use Go Action
+        id: use-go-action
+        uses: https://gitea.com/actions/release-action@main
+        with:
+          files: |-
+            gotelem
+          api_key: '${{secrets.RELEASE_TOKEN}}'
