@@ -163,7 +163,7 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 	// if we're filtering by names, add a where clause for it.
 	if len(filter.Names) > 0 {
 		names := strings.Join(filter.Names, ", ")
-		qString := fmt.Sprintf("name IN (%s)", names)
+		qString := fmt.Sprintf(`name IN ("%s")`, names)
 		whereFrags = append(whereFrags, qString)
 	}
 	// TODO: identify if we need a special case for both time ranges
@@ -181,7 +181,7 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 	}
 
 	sb := strings.Builder{}
-	sb.WriteString("SELECT * from \"bus_events\"")
+	sb.WriteString(`SELECT * from "bus_events"`)
 	// construct the full statement.
 	if len(whereFrags) > 0 {
 		// use the where clauses.
@@ -231,8 +231,8 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 // Datum is a single measurement - it is more granular than a packet.
 // the classic example is bms_measurement.current
 type Datum struct {
-	Timestamp time.Time `db:"timestamp"`
-	Value     any       `db:"val"`
+	Timestamp time.Time `db:"timestamp" json:"ts"`
+	Value     any       `db:"val" json:"val"`
 }
 
 // GetValues queries the database for values in a given time range.
@@ -291,19 +291,18 @@ func (tdb *TelemDb) GetValues(ctx context.Context, bef BusEventFilter,
 	return data, nil
 }
 
-
 // PacketDef is a database packet model
 type PacketDef struct {
-	Name string
+	Name        string
 	Description string
-	Id int
+	Id          int
 }
 
 type FieldDef struct {
-	Name string
+	Name    string
 	SubName string
-	Packet string
-	Type string
+	Packet  string
+	Type    string
 }
 
 // PacketNotFoundError is when a matching packet cannot be found.
@@ -313,23 +312,19 @@ func (e *PacketNotFoundError) Error() string {
 	return "packet not found: " + string(*e)
 }
 
-
 // GetPacketDefN retrieves a packet matching the given name, if it exists.
 // returns PacketNotFoundError if a matching packet could not be found.
 func (tdb *TelemDb) GetPacketDefN(name string) (*PacketDef, error) {
 	return nil, nil
 }
 
-// GetPacketDefF retrieves the parent packet for a given field. 
+// GetPacketDefF retrieves the parent packet for a given field.
 // This function cannot return PacketNotFoundError since we have SQL FKs enforcing.
 func (tdb *TelemDb) GetPacketDefF(field FieldDef) (*PacketDef, error) {
-	return nil, nil 
+	return nil, nil
 }
-
 
 // GetFieldDefs returns the given fields for a given packet definition.
 func (tdb *TelemDb) GetFieldDefs(pkt PacketDef) ([]FieldDef, error) {
 	return nil, nil
 }
-
-

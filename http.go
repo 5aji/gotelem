@@ -39,7 +39,7 @@ func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
 		if err != nil {
 			return bef, err
 		}
-		bef.TimerangeStart = t
+		bef.TimerangeEnd = t
 	}
 	return bef, nil
 }
@@ -69,9 +69,9 @@ func extractLimitModifier(r *http.Request) (*LimitOffsetModifier, error) {
 	return nil, nil
 }
 
-type RouterMod func (chi.Router)
-var RouterMods = []RouterMod{}
+type RouterMod func(chi.Router)
 
+var RouterMods = []RouterMod{}
 
 func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 	r := chi.NewRouter()
@@ -222,17 +222,12 @@ func apiV1GetPackets(tdb *TelemDb) http.HandlerFunc {
 		var res []skylab.BusEvent
 		if lim != nil {
 			res, err = tdb.GetPackets(r.Context(), *bef, lim)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
 		} else {
 			res, err = tdb.GetPackets(r.Context(), *bef)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		b, err := json.Marshal(res)
 		if err != nil {
@@ -269,7 +264,13 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		// override the bus event filter name option
 		bef.Names = []string{name}
 
-		res, err := db.GetValues(r.Context(), *bef, field, lim)
+		var res []Datum
+		// make the call, skip the limit modifier if it's nil.
+		if lim == nil {
+			res, err = db.GetValues(r.Context(), *bef, field)
+		} else {
+			res, err = db.GetValues(r.Context(), *bef, field, lim)
+		}
 		if err != nil {
 			// 500 server error:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -309,4 +310,3 @@ func apiV1GetRecord(db *TelemDb) http.HandlerFunc {
 func apiV1UpdateRecord(db *TelemDb) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {}
 }
-
