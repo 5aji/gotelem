@@ -80,6 +80,7 @@ func TelemRouter(log *slog.Logger, broker *Broker, db *TelemDb) http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger) // TODO: integrate with slog instead of go default logger.
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.SetHeader("Access-Control-Allow-Origin", "*"))
 
 	// heartbeat request.
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
