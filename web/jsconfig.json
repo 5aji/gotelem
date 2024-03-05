@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    // "baseUrl": "./src",
+    "target": "es6",
+    "checkJs": true,
+    "allowJs": true,
+    "moduleResolution": "nodenext",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "openmct": ["./node_modules/openmct/dist/openmct.d.ts"]
+    }
+  },
+  "exclude": [
+    "./dist/**/*",
+    "webpack.*.js"
+  ]
+}

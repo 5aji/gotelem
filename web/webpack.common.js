@@ -5,7 +5,6 @@ const Dotenv = require('dotenv-webpack');
 
 module.exports = {
     entry: './src/app.js',
-    mode: "development",
     module: {
         rules: [
             {
@@ -32,13 +31,6 @@ module.exports = {
     },
     externals: {
         openmct: "openmct",
-    },
-    devServer: {
-        static: [{
-            // eslint-disable-next-line no-undef
-            directory: path.join(__dirname, '/node_modules/openmct/dist'),
-            publicPath: '/node_modules/openmct/dist'
-        }]
     },
     output: {
         filename: 'main.js',
