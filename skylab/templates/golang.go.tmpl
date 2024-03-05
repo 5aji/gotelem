@@ -46,7 +46,7 @@ type {{$structName}} struct {
 }
 
 func (p *{{$structName}}) CanId() (can.CanID, error) {
-	c := can.CanID{Extended: {{.Extended}}}
+	c := can.CanID{Extended: {{.IsExtended}}}
 {{- if .Repeat }}
 	if p.Idx >= {{.Repeat}} {
 		return c, &UnknownIdError{ {{ printf "0x%X" .Id }} }
@@ -108,10 +108,10 @@ var idMap = map[can.CanID]bool{
 	{{ range $p := .Packets -}}
 	{{ if $p.Repeat }} 
 	{{ range $idx := Nx (int $p.Id) $p.Repeat $p.Offset -}}
-	{ Id: {{ $idx | printf "0x%X"}}, Extended: {{$p.Extended}} }: true,
+	{ Id: {{ $idx | printf "0x%X"}}, Extended: {{$p.IsExtended}} }: true,
 	{{ end }}
 	{{- else }}
-	{ Id: {{ $p.Id | printf "0x%X" }}, Extended: {{$p.Extended}} }: true,
+	{ Id: {{ $p.Id | printf "0x%X" }}, Extended: {{$p.IsExtended}} }: true,
 	{{- end}}
 	{{- end}}
 }

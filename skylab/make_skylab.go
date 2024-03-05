@@ -18,37 +18,37 @@ import (
 
 // SkylabFile is a yaml file from skylab.
 type SkylabFile struct {
-	Packets []PacketDef `yaml:"packets"`
-	Boards  []BoardDef  `yaml:"boards"`
+	Packets []PacketDef `yaml:"packets,omitempty" json:"packets,omitempty"`
+	Boards  []BoardDef  `yaml:"boards,omitempty" json:"boards,omitempty"`
 }
 
 type BoardDef struct {
-	Name     string   `yaml:"name"`
-	Transmit []string `yaml:"transmit"`
-	Receive  []string `yaml:"receive"`
+	Name     string   `yaml:"name,omitempty" json:"name,omitempty"`
+	Transmit []string `yaml:"transmit,omitempty" json:"transmit,omitempty"`
+	Receive  []string `yaml:"receive,omitempty" json:"receive,omitempty"`
 }
 
 // data field.
 type FieldDef struct {
-	Name       string  `yaml:"name"`
-	Type       string  `yaml:"type"`
-	Units      string  `yaml:"units"`
-	Conversion float32 `yaml:"conversion"`
+	Name       string  `yaml:"name,omitempty" json:"name,omitempty"`
+	Type       string  `yaml:"type,omitempty" json:"type,omitempty"`
+	Units      string  `yaml:"units,omitempty" json:"units,omitempty"`
+	Conversion float32 `yaml:"conversion,omitempty" json:"conversion,omitempty"`
 	Bits       []struct {
-		Name string `yaml:"name"`
-	} `yaml:"bits"`
+		Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	} `yaml:"bits,omitempty" json:"bits,omitempty"`
 }
 
 // a PacketDef is a full can packet.
 type PacketDef struct {
-	Name        string     `yaml:"name"`
-	Description string     `yaml:"description"`
-	Id          uint32     `yaml:"id"`
-	Endian    string      `yaml:"endian"`
-	Extended      bool     `yaml:"is_extended"`
-	Repeat      int        `yaml:"repeat"`
-	Offset      int        `yaml:"offset"`
-	Data        []FieldDef `yaml:"data"`
+	Name        string     `yaml:"name,omitempty" json:"name,omitempty"`
+	Description string     `yaml:"description,omitempty" json:"description,omitempty"`
+	Id          uint32     `yaml:"id,omitempty" json:"id,omitempty"`
+	Endian      string     `yaml:"endian,omitempty" json:"endian,omitempty"`
+	IsExtended  bool       `yaml:"is_extended,omitempty" json:"is_extended,omitempty"`
+	Repeat      int        `yaml:"repeat,omitempty" json:"repeat,omitempty"`
+	Offset      int        `yaml:"offset,omitempty" json:"offset,omitempty"`
+	Data        []FieldDef `yaml:"data,omitempty" json:"data,omitempty"`
 }
 
 // we need to generate bitfield types.
@@ -278,13 +278,13 @@ func idToString(p PacketDef) string {
 	if p.Repeat > 0 {
 		resp := make([]string, p.Repeat)
 		for idx := 0; idx < p.Repeat; idx++ {
-			resp[idx] = fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", int(p.Id)+idx*p.Offset, p.Extended)
+			resp[idx] = fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", int(p.Id)+idx*p.Offset, p.IsExtended)
 		}
 
 		return strings.Join(resp, ",")
 
 	} else {
-		return fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", p.Id, p.Extended)
+		return fmt.Sprintf("can.CanID{ Id: 0x%X, Extended: %t }", p.Id, p.IsExtended)
 	}
 }
 
