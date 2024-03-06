@@ -139,7 +139,7 @@ func TestTelemDb(t *testing.T) {
 
 		ctx := context.Background()
 		f := BusEventFilter{}
-		limitMod := LimitOffsetModifier{Limit: 1}
+		limitMod := &LimitOffsetModifier{Limit: 1}
 		pkt, err := tdb.GetPackets(ctx, f, limitMod)
 		if err != nil {
 			t.Fatalf("error getting packets: %v", err)
