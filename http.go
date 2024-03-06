@@ -31,7 +31,7 @@ func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
 		if err != nil {
 			return bef, err
 		}
-		bef.TimerangeStart = t
+		bef.StartTime = t
 	}
 	if el := v.Get("end"); el != "" {
 		// parse the start time query.
@@ -39,7 +39,15 @@ func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
 		if err != nil {
 			return bef, err
 		}
-		bef.TimerangeEnd = t
+		bef.EndTime = t
+	}
+	bef.Indexes = make([]int, 0)
+	for _, strIdx := range v["idx"] {
+		idx, err := strconv.ParseInt(strIdx, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		bef.Indexes = append(bef.Indexes, int(idx))
 	}
 	return bef, nil
 }
@@ -132,15 +140,20 @@ func apiV1(broker *Broker, tdb *TelemDb) chi.Router {
 
 	})
 
-	// records are driving segments/runs.
-	r.Route("/records", func(r chi.Router) {
-		r.Get("/", apiV1GetRecords(tdb))            // get all runs
-		r.Get("/active", apiV1GetActiveRecord(tdb)) // get current run (no end time)
-		r.Post("/", apiV1StartRecord(tdb))          // create a new run (with note). Ends active run if any, and creates new active run (no end time)
-		r.Get("/{id}", apiV1GetRecord(tdb))         // get details on a specific run
-		r.Put("/{id}", apiV1UpdateRecord(tdb))      // update a specific run. Can only be used to add notes/metadata, and not to change time/id.
+	// OpenMCT domain object storage. Basically an arbitrary JSON document store
 
+	r.Route("/openmct", func(r chi.Router) {
+		// key is a column on our json store, it's nested under identifier.key
+		r.Get("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		r.Put("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		r.Delete("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		// create a new object.
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+		// subscribe to object updates.
+		r.Get("/subscribe", func(w http.ResponseWriter, r *http.Request) {})
 	})
+
+	// records are driving segments/runs.
 
 	r.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
 
@@ -215,6 +228,7 @@ func apiV1GetPackets(tdb *TelemDb) http.HandlerFunc {
 		lim, err := extractLimitModifier(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			fmt.Print(lim)
 			return
 		}
 
@@ -264,14 +278,13 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		// override the bus event filter name option
 		bef.Names = []string{name}
 
-		var order = &OrderByTimestampModifer{}
 
 		var res []Datum
 		// make the call, skip the limit modifier if it's nil.
 		if lim == nil {
-			res, err = db.GetValues(r.Context(), *bef, field, order)
+			res, err = db.GetValues(r.Context(), *bef, field)
 		} else {
-			res, err = db.GetValues(r.Context(), *bef, field, lim, order)
+			res, err = db.GetValues(r.Context(), *bef, field, lim)
 		}
 		if err != nil {
 			// 500 server error:
@@ -286,29 +299,4 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		w.Write(b)
 	}
 
-}
-
-// TODO: rename. record is not a clear name. Runs? drives? segments?
-func apiV1GetRecords(db *TelemDb) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-	}
-}
-
-func apiV1GetActiveRecord(db *TelemDb) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-	}
-}
-
-func apiV1StartRecord(db *TelemDb) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func apiV1GetRecord(db *TelemDb) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func apiV1UpdateRecord(db *TelemDb) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
 }

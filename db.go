@@ -147,19 +147,12 @@ func (l *LimitOffsetModifier) ModifyStatement(sb *strings.Builder) error {
 	return nil
 }
 
-type OrderByTimestampModifer struct {
-}
-
-func (o *OrderByTimestampModifer) ModifyStatement(sb *strings.Builder) error {
-	sb.WriteString(" ORDER BY ts DESC")
-	return nil
-}
-
 // BusEventFilter is a filter for bus events.
 type BusEventFilter struct {
-	Names          []string
-	TimerangeStart time.Time
-	TimerangeEnd   time.Time
+	Names     []string  // The name(s) of packets to filter for
+	StartTime time.Time // Starting time range. All packets >= StartTime
+	EndTime   time.Time // Ending time range. All packets <= EndTime
+	Indexes   []int     // The specific index of the packets to index.
 }
 
 // now we can optionally add a limit.
@@ -179,24 +172,35 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 	// using BETWEEN since apparenlty that can be better?
 
 	// next, check if we have a start/end time, add constraints
-	if !filter.TimerangeEnd.IsZero() {
-		qString := fmt.Sprintf("ts <= %d", filter.TimerangeEnd.UnixMilli())
+	if !filter.EndTime.IsZero() {
+		qString := fmt.Sprintf("ts <= %d", filter.EndTime.UnixMilli())
 		whereFrags = append(whereFrags, qString)
 	}
-	if !filter.TimerangeStart.IsZero() {
+	if !filter.StartTime.IsZero() {
 		// we have an end range
-		qString := fmt.Sprintf("ts >= %d", filter.TimerangeStart.UnixMilli())
+		qString := fmt.Sprintf("ts >= %d", filter.StartTime.UnixMilli())
+		whereFrags = append(whereFrags, qString)
+	}
+	if len(filter.Indexes) > 0 {
+		s := make([]string, 0)
+		for _, idx := range filter.Indexes {
+			s = append(s, fmt.Sprint(idx))
+		}
+		idxs := strings.Join(s, ", ")
+		qString := fmt.Sprintf(`idx in (%s)`, idxs)
 		whereFrags = append(whereFrags, qString)
 	}
 
 	sb := strings.Builder{}
-	sb.WriteString(`SELECT * from "bus_events"`)
+	sb.WriteString(`SELECT ts, name, data from "bus_events"`)
 	// construct the full statement.
 	if len(whereFrags) > 0 {
 		// use the where clauses.
 		sb.WriteString(" WHERE ")
 		sb.WriteString(strings.Join(whereFrags, " AND "))
 	}
+
+	sb.WriteString(" ORDER BY ts DESC")
 
 	// Augment our data further if there's i.e a limit modifier.
 	// TODO: factor this out maybe?
@@ -247,29 +251,39 @@ type Datum struct {
 // GetValues queries the database for values in a given time range.
 // A value is a specific data point. For example, bms_measurement.current
 // would be a value.
-func (tdb *TelemDb) GetValues(ctx context.Context, bef BusEventFilter,
+func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
 	field string, opts ...QueryModifier) ([]Datum, error) {
 	// this fragment uses json_extract from sqlite to get a single
 	// nested value.
 	sb := strings.Builder{}
 	sb.WriteString(`SELECT ts as timestamp, json_extract(data, '$.' || ?) as val FROM bus_events WHERE `)
-	if len(bef.Names) != 1 {
+	if len(filter.Names) != 1 {
 		return nil, errors.New("invalid number of names")
 	}
+	whereFrags := []string{"name is ?"}
 
-	qStrings := []string{"name is ?"}
-	// add timestamp limit.
-	if !bef.TimerangeStart.IsZero() {
-		qString := fmt.Sprintf("ts >= %d", bef.TimerangeStart.UnixMilli())
-		qStrings = append(qStrings, qString)
+	if !filter.StartTime.IsZero() {
+		qString := fmt.Sprintf("ts >= %d", filter.StartTime.UnixMilli())
+		whereFrags = append(whereFrags, qString)
 	}
 
-	if !bef.TimerangeEnd.IsZero() {
-		qString := fmt.Sprintf("ts <= %d", bef.TimerangeEnd.UnixMilli())
-		qStrings = append(qStrings, qString)
+	if !filter.EndTime.IsZero() {
+		qString := fmt.Sprintf("ts <= %d", filter.EndTime.UnixMilli())
+		whereFrags = append(whereFrags, qString)
+	}
+	if len(filter.Indexes) > 0 {
+		s := make([]string, 0)
+		for _, idx := range filter.Indexes {
+			s = append(s, fmt.Sprint(idx))
+		}
+		idxs := strings.Join(s, ", ")
+		qString := fmt.Sprintf(`idx in (%s)`, idxs)
+		whereFrags = append(whereFrags, qString)
 	}
 	// join qstrings with AND
-	sb.WriteString(strings.Join(qStrings, " AND "))
+	sb.WriteString(strings.Join(whereFrags, " AND "))
+
+	sb.WriteString(" ORDER BY ts DESC")
 
 	for _, m := range opts {
 		if m == nil {
@@ -277,7 +291,7 @@ func (tdb *TelemDb) GetValues(ctx context.Context, bef BusEventFilter,
 		}
 		m.ModifyStatement(&sb)
 	}
-	rows, err := tdb.db.QueryxContext(ctx, sb.String(), field, bef.Names[0])
+	rows, err := tdb.db.QueryxContext(ctx, sb.String(), field, filter.Names[0])
 	if err != nil {
 		return nil, err
 	}
