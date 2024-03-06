@@ -321,6 +321,14 @@ func (tdb *TelemDb) AddDocument(ctx context.Context, obj json.RawMessage) error 
 	return err
 }
 
+// DocumentNotFoundError is when the underlying document cannot be found.
+type DocumentNotFoundError string
+
+func (e DocumentNotFoundError) Error() string {
+	return fmt.Sprintf("document could not find key: %s", string(e))
+}
+
+
 // UpdateDocument replaces the entire contents of a document matching
 // the given key. Note that the key is derived from the document,
 // and no checks are done to ensure that the new key is the same.
@@ -328,9 +336,20 @@ func (tdb *TelemDb) UpdateDocument(ctx context.Context, key string,
 	obj json.RawMessage) error {
 
 	const upd = `UPDATE openmct_objects SET data = json(?) WHERE key IS ?`
-	_, err := tdb.db.ExecContext(ctx, upd, obj, key)
+	r, err := tdb.db.ExecContext(ctx, upd, obj, key)
+	if err != nil {
+		return err
+	}
+	n, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n != 1 {
+		return DocumentNotFoundError(key)
+	}
 	return err
 }
+
 
 // GetDocument gets the document matching the corresponding key.
 func (tdb *TelemDb) GetDocument(ctx context.Context, key string) (json.RawMessage, error) {
@@ -341,6 +360,11 @@ func (tdb *TelemDb) GetDocument(ctx context.Context, key string) (json.RawMessag
 	var res []byte // VERY important, json.RawMessage won't work here
 	// since the scan function does not look at underlying types.
 	row.Scan(&res)
+
+	if len(res) == 0 {
+		return nil, DocumentNotFoundError(key)
+	}
+
 	return res, nil
 }
 
@@ -366,6 +390,16 @@ func (tdb *TelemDb) GetAllDocuments(ctx context.Context) ([]json.RawMessage, err
 // if it does not exist.
 func (tdb *TelemDb) DeleteDocument(ctx context.Context, key string) error {
 	const del = `DELETE FROM openmct_objects WHERE key IS ?`
-	_, err := tdb.db.ExecContext(ctx, del, key)
+	res, err := tdb.db.ExecContext(ctx, del, key)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n != 1 {
+		return DocumentNotFoundError(key)
+	}
 	return err
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -232,4 +233,52 @@ func TestDbDocuments(t *testing.T) {
 		}
 
 	})
+
+	t.Run("test getting nonexistent document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+
+		res, err := tdb.GetDocument(ctx, "hi")
+
+		if err == nil || !errors.Is(err, DocumentNotFoundError("hi")){
+			t.Fatalf("GetDocument expected DocumentNotFoundError, got %v", err)
+		}
+		if res != nil {
+			t.Fatalf("GetDocument expected nil result, got %v", res)
+		}
+	})
+
+	t.Run("test update document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		doc1 := MockDocument("hi")
+		doc2 := MockDocument("hi") // same key, we want to update.
+
+		tdb.AddDocument(ctx, doc1)
+		err := tdb.UpdateDocument(ctx, "hi", doc2)
+		if err != nil {
+			t.Fatalf("UpdateDocument expected no error, got err=%v", err)
+		}
+
+		// compare.
+		res, _ := tdb.GetDocument(ctx, "hi")
+		if !reflect.DeepEqual(res, doc2) {
+			t.Fatalf("UpdateDocument did not return new doc, got %s", res)
+		}
+
+	})
+
+	t.Run("test update nonexistent document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		doc := MockDocument("hi")
+		err := tdb.UpdateDocument(ctx, "badKey", doc)
+		if err == nil {
+			t.Fatalf("UpdateDocument expected error, got nil")
+		}
+	})
+
 }
