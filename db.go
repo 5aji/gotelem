@@ -170,7 +170,8 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 
 	// if we're filtering by names, add a where clause for it.
 	if len(filter.Names) > 0 {
-		names := strings.Join(filter.Names, ", ")
+		// we have to quote our individual names
+		names := strings.Join(filter.Names, `", "`)
 		qString := fmt.Sprintf(`name IN ("%s")`, names)
 		whereFrags = append(whereFrags, qString)
 	}
