@@ -8,36 +8,36 @@ openmct.install(openmct.plugins.UTCTimeSystem());
 openmct.install(openmct.plugins.Clock({ enableClockIndicator: true }));
 openmct.install(openmct.plugins.Timer());
 openmct.install(openmct.plugins.Timelist());
-openmct.time.clock('local', {start: -5 * 60 * 1000, end: 0});
+openmct.time.clock('local', { start: -5 * 60 * 1000, end: 0 });
 openmct.time.timeSystem('utc');
 openmct.install(openmct.plugins.Espresso());
 
-      openmct.install(
-        openmct.plugins.Conductor({
-          menuOptions: [
+openmct.install(
+    openmct.plugins.Conductor({
+        menuOptions: [
             {
-              name: 'Fixed',
-              timeSystem: 'utc',
-              bounds: {
-                start: Date.now() - 30000000,
-                end: Date.now()
-              },
+                name: 'Fixed',
+                timeSystem: 'utc',
+                bounds: {
+                    start: Date.now() - 30000000,
+                    end: Date.now()
+                },
 
             },
             {
-              name: 'Realtime',
-              timeSystem: 'utc',
-              clock: 'local',
-              clockOffsets: {
-                start: -30000000,
-                end: 30000
-              },
-             
-            
+                name: 'Realtime',
+                timeSystem: 'utc',
+                clock: 'local',
+                clockOffsets: {
+                    start: -30000000,
+                    end: 30000
+                },
+
+
             }
-          ]
-        })
-      );
+        ]
+    })
+);
 
 
 
@@ -61,73 +61,73 @@ function getSchema() {
 
 const objectProvider = {
     get: function (id) {
-    return getSchema().then((schema) => {
-        if (id.key === "car") {
-            const comp = schema.packets.map((x) => {
-                return {
-                    key: x.name,
-                    namespace: "umnsvp"
-                }
-            })
-            return {
-                identifier: id,
-                name: "the solar car",
-                type: 'folder',
-                location: 'ROOT',
-                composition: comp
-            }
-        }
-        var pkt = schema.packets.find((x) => x.name === id.key)
-        if (pkt) {
-            // if the key matches one of the packet names,
-            // we know it's a field.
-            const comp = pkt.data.map((field) => {
-                return {
-                    // we have to do this since
-                    // we can't get the packet name otherwise.
-                    key: `${pkt.name}.${field.name}`,
-                    namespace: "umnsvp"
-                }
-            })
-            return {
-                identifier: id,
-                name: pkt.name,
-                type: 'folder',
-                composition: comp
-            }
-        }
-        // at this point it's definitely a field aka umnsvp-datum
-        var [pktName, fieldName] = id.key.split('.')
-        return {
-            identifier: id,
-            name: fieldName,
-            type: 'umnsvp-datum',
-            telemetry: {
-                values: [
-                    {
-                        key: "value",
-                        source: "val",
-                        name: "Value",
-                        "format": "float",
-                        hints: {
-                            range: 1
-                        }
-                    },
-                    {
-                        key: "utc",
-                        source: "ts",
-                        name: "Timestamp",
-                        format: "utc",
-                        hints: {
-                            domain: 1
-                        }
-
+        return getSchema().then((schema) => {
+            if (id.key === "car") {
+                const comp = schema.packets.map((x) => {
+                    return {
+                        key: x.name,
+                        namespace: "umnsvp"
                     }
-                ]
+                })
+                return {
+                    identifier: id,
+                    name: "the solar car",
+                    type: 'folder',
+                    location: 'ROOT',
+                    composition: comp
+                }
             }
-        }
+            var pkt = schema.packets.find((x) => x.name === id.key)
+            if (pkt) {
+                // if the key matches one of the packet names,
+                // we know it's a field.
+                const comp = pkt.data.map((field) => {
+                    return {
+                        // we have to do this since
+                        // we can't get the packet name otherwise.
+                        key: `${pkt.name}.${field.name}`,
+                        namespace: "umnsvp"
+                    }
+                })
+                return {
+                    identifier: id,
+                    name: pkt.name,
+                    type: 'folder',
+                    composition: comp
+                }
+            }
+            // at this point it's definitely a field aka umnsvp-datum
+            var [pktName, fieldName] = id.key.split('.')
+            return {
+                identifier: id,
+                name: fieldName,
+                type: 'umnsvp-datum',
+                telemetry: {
+                    values: [
+                        {
+                            key: "value",
+                            source: "val",
+                            name: "Value",
+                            "format": "float",
+                            hints: {
+                                range: 1
+                            }
+                        },
+                        {
+                            key: "utc",
+                            source: "ts",
+                            name: "Timestamp",
+                            format: "utc",
+                            hints: {
+                                domain: 1
+                            }
 
-    })
+                        }
+                    ]
+                }
+            }
+
+        })
     }
 }
 
@@ -141,7 +141,8 @@ const TelemHistoryProvider = {
         var params = new URLSearchParams({
             start: new Date(opt.start).toISOString(),
             end: new Date(opt.end).toISOString(),
-        }) 
+        })
+        console.log((opt.end - opt.start)/opt.size)
         return fetch(url + params).then((resp) => {
             return resp.json()
         })

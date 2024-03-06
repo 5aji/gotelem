@@ -68,3 +68,39 @@ Certain features, like socketCAN support, are only enabled on platforms that sup
 This is handled automatically; builds will exclude the socketCAN files and 
 the additional commands and features will not be present in the CLI.
 
+### Lightweight Build
+
+This doesn't include the OpenMCT files, but is simpler to build, and doesn't require Node setup.
+You must install Go.
+```
+$ go build ./cmd/gotelem
+```
+
+### Full Build
+
+This includes an integrated OpenMCT build, which automatically connects to the Telemetry server
+for historical and live data. You must have both Go and Node.JS installed.
+
+```
+$ cd web/
+$ npm install
+$ npm run build
+$ cd ..
+$ go build -tags openmct ./cmd/gotelem
+```
+
+## Development
+
+During development, it can be useful to have the OpenMCT sources be served separately from Gotelem,
+so you don't need to rebuild everything. This case is supported:
+
+```
+$ go run ./cmd/gotelem server --db gotelem.db # in one terminal
+$ npm run serve # in a separate terminal
+```
+When using the dev server, webpack will set the Gotelem URL to `localhost:8080`. If you're running
+Gotelem using the default settings, this should work out of the box. Making changes to the OpenMCT
+plugins will trigger a refresh automatically.
+
+
+

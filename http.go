@@ -264,12 +264,14 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		// override the bus event filter name option
 		bef.Names = []string{name}
 
+		var order = &OrderByTimestampModifer{}
+
 		var res []Datum
 		// make the call, skip the limit modifier if it's nil.
 		if lim == nil {
-			res, err = db.GetValues(r.Context(), *bef, field)
+			res, err = db.GetValues(r.Context(), *bef, field, order)
 		} else {
-			res, err = db.GetValues(r.Context(), *bef, field, lim)
+			res, err = db.GetValues(r.Context(), *bef, field, lim, order)
 		}
 		if err != nil {
 			// 500 server error:

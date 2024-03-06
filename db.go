@@ -141,9 +141,17 @@ type LimitOffsetModifier struct {
 	Offset int
 }
 
-func (l LimitOffsetModifier) ModifyStatement(sb *strings.Builder) error {
+func (l *LimitOffsetModifier) ModifyStatement(sb *strings.Builder) error {
 	clause := fmt.Sprintf(" LIMIT %d OFFSET %d", l.Limit, l.Offset)
 	sb.WriteString(clause)
+	return nil
+}
+
+type OrderByTimestampModifer struct {
+}
+
+func (o *OrderByTimestampModifer) ModifyStatement(sb *strings.Builder) error {
+	sb.WriteString(" ORDER BY ts DESC")
 	return nil
 }
 
