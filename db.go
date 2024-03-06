@@ -314,40 +314,18 @@ func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
 	return data, nil
 }
 
-// PacketDef is a database packet model
-type PacketDef struct {
-	Name        string
-	Description string
-	Id          int
+func (tdb *TelemDb) AddDocument(obj json.RawMessage) error {
+	return nil
 }
 
-type FieldDef struct {
-	Name    string
-	SubName string
-	Packet  string
-	Type    string
+func (tdb *TelemDb) UpdateDocument(key string, obj json.RawMessage) error {
+	return nil
 }
 
-// PacketNotFoundError is when a matching packet cannot be found.
-type PacketNotFoundError string
-
-func (e *PacketNotFoundError) Error() string {
-	return "packet not found: " + string(*e)
-}
-
-// GetPacketDefN retrieves a packet matching the given name, if it exists.
-// returns PacketNotFoundError if a matching packet could not be found.
-func (tdb *TelemDb) GetPacketDefN(name string) (*PacketDef, error) {
+func (tdb *TelemDb) GetDocument(key string) (json.RawMessage, error) {
 	return nil, nil
 }
 
-// GetPacketDefF retrieves the parent packet for a given field.
-// This function cannot return PacketNotFoundError since we have SQL FKs enforcing.
-func (tdb *TelemDb) GetPacketDefF(field FieldDef) (*PacketDef, error) {
-	return nil, nil
-}
-
-// GetFieldDefs returns the given fields for a given packet definition.
-func (tdb *TelemDb) GetFieldDefs(pkt PacketDef) ([]FieldDef, error) {
-	return nil, nil
+func (tdb *TelemDb) DeleteDocument(key string) error {
+	return nil
 }
