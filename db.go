@@ -314,18 +314,58 @@ func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
 	return data, nil
 }
 
-func (tdb *TelemDb) AddDocument(obj json.RawMessage) error {
-	return nil
+// AddDocument inserts a new document to the store if it is unique and valid.
+func (tdb *TelemDb) AddDocument(ctx context.Context, obj json.RawMessage) error {
+	const insertStmt = `INSERT INTO openmct_objects (data) VALUES (json(?))`
+	_, err := tdb.db.ExecContext(ctx, insertStmt, obj)
+	return err
 }
 
-func (tdb *TelemDb) UpdateDocument(key string, obj json.RawMessage) error {
-	return nil
+// UpdateDocument replaces the entire contents of a document matching
+// the given key. Note that the key is derived from the document,
+// and no checks are done to ensure that the new key is the same.
+func (tdb *TelemDb) UpdateDocument(ctx context.Context, key string,
+	obj json.RawMessage) error {
+
+	const upd = `UPDATE openmct_objects SET data = json(?) WHERE key IS ?`
+	_, err := tdb.db.ExecContext(ctx, upd, obj, key)
+	return err
 }
 
-func (tdb *TelemDb) GetDocument(key string) (json.RawMessage, error) {
-	return nil, nil
+// GetDocument gets the document matching the corresponding key.
+func (tdb *TelemDb) GetDocument(ctx context.Context, key string) (json.RawMessage, error) {
+	const get = `SELECT data FROM openmct_objects WHERE key IS ?`
+
+	row := tdb.db.QueryRowxContext(ctx, get, key)
+
+	var res []byte // VERY important, json.RawMessage won't work here
+	// since the scan function does not look at underlying types.
+	row.Scan(&res)
+	return res, nil
 }
 
-func (tdb *TelemDb) DeleteDocument(key string) error {
-	return nil
+// GetAllDocuments returns all documents in the database.
+func (tdb *TelemDb) GetAllDocuments(ctx context.Context) ([]json.RawMessage, error) {
+	const getall = `SELECT data FROM openmct_objects`;
+
+	rows, err := tdb.db.QueryxContext(ctx, getall)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	docs := make([]json.RawMessage, 0)
+	for rows.Next() {
+		var j json.RawMessage
+		rows.Scan(&j)
+		docs = append(docs, j)
+	}
+	return docs, nil
+}
+
+// DeleteDocument removes a document from the store, or errors
+// if it does not exist.
+func (tdb *TelemDb) DeleteDocument(ctx context.Context, key string) error {
+	const del = `DELETE FROM openmct_objects WHERE key IS ?`
+	_, err := tdb.db.ExecContext(ctx, del, key)
+	return err
 }

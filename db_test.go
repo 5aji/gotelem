@@ -3,7 +3,10 @@ package gotelem
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -85,7 +88,6 @@ func MakeMockDatabase(name string) *TelemDb {
 
 func TestTelemDb(t *testing.T) {
 
-
 	t.Run("test opening database", func(t *testing.T) {
 		// create our mock
 		tdb := MakeMockDatabase(t.Name())
@@ -151,6 +153,83 @@ func TestTelemDb(t *testing.T) {
 	})
 
 	t.Run("test read-write packet", func(t *testing.T) {
-		
+
+	})
+}
+
+func MockDocument(key string) json.RawMessage {
+	var v = make(map[string]interface{})
+
+	v["identifier"] = map[string]string{"key": key}
+	v["randomdata"] = rand.Int()
+	res, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func TestDbDocuments(t *testing.T) {
+
+	t.Run("test inserting a document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		err := tdb.AddDocument(ctx, MockDocument("hi"))
+		if err != nil {
+			t.Fatalf("AddDocument expected no error, got err=%v", err)
+		}
+	})
+
+	t.Run("test inserting duplicate documents", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		doc := MockDocument("hi")
+		err := tdb.AddDocument(ctx, doc)
+		if err != nil {
+			t.Fatalf("AddDocument expected no error, got err=%v", err)
+		}
+
+		err = tdb.AddDocument(ctx, doc)
+		if err == nil {
+			t.Fatalf("AddDocument expected duplicate key error, got nil")
+		}
+	})
+	t.Run("test inserting bad document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		var badDoc = map[string]string{"bad":"duh"}
+		msg, err := json.Marshal(badDoc)
+		if err != nil {
+			panic(err)
+		}
+		err = tdb.AddDocument(ctx, msg)
+
+		if err == nil {
+			t.Fatalf("AddDocument expected error, got nil")
+		}
+
+	})
+
+	t.Run("test getting document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		doc := MockDocument("hi")
+		err := tdb.AddDocument(ctx, doc)
+		if err != nil {
+			t.Fatalf("AddDocument expected no error, got err=%v", err)
+		}
+
+		res, err := tdb.GetDocument(ctx, "hi")
+		if err != nil {
+			t.Fatalf("GetDocument expected no error, got err=%v", err)
+		}
+		if !reflect.DeepEqual(res, doc) {
+			t.Fatalf("GetDocument did not return identical document")
+		}
+
 	})
 }
