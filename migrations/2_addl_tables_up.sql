@@ -7,12 +7,3 @@ CREATE TABLE "drive_records" (
 	PRIMARY KEY("id" AUTOINCREMENT),
 	CONSTRAINT "duration_valid" CHECK(end_time is null or start_time < end_time)
 );
-
-CREATE TABLE "position_logs" (
-	"ts"	INTEGER NOT NULL,
-	"source"	TEXT NOT NULL,
-	"lat"	REAL NOT NULL,
-	"lon"	REAL NOT NULL,
-	"elevation"	REAL,
-	CONSTRAINT "no_empty_source" CHECK(source is not "")
-);
