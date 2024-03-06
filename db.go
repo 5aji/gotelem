@@ -130,11 +130,6 @@ func (tdb *TelemDb) AddEvents(events ...skylab.BusEvent) (int64, error) {
 	return tdb.AddEventsCtx(context.Background(), events...)
 }
 
-// QueryModifier augments SQL strings.
-type QueryModifier interface {
-	ModifyStatement(*strings.Builder) error
-}
-
 // LimitOffsetModifier is a modifier to support pagniation.
 type LimitOffsetModifier struct {
 	Limit  int
@@ -157,7 +152,7 @@ type BusEventFilter struct {
 
 // now we can optionally add a limit.
 
-func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, options ...QueryModifier) ([]skylab.BusEvent, error) {
+func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, lim *LimitOffsetModifier) ([]skylab.BusEvent, error) {
 	// construct a simple
 	var whereFrags = make([]string, 0)
 
@@ -204,8 +199,8 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, optio
 
 	// Augment our data further if there's i.e a limit modifier.
 	// TODO: factor this out maybe?
-	for _, m := range options {
-		m.ModifyStatement(&sb)
+	if lim != nil {
+		lim.ModifyStatement(&sb)
 	}
 	rows, err := tdb.db.QueryxContext(ctx, sb.String())
 	if err != nil {
@@ -252,7 +247,7 @@ type Datum struct {
 // A value is a specific data point. For example, bms_measurement.current
 // would be a value.
 func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
-	field string, opts ...QueryModifier) ([]Datum, error) {
+	field string, lim *LimitOffsetModifier) ([]Datum, error) {
 	// this fragment uses json_extract from sqlite to get a single
 	// nested value.
 	sb := strings.Builder{}
@@ -285,12 +280,10 @@ func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
 
 	sb.WriteString(" ORDER BY ts DESC")
 
-	for _, m := range opts {
-		if m == nil {
-			continue
-		}
-		m.ModifyStatement(&sb)
+	if lim != nil {
+		lim.ModifyStatement(&sb)
 	}
+
 	rows, err := tdb.db.QueryxContext(ctx, sb.String(), field, filter.Names[0])
 	if err != nil {
 		return nil, err

@@ -234,11 +234,7 @@ func apiV1GetPackets(tdb *TelemDb) http.HandlerFunc {
 
 		// TODO: is the following check needed?
 		var res []skylab.BusEvent
-		if lim != nil {
-			res, err = tdb.GetPackets(r.Context(), *bef, lim)
-		} else {
-			res, err = tdb.GetPackets(r.Context(), *bef)
-		}
+		res, err = tdb.GetPackets(r.Context(), *bef, lim)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -281,11 +277,7 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 
 		var res []Datum
 		// make the call, skip the limit modifier if it's nil.
-		if lim == nil {
-			res, err = db.GetValues(r.Context(), *bef, field)
-		} else {
-			res, err = db.GetValues(r.Context(), *bef, field, lim)
-		}
+		res, err = db.GetValues(r.Context(), *bef, field, lim)
 		if err != nil {
 			// 500 server error:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
