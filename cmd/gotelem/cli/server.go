@@ -92,7 +92,7 @@ func serve(cCtx *cli.Context) error {
 	broker := gotelem.NewBroker(20, logger.WithGroup("broker"))
 
 	// open database
-	dbPath := "file::memory:?cache=shared"
+	dbPath := "gotelem.db"
 	if cCtx.IsSet("db") {
 		dbPath = cCtx.Path("db")
 	}
