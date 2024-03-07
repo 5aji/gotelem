@@ -366,10 +366,10 @@ func (tdb *TelemDb) GetAllDocuments(ctx context.Context) ([]json.RawMessage, err
 	const getall = `SELECT data FROM openmct_objects`;
 
 	rows, err := tdb.db.QueryxContext(ctx, getall)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	docs := make([]json.RawMessage, 0)
 	for rows.Next() {
 		var j json.RawMessage
