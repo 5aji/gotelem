@@ -281,4 +281,26 @@ func TestDbDocuments(t *testing.T) {
 		}
 	})
 
+	t.Run("test delete document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		doc := MockDocument("hi")
+		tdb.AddDocument(ctx, doc)
+		err := tdb.DeleteDocument(ctx, "hi")
+		if err != nil {
+			t.Fatalf("DeleteDocument expected no error, got err=%v", err)
+		}
+	})
+
+	t.Run("test delete nonexistent document", func(t *testing.T) {
+		tdb := MakeMockDatabase(t.Name())
+		tdb.db.Ping()
+		ctx := context.Background()
+		err := tdb.DeleteDocument(ctx, "hi")
+		if !errors.Is(err, DocumentNotFoundError("hi")) {
+			t.Fatalf("DeleteDocument expected not found, got err=%v", err)
+		}
+	})
+
 }
