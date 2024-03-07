@@ -12,5 +12,3 @@ import (
 
 // this program demonstrates basic CAN stuff.
 // i give up this shit is so hard
-
-

@@ -134,11 +134,10 @@ func (sck *CanSocket) Send(msg *can.Frame) error {
 
 	idToWrite := msg.Id.Id
 
-	if (msg.Id.Extended) {
+	if msg.Id.Extended {
 		idToWrite &= unix.CAN_EFF_MASK
 		idToWrite |= unix.CAN_EFF_FLAG
 	}
-		
 
 	switch msg.Kind {
 	case can.CanRTRFrame:
@@ -191,10 +190,10 @@ func (sck *CanSocket) Recv() (*can.Frame, error) {
 	id.Id = raw_id
 	if raw_id&unix.CAN_EFF_FLAG != 0 {
 		// extended id frame
-		id.Extended = true;
+		id.Extended = true
 	} else {
 		// it's a normal can frame
-		id.Extended = false;
+		id.Extended = false
 	}
 
 	var k can.Kind = can.CanDataFrame
@@ -203,8 +202,8 @@ func (sck *CanSocket) Recv() (*can.Frame, error) {
 		// we got an error...
 		k = can.CanErrFrame
 	}
-	
-	if raw_id & unix.CAN_RTR_FLAG != 0 {
+
+	if raw_id&unix.CAN_RTR_FLAG != 0 {
 		k = can.CanRTRFrame
 	}
 

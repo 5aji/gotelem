@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-
 )
 
 // Frameable is an object that can be sent in an XBee Frame. An XBee Frame
@@ -104,7 +103,6 @@ func xbeeFrameSplit(data []byte, atEOF bool) (advance int, token []byte, err err
 		}
 		// FIXME: add bounds checking! this can panic.
 		var frameLen = int(binary.BigEndian.Uint16(data[startIdx+1:startIdx+3])) + 4
-		
 
 		// if the value of frameLen is > 0x100, we know that it's screwed up.
 		// this helps keep error duration lowered.

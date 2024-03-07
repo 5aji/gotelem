@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/kschamplin/gotelem"
 	"github.com/kschamplin/gotelem/internal/logparsers"
 	"github.com/kschamplin/gotelem/skylab"
-	"github.com/kschamplin/gotelem"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 )

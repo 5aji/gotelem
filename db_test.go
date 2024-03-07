@@ -201,7 +201,7 @@ func TestDbDocuments(t *testing.T) {
 		tdb := MakeMockDatabase(t.Name())
 		tdb.db.Ping()
 		ctx := context.Background()
-		var badDoc = map[string]string{"bad":"duh"}
+		var badDoc = map[string]string{"bad": "duh"}
 		msg, err := json.Marshal(badDoc)
 		if err != nil {
 			panic(err)
@@ -241,7 +241,7 @@ func TestDbDocuments(t *testing.T) {
 
 		res, err := tdb.GetDocument(ctx, "hi")
 
-		if err == nil || !errors.Is(err, DocumentNotFoundError("hi")){
+		if err == nil || !errors.Is(err, DocumentNotFoundError("hi")) {
 			t.Fatalf("GetDocument expected DocumentNotFoundError, got %v", err)
 		}
 		if res != nil {

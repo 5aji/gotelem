@@ -1,11 +1,9 @@
-
 package skylab
 
 import (
-	"testing"
 	"encoding/json"
+	"testing"
 )
-
 
 func TestMarshalUnmarshalBmsMeasurement(t *testing.T) {
 	v := &BmsMeasurement{}
@@ -39,7 +37,6 @@ func TestJSONBmsMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBatteryStatus(t *testing.T) {
@@ -74,7 +71,6 @@ func TestJSONBatteryStatus(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsKillReason(t *testing.T) {
@@ -109,7 +105,6 @@ func TestJSONBmsKillReason(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsModuleMinMax(t *testing.T) {
@@ -144,7 +139,6 @@ func TestJSONBmsModuleMinMax(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsSoc(t *testing.T) {
@@ -179,7 +173,6 @@ func TestJSONBmsSoc(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsCapacity(t *testing.T) {
@@ -214,7 +207,6 @@ func TestJSONBmsCapacity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsCurrentlimit(t *testing.T) {
@@ -249,7 +241,6 @@ func TestJSONBmsCurrentlimit(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsFanInfo(t *testing.T) {
@@ -284,7 +275,6 @@ func TestJSONBmsFanInfo(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsSetMinFanSpeed(t *testing.T) {
@@ -319,7 +309,6 @@ func TestJSONBmsSetMinFanSpeed(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsModule(t *testing.T) {
@@ -354,7 +343,6 @@ func TestJSONBmsModule(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsChargerResponse(t *testing.T) {
@@ -389,7 +377,6 @@ func TestJSONBmsChargerResponse(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalChassisIsolationFault(t *testing.T) {
@@ -424,7 +411,6 @@ func TestJSONChassisIsolationFault(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsImdInfo(t *testing.T) {
@@ -459,7 +445,6 @@ func TestJSONBmsImdInfo(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalDashboardPedalPercentages(t *testing.T) {
@@ -494,7 +479,6 @@ func TestJSONDashboardPedalPercentages(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalCarState(t *testing.T) {
@@ -529,7 +513,6 @@ func TestJSONCarState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalDashboardPedalFault(t *testing.T) {
@@ -564,7 +547,6 @@ func TestJSONDashboardPedalFault(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalDashboardSystemTimeoutTest(t *testing.T) {
@@ -599,7 +581,6 @@ func TestJSONDashboardSystemTimeoutTest(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalCarSpeed(t *testing.T) {
@@ -634,7 +615,6 @@ func TestJSONCarSpeed(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalFlightComputerLvBoardDisconnectCounts(t *testing.T) {
@@ -669,7 +649,6 @@ func TestJSONFlightComputerLvBoardDisconnectCounts(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalFlightComputerHvBoardDisconnectCounts(t *testing.T) {
@@ -704,7 +683,6 @@ func TestJSONFlightComputerHvBoardDisconnectCounts(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalFlightComputerInternalState(t *testing.T) {
@@ -739,7 +717,6 @@ func TestJSONFlightComputerInternalState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalPowerToDrive(t *testing.T) {
@@ -774,7 +751,6 @@ func TestJSONPowerToDrive(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalArrayPower(t *testing.T) {
@@ -809,7 +785,6 @@ func TestJSONArrayPower(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalArrayEnergy(t *testing.T) {
@@ -844,7 +819,6 @@ func TestJSONArrayEnergy(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalArrayEnergyReset(t *testing.T) {
@@ -879,7 +853,6 @@ func TestJSONArrayEnergyReset(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionTurnSignalsCommand(t *testing.T) {
@@ -914,7 +887,6 @@ func TestJSONVisionTurnSignalsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionBrakeLightsCommand(t *testing.T) {
@@ -949,7 +921,6 @@ func TestJSONVisionBrakeLightsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionHeadlightsCommand(t *testing.T) {
@@ -984,7 +955,6 @@ func TestJSONVisionHeadlightsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionHornCommand(t *testing.T) {
@@ -1019,7 +989,6 @@ func TestJSONVisionHornCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionArrayLatchesCommand(t *testing.T) {
@@ -1054,7 +1023,6 @@ func TestJSONVisionArrayLatchesCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionRearviewCommand(t *testing.T) {
@@ -1089,7 +1057,6 @@ func TestJSONVisionRearviewCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTrackerEnable(t *testing.T) {
@@ -1124,7 +1091,6 @@ func TestJSONTrackerEnable(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalDistanceTraveled(t *testing.T) {
@@ -1159,7 +1125,6 @@ func TestJSONDistanceTraveled(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalChargerState(t *testing.T) {
@@ -1194,7 +1159,6 @@ func TestJSONChargerState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalChargerBmsRequest(t *testing.T) {
@@ -1229,7 +1193,6 @@ func TestJSONChargerBmsRequest(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalChargerCurrentVoltage(t *testing.T) {
@@ -1264,7 +1227,6 @@ func TestJSONChargerCurrentVoltage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalChargerPower(t *testing.T) {
@@ -1299,7 +1261,6 @@ func TestJSONChargerPower(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalThunderstruckControlMessage(t *testing.T) {
@@ -1334,7 +1295,6 @@ func TestJSONThunderstruckControlMessage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionStatusFront(t *testing.T) {
@@ -1369,7 +1329,6 @@ func TestJSONVisionStatusFront(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionStatusRear(t *testing.T) {
@@ -1404,7 +1363,6 @@ func TestJSONVisionStatusRear(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalLightsFrontId(t *testing.T) {
@@ -1439,7 +1397,6 @@ func TestJSONLightsFrontId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalLightsBackId(t *testing.T) {
@@ -1474,7 +1431,6 @@ func TestJSONLightsBackId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalVisionId(t *testing.T) {
@@ -1509,7 +1465,6 @@ func TestJSONVisionId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalSteeringPressCount1(t *testing.T) {
@@ -1544,7 +1499,6 @@ func TestJSONSteeringPressCount1(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalSteeringPressCount2(t *testing.T) {
@@ -1579,7 +1533,6 @@ func TestJSONSteeringPressCount2(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalSteeringButtonColors1(t *testing.T) {
@@ -1614,7 +1567,6 @@ func TestJSONSteeringButtonColors1(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalSteeringButtonColors2(t *testing.T) {
@@ -1649,7 +1601,6 @@ func TestJSONSteeringButtonColors2(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalSteeringHorn(t *testing.T) {
@@ -1684,7 +1635,6 @@ func TestJSONSteeringHorn(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalThunderstruckStatusMessage(t *testing.T) {
@@ -1719,7 +1669,6 @@ func TestJSONThunderstruckStatusMessage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTrackerData(t *testing.T) {
@@ -1754,7 +1703,6 @@ func TestJSONTrackerData(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumMotorDriveL(t *testing.T) {
@@ -1789,7 +1737,6 @@ func TestJSONTritiumMotorDriveL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumMotorPowerL(t *testing.T) {
@@ -1824,7 +1771,6 @@ func TestJSONTritiumMotorPowerL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumResetL(t *testing.T) {
@@ -1859,7 +1805,6 @@ func TestJSONTritiumResetL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumMotorDriveR(t *testing.T) {
@@ -1894,7 +1839,6 @@ func TestJSONTritiumMotorDriveR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumMotorPowerR(t *testing.T) {
@@ -1929,7 +1873,6 @@ func TestJSONTritiumMotorPowerR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTritiumResetR(t *testing.T) {
@@ -1964,7 +1907,6 @@ func TestJSONTritiumResetR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsAhSet(t *testing.T) {
@@ -1999,7 +1941,6 @@ func TestJSONBmsAhSet(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsWhSet(t *testing.T) {
@@ -2034,7 +1975,6 @@ func TestJSONBmsWhSet(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalBmsKill(t *testing.T) {
@@ -2069,7 +2009,6 @@ func TestJSONBmsKill(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalTelemetryRtcReset(t *testing.T) {
@@ -2104,7 +2043,6 @@ func TestJSONTelemetryRtcReset(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrIdentification(t *testing.T) {
@@ -2139,7 +2077,6 @@ func TestJSONWsrIdentification(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrStatusInformation(t *testing.T) {
@@ -2174,7 +2111,6 @@ func TestJSONWsrStatusInformation(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrBusMeasurement(t *testing.T) {
@@ -2209,7 +2145,6 @@ func TestJSONWsrBusMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrVelocity(t *testing.T) {
@@ -2244,7 +2179,6 @@ func TestJSONWsrVelocity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrPhaseCurrent(t *testing.T) {
@@ -2279,7 +2213,6 @@ func TestJSONWsrPhaseCurrent(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrMotorVoltageVector(t *testing.T) {
@@ -2314,7 +2247,6 @@ func TestJSONWsrMotorVoltageVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrMotorCurrentVector(t *testing.T) {
@@ -2349,7 +2281,6 @@ func TestJSONWsrMotorCurrentVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrMotorBackemf(t *testing.T) {
@@ -2384,7 +2315,6 @@ func TestJSONWsrMotorBackemf(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsr15165VoltageRail(t *testing.T) {
@@ -2419,7 +2349,6 @@ func TestJSONWsr15165VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsr2512VoltageRail(t *testing.T) {
@@ -2454,7 +2383,6 @@ func TestJSONWsr2512VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrHeatsinkMotorTemp(t *testing.T) {
@@ -2489,7 +2417,6 @@ func TestJSONWsrHeatsinkMotorTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrDspBoardTemp(t *testing.T) {
@@ -2524,7 +2451,6 @@ func TestJSONWsrDspBoardTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrReserved(t *testing.T) {
@@ -2559,7 +2485,6 @@ func TestJSONWsrReserved(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrOdometerBusAmphoursMeasurement(t *testing.T) {
@@ -2594,7 +2519,6 @@ func TestJSONWsrOdometerBusAmphoursMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsrSlipSpeedMeasurement(t *testing.T) {
@@ -2629,7 +2553,6 @@ func TestJSONWsrSlipSpeedMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslIdentification(t *testing.T) {
@@ -2664,7 +2587,6 @@ func TestJSONWslIdentification(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslStatusInformation(t *testing.T) {
@@ -2699,7 +2621,6 @@ func TestJSONWslStatusInformation(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslBusMeasurement(t *testing.T) {
@@ -2734,7 +2655,6 @@ func TestJSONWslBusMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslVelocity(t *testing.T) {
@@ -2769,7 +2689,6 @@ func TestJSONWslVelocity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslPhaseCurrent(t *testing.T) {
@@ -2804,7 +2723,6 @@ func TestJSONWslPhaseCurrent(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslMotorVoltageVector(t *testing.T) {
@@ -2839,7 +2757,6 @@ func TestJSONWslMotorVoltageVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslMotorCurrentVector(t *testing.T) {
@@ -2874,7 +2791,6 @@ func TestJSONWslMotorCurrentVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslMotorBackemf(t *testing.T) {
@@ -2909,7 +2825,6 @@ func TestJSONWslMotorBackemf(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsl15165VoltageRail(t *testing.T) {
@@ -2944,7 +2859,6 @@ func TestJSONWsl15165VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWsl2512VoltageRail(t *testing.T) {
@@ -2979,7 +2893,6 @@ func TestJSONWsl2512VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslHeatsinkMotorTemp(t *testing.T) {
@@ -3014,7 +2927,6 @@ func TestJSONWslHeatsinkMotorTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslDspBoardTemp(t *testing.T) {
@@ -3049,7 +2961,6 @@ func TestJSONWslDspBoardTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslOdometerBusAmphoursMeasurement(t *testing.T) {
@@ -3084,7 +2995,6 @@ func TestJSONWslOdometerBusAmphoursMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslReserved(t *testing.T) {
@@ -3119,7 +3029,6 @@ func TestJSONWslReserved(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }
 func TestMarshalUnmarshalWslSlipSpeedMeasurement(t *testing.T) {
@@ -3154,6 +3063,5 @@ func TestJSONWslSlipSpeedMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
-	
 
 }

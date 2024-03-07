@@ -103,14 +103,13 @@ func Test_xbeeFrameSplit(t *testing.T) {
 		{
 			name: "start delimiter inside partial packet",
 			args: args{
-				data: advTest,
+				data:  advTest,
 				atEOF: false,
 			},
 			wantAdvance: 2,
-			wantToken: nil,
-			wantErr: false,
+			wantToken:   nil,
+			wantErr:     false,
 		},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -128,8 +127,6 @@ func Test_xbeeFrameSplit(t *testing.T) {
 		})
 	}
 }
-
-
 
 func Test_parseFrame(t *testing.T) {
 	type args struct {

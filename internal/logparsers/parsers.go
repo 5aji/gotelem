@@ -44,7 +44,7 @@ var candumpRegex = regexp.MustCompile(`^\((\d+)\.(\d{6})\) \w+ (\w+)#(\w+)$`)
 
 func parseCanDumpLine(dumpLine string) (frame can.Frame, ts time.Time, err error) {
 	frame = can.Frame{}
-	ts = time.Unix(0,0)
+	ts = time.Unix(0, 0)
 	// dumpline looks like this:
 	// (1684538768.521889) can0 200#8D643546
 	// remove trailing newline/whitespaces
@@ -84,13 +84,13 @@ func parseCanDumpLine(dumpLine string) (frame can.Frame, ts time.Time, err error
 	}
 
 	// TODO: add extended id support, need an example log and a test.
-	frame.Id =  can.CanID{Id: uint32(id), Extended: false}
+	frame.Id = can.CanID{Id: uint32(id), Extended: false}
 	frame.Data = rawData
 	frame.Kind = can.CanDataFrame
 
-	ts = time.Unix(unixSeconds, unixMicros * int64(time.Microsecond))
+	ts = time.Unix(unixSeconds, unixMicros*int64(time.Microsecond))
 
-	return 
+	return
 
 }
 
@@ -103,7 +103,7 @@ var telemRegex = regexp.MustCompile(`^(\d+)\.(\d{3}) (\w{3})(\w+)$`)
 
 func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
 	frame = can.Frame{}
-	ts = time.Unix(0,0)
+	ts = time.Unix(0, 0)
 	// strip trailng newline since we rely on it being gone
 	line = strings.TrimSpace(line)
 

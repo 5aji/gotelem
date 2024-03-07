@@ -96,7 +96,6 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 			frame, err = skylab.ToCanFrame(msg.Data)
 
-
 			s.sock.Send(&frame)
 
 		case msg := <-rxCan:
@@ -107,7 +106,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 			}
 			cde := skylab.BusEvent{
 				Timestamp: time.Now(),
-				Name: p.String(),
+				Name:      p.String(),
 				Data:      p,
 			}
 			broker.Publish("socketCAN", cde)

@@ -1,4 +1,5 @@
 //go:build openmct
+
 package gotelem
 
 import (

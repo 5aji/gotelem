@@ -74,7 +74,6 @@ type Sizer interface {
 // CanSend takes a packet and makes CAN framing data.
 func ToCanFrame(p Packet) (f can.Frame, err error) {
 
-
 	f.Id, err = p.CanId()
 	if err != nil {
 		return
@@ -146,8 +145,9 @@ func (e *UnknownIdError) Error() string {
 
 type BadLengthError struct {
 	expected uint32
-	actual uint32
+	actual   uint32
 }
+
 func (e *BadLengthError) Error() string {
 	return fmt.Sprintf("bad data length, expected %d, got %d", e.expected, e.actual)
 }

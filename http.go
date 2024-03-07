@@ -274,7 +274,6 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		// override the bus event filter name option
 		bef.Names = []string{name}
 
-
 		var res []Datum
 		// make the call, skip the limit modifier if it's nil.
 		res, err = db.GetValues(r.Context(), *bef, field, lim)

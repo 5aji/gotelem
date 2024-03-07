@@ -3,248 +3,248 @@
 package skylab
 
 import (
-	"errors"
 	"encoding/binary"
-	"github.com/kschamplin/gotelem/internal/can"
 	"encoding/json"
+	"errors"
+	"github.com/kschamplin/gotelem/internal/can"
 )
 
 type SkylabId uint32
 
 const (
-	BmsMeasurementId SkylabId = 0x10
-	BatteryStatusId SkylabId = 0x11
-	BmsKillReasonId SkylabId = 0x12
-	BmsModuleMinMaxId SkylabId = 0x13
-	BmsSocId SkylabId = 0x14
-	BmsCapacityId SkylabId = 0x15
-	BmsCurrentlimitId SkylabId = 0x18
-	BmsFanInfoId SkylabId = 0x19
-	BmsSetMinFanSpeedId SkylabId = 0x1B
-	BmsModuleId SkylabId = 0x40
-	BmsChargerResponseId SkylabId = 0x75
-	ChassisIsolationFaultId SkylabId = 0x38
-	BmsImdInfoId SkylabId = 0x37
-	DashboardPedalPercentagesId SkylabId = 0x290
-	CarStateId SkylabId = 0x291
-	DashboardPedalFaultId SkylabId = 0x292
-	DashboardSystemTimeoutTestId SkylabId = 0x299
-	CarSpeedId SkylabId = 0x29A
+	BmsMeasurementId                        SkylabId = 0x10
+	BatteryStatusId                         SkylabId = 0x11
+	BmsKillReasonId                         SkylabId = 0x12
+	BmsModuleMinMaxId                       SkylabId = 0x13
+	BmsSocId                                SkylabId = 0x14
+	BmsCapacityId                           SkylabId = 0x15
+	BmsCurrentlimitId                       SkylabId = 0x18
+	BmsFanInfoId                            SkylabId = 0x19
+	BmsSetMinFanSpeedId                     SkylabId = 0x1B
+	BmsModuleId                             SkylabId = 0x40
+	BmsChargerResponseId                    SkylabId = 0x75
+	ChassisIsolationFaultId                 SkylabId = 0x38
+	BmsImdInfoId                            SkylabId = 0x37
+	DashboardPedalPercentagesId             SkylabId = 0x290
+	CarStateId                              SkylabId = 0x291
+	DashboardPedalFaultId                   SkylabId = 0x292
+	DashboardSystemTimeoutTestId            SkylabId = 0x299
+	CarSpeedId                              SkylabId = 0x29A
 	FlightComputerLvBoardDisconnectCountsId SkylabId = 0x29B
 	FlightComputerHvBoardDisconnectCountsId SkylabId = 0x29C
-	FlightComputerInternalStateId SkylabId = 0x29D
-	PowerToDriveId SkylabId = 0x19E
-	ArrayPowerId SkylabId = 0x19F
-	ArrayEnergyId SkylabId = 0x119
-	ArrayEnergyResetId SkylabId = 0x120
-	VisionTurnSignalsCommandId SkylabId = 0x2B0
-	VisionBrakeLightsCommandId SkylabId = 0x2B1
-	VisionHeadlightsCommandId SkylabId = 0x2B2
-	VisionHornCommandId SkylabId = 0x2B3
-	VisionArrayLatchesCommandId SkylabId = 0x2B4
-	VisionRearviewCommandId SkylabId = 0x2B5
-	TrackerEnableId SkylabId = 0x610
-	DistanceTraveledId SkylabId = 0x19D
-	ChargerStateId SkylabId = 0x573
-	ChargerBmsRequestId SkylabId = 0x74
-	ChargerCurrentVoltageId SkylabId = 0x576
-	ChargerPowerId SkylabId = 0x577
-	ThunderstruckControlMessageId SkylabId = 0x18E54024
-	VisionStatusFrontId SkylabId = 0x2B6
-	VisionStatusRearId SkylabId = 0x2B7
-	LightsFrontIdId SkylabId = 0x300
-	LightsBackIdId SkylabId = 0x301
-	VisionIdId SkylabId = 0x302
-	SteeringPressCount1Id SkylabId = 0x240
-	SteeringPressCount2Id SkylabId = 0x250
-	SteeringButtonColors1Id SkylabId = 0x241
-	SteeringButtonColors2Id SkylabId = 0x251
-	SteeringHornId SkylabId = 0x242
-	ThunderstruckStatusMessageId SkylabId = 0x18EB2440
-	TrackerDataId SkylabId = 0x600
-	TritiumMotorDriveLId SkylabId = 0x121
-	TritiumMotorPowerLId SkylabId = 0x122
-	TritiumResetLId SkylabId = 0x123
-	TritiumMotorDriveRId SkylabId = 0x161
-	TritiumMotorPowerRId SkylabId = 0x162
-	TritiumResetRId SkylabId = 0x163
-	BmsAhSetId SkylabId = 0x16
-	BmsWhSetId SkylabId = 0x17
-	BmsKillId SkylabId = 0x1A
-	TelemetryRtcResetId SkylabId = 0x700
-	WsrIdentificationId SkylabId = 0x140
-	WsrStatusInformationId SkylabId = 0x141
-	WsrBusMeasurementId SkylabId = 0x142
-	WsrVelocityId SkylabId = 0x143
-	WsrPhaseCurrentId SkylabId = 0x144
-	WsrMotorVoltageVectorId SkylabId = 0x145
-	WsrMotorCurrentVectorId SkylabId = 0x146
-	WsrMotorBackemfId SkylabId = 0x147
-	Wsr15165VoltageRailId SkylabId = 0x148
-	Wsr2512VoltageRailId SkylabId = 0x149
-	WsrHeatsinkMotorTempId SkylabId = 0x14B
-	WsrDspBoardTempId SkylabId = 0x14C
-	WsrReservedId SkylabId = 0x14D
-	WsrOdometerBusAmphoursMeasurementId SkylabId = 0x14E
-	WsrSlipSpeedMeasurementId SkylabId = 0x157
-	WslIdentificationId SkylabId = 0x100
-	WslStatusInformationId SkylabId = 0x101
-	WslBusMeasurementId SkylabId = 0x102
-	WslVelocityId SkylabId = 0x103
-	WslPhaseCurrentId SkylabId = 0x104
-	WslMotorVoltageVectorId SkylabId = 0x105
-	WslMotorCurrentVectorId SkylabId = 0x106
-	WslMotorBackemfId SkylabId = 0x107
-	Wsl15165VoltageRailId SkylabId = 0x108
-	Wsl2512VoltageRailId SkylabId = 0x109
-	WslHeatsinkMotorTempId SkylabId = 0x10B
-	WslDspBoardTempId SkylabId = 0x10C
-	WslOdometerBusAmphoursMeasurementId SkylabId = 0x10E
-	WslReservedId SkylabId = 0x10D
-	WslSlipSpeedMeasurementId SkylabId = 0x117
+	FlightComputerInternalStateId           SkylabId = 0x29D
+	PowerToDriveId                          SkylabId = 0x19E
+	ArrayPowerId                            SkylabId = 0x19F
+	ArrayEnergyId                           SkylabId = 0x119
+	ArrayEnergyResetId                      SkylabId = 0x120
+	VisionTurnSignalsCommandId              SkylabId = 0x2B0
+	VisionBrakeLightsCommandId              SkylabId = 0x2B1
+	VisionHeadlightsCommandId               SkylabId = 0x2B2
+	VisionHornCommandId                     SkylabId = 0x2B3
+	VisionArrayLatchesCommandId             SkylabId = 0x2B4
+	VisionRearviewCommandId                 SkylabId = 0x2B5
+	TrackerEnableId                         SkylabId = 0x610
+	DistanceTraveledId                      SkylabId = 0x19D
+	ChargerStateId                          SkylabId = 0x573
+	ChargerBmsRequestId                     SkylabId = 0x74
+	ChargerCurrentVoltageId                 SkylabId = 0x576
+	ChargerPowerId                          SkylabId = 0x577
+	ThunderstruckControlMessageId           SkylabId = 0x18E54024
+	VisionStatusFrontId                     SkylabId = 0x2B6
+	VisionStatusRearId                      SkylabId = 0x2B7
+	LightsFrontIdId                         SkylabId = 0x300
+	LightsBackIdId                          SkylabId = 0x301
+	VisionIdId                              SkylabId = 0x302
+	SteeringPressCount1Id                   SkylabId = 0x240
+	SteeringPressCount2Id                   SkylabId = 0x250
+	SteeringButtonColors1Id                 SkylabId = 0x241
+	SteeringButtonColors2Id                 SkylabId = 0x251
+	SteeringHornId                          SkylabId = 0x242
+	ThunderstruckStatusMessageId            SkylabId = 0x18EB2440
+	TrackerDataId                           SkylabId = 0x600
+	TritiumMotorDriveLId                    SkylabId = 0x121
+	TritiumMotorPowerLId                    SkylabId = 0x122
+	TritiumResetLId                         SkylabId = 0x123
+	TritiumMotorDriveRId                    SkylabId = 0x161
+	TritiumMotorPowerRId                    SkylabId = 0x162
+	TritiumResetRId                         SkylabId = 0x163
+	BmsAhSetId                              SkylabId = 0x16
+	BmsWhSetId                              SkylabId = 0x17
+	BmsKillId                               SkylabId = 0x1A
+	TelemetryRtcResetId                     SkylabId = 0x700
+	WsrIdentificationId                     SkylabId = 0x140
+	WsrStatusInformationId                  SkylabId = 0x141
+	WsrBusMeasurementId                     SkylabId = 0x142
+	WsrVelocityId                           SkylabId = 0x143
+	WsrPhaseCurrentId                       SkylabId = 0x144
+	WsrMotorVoltageVectorId                 SkylabId = 0x145
+	WsrMotorCurrentVectorId                 SkylabId = 0x146
+	WsrMotorBackemfId                       SkylabId = 0x147
+	Wsr15165VoltageRailId                   SkylabId = 0x148
+	Wsr2512VoltageRailId                    SkylabId = 0x149
+	WsrHeatsinkMotorTempId                  SkylabId = 0x14B
+	WsrDspBoardTempId                       SkylabId = 0x14C
+	WsrReservedId                           SkylabId = 0x14D
+	WsrOdometerBusAmphoursMeasurementId     SkylabId = 0x14E
+	WsrSlipSpeedMeasurementId               SkylabId = 0x157
+	WslIdentificationId                     SkylabId = 0x100
+	WslStatusInformationId                  SkylabId = 0x101
+	WslBusMeasurementId                     SkylabId = 0x102
+	WslVelocityId                           SkylabId = 0x103
+	WslPhaseCurrentId                       SkylabId = 0x104
+	WslMotorVoltageVectorId                 SkylabId = 0x105
+	WslMotorCurrentVectorId                 SkylabId = 0x106
+	WslMotorBackemfId                       SkylabId = 0x107
+	Wsl15165VoltageRailId                   SkylabId = 0x108
+	Wsl2512VoltageRailId                    SkylabId = 0x109
+	WslHeatsinkMotorTempId                  SkylabId = 0x10B
+	WslDspBoardTempId                       SkylabId = 0x10C
+	WslOdometerBusAmphoursMeasurementId     SkylabId = 0x10E
+	WslReservedId                           SkylabId = 0x10D
+	WslSlipSpeedMeasurementId               SkylabId = 0x117
 )
 
 // list of every packet ID. Can be used for O(1) checks.
 var idMap = map[can.CanID]bool{
-	
-	{ Id: 0x10, Extended: false }: true,
-	{ Id: 0x11, Extended: false }: true,
-	{ Id: 0x12, Extended: false }: true,
-	{ Id: 0x13, Extended: false }: true,
-	{ Id: 0x14, Extended: false }: true,
-	{ Id: 0x15, Extended: false }: true,
-	{ Id: 0x18, Extended: false }: true,
-	{ Id: 0x19, Extended: false }: true,
-	{ Id: 0x1B, Extended: false }: true, 
-	{ Id: 0x40, Extended: false }: true,
-	{ Id: 0x41, Extended: false }: true,
-	{ Id: 0x42, Extended: false }: true,
-	{ Id: 0x43, Extended: false }: true,
-	{ Id: 0x44, Extended: false }: true,
-	{ Id: 0x45, Extended: false }: true,
-	{ Id: 0x46, Extended: false }: true,
-	{ Id: 0x47, Extended: false }: true,
-	{ Id: 0x48, Extended: false }: true,
-	{ Id: 0x49, Extended: false }: true,
-	{ Id: 0x4A, Extended: false }: true,
-	{ Id: 0x4B, Extended: false }: true,
-	{ Id: 0x4C, Extended: false }: true,
-	{ Id: 0x4D, Extended: false }: true,
-	{ Id: 0x4E, Extended: false }: true,
-	{ Id: 0x4F, Extended: false }: true,
-	{ Id: 0x50, Extended: false }: true,
-	{ Id: 0x51, Extended: false }: true,
-	{ Id: 0x52, Extended: false }: true,
-	{ Id: 0x53, Extended: false }: true,
-	{ Id: 0x54, Extended: false }: true,
-	{ Id: 0x55, Extended: false }: true,
-	{ Id: 0x56, Extended: false }: true,
-	{ Id: 0x57, Extended: false }: true,
-	{ Id: 0x58, Extended: false }: true,
-	{ Id: 0x59, Extended: false }: true,
-	{ Id: 0x5A, Extended: false }: true,
-	{ Id: 0x5B, Extended: false }: true,
-	{ Id: 0x5C, Extended: false }: true,
-	{ Id: 0x5D, Extended: false }: true,
-	{ Id: 0x5E, Extended: false }: true,
-	{ Id: 0x5F, Extended: false }: true,
-	{ Id: 0x60, Extended: false }: true,
-	{ Id: 0x61, Extended: false }: true,
-	{ Id: 0x62, Extended: false }: true,
-	{ Id: 0x63, Extended: false }: true,
-	
-	{ Id: 0x75, Extended: false }: true,
-	{ Id: 0x38, Extended: false }: true,
-	{ Id: 0x37, Extended: false }: true,
-	{ Id: 0x290, Extended: false }: true,
-	{ Id: 0x291, Extended: false }: true,
-	{ Id: 0x292, Extended: false }: true,
-	{ Id: 0x299, Extended: false }: true,
-	{ Id: 0x29A, Extended: false }: true,
-	{ Id: 0x29B, Extended: false }: true,
-	{ Id: 0x29C, Extended: false }: true,
-	{ Id: 0x29D, Extended: false }: true,
-	{ Id: 0x19E, Extended: false }: true,
-	{ Id: 0x19F, Extended: false }: true,
-	{ Id: 0x119, Extended: false }: true,
-	{ Id: 0x120, Extended: false }: true,
-	{ Id: 0x2B0, Extended: false }: true,
-	{ Id: 0x2B1, Extended: false }: true,
-	{ Id: 0x2B2, Extended: false }: true,
-	{ Id: 0x2B3, Extended: false }: true,
-	{ Id: 0x2B4, Extended: false }: true,
-	{ Id: 0x2B5, Extended: false }: true, 
-	{ Id: 0x610, Extended: false }: true,
-	{ Id: 0x611, Extended: false }: true,
-	{ Id: 0x612, Extended: false }: true,
-	{ Id: 0x613, Extended: false }: true,
-	{ Id: 0x614, Extended: false }: true,
-	{ Id: 0x615, Extended: false }: true,
-	
-	{ Id: 0x19D, Extended: false }: true,
-	{ Id: 0x573, Extended: false }: true,
-	{ Id: 0x74, Extended: false }: true,
-	{ Id: 0x576, Extended: false }: true,
-	{ Id: 0x577, Extended: false }: true,
-	{ Id: 0x18E54024, Extended: true }: true,
-	{ Id: 0x2B6, Extended: false }: true,
-	{ Id: 0x2B7, Extended: false }: true,
-	{ Id: 0x300, Extended: false }: true,
-	{ Id: 0x301, Extended: false }: true,
-	{ Id: 0x302, Extended: false }: true,
-	{ Id: 0x240, Extended: false }: true,
-	{ Id: 0x250, Extended: false }: true,
-	{ Id: 0x241, Extended: false }: true,
-	{ Id: 0x251, Extended: false }: true,
-	{ Id: 0x242, Extended: false }: true,
-	{ Id: 0x18EB2440, Extended: true }: true, 
-	{ Id: 0x600, Extended: false }: true,
-	{ Id: 0x601, Extended: false }: true,
-	{ Id: 0x602, Extended: false }: true,
-	{ Id: 0x603, Extended: false }: true,
-	{ Id: 0x604, Extended: false }: true,
-	{ Id: 0x605, Extended: false }: true,
-	
-	{ Id: 0x121, Extended: false }: true,
-	{ Id: 0x122, Extended: false }: true,
-	{ Id: 0x123, Extended: false }: true,
-	{ Id: 0x161, Extended: false }: true,
-	{ Id: 0x162, Extended: false }: true,
-	{ Id: 0x163, Extended: false }: true,
-	{ Id: 0x16, Extended: false }: true,
-	{ Id: 0x17, Extended: false }: true,
-	{ Id: 0x1A, Extended: false }: true,
-	{ Id: 0x700, Extended: false }: true,
-	{ Id: 0x140, Extended: false }: true,
-	{ Id: 0x141, Extended: false }: true,
-	{ Id: 0x142, Extended: false }: true,
-	{ Id: 0x143, Extended: false }: true,
-	{ Id: 0x144, Extended: false }: true,
-	{ Id: 0x145, Extended: false }: true,
-	{ Id: 0x146, Extended: false }: true,
-	{ Id: 0x147, Extended: false }: true,
-	{ Id: 0x148, Extended: false }: true,
-	{ Id: 0x149, Extended: false }: true,
-	{ Id: 0x14B, Extended: false }: true,
-	{ Id: 0x14C, Extended: false }: true,
-	{ Id: 0x14D, Extended: false }: true,
-	{ Id: 0x14E, Extended: false }: true,
-	{ Id: 0x157, Extended: false }: true,
-	{ Id: 0x100, Extended: false }: true,
-	{ Id: 0x101, Extended: false }: true,
-	{ Id: 0x102, Extended: false }: true,
-	{ Id: 0x103, Extended: false }: true,
-	{ Id: 0x104, Extended: false }: true,
-	{ Id: 0x105, Extended: false }: true,
-	{ Id: 0x106, Extended: false }: true,
-	{ Id: 0x107, Extended: false }: true,
-	{ Id: 0x108, Extended: false }: true,
-	{ Id: 0x109, Extended: false }: true,
-	{ Id: 0x10B, Extended: false }: true,
-	{ Id: 0x10C, Extended: false }: true,
-	{ Id: 0x10E, Extended: false }: true,
-	{ Id: 0x10D, Extended: false }: true,
-	{ Id: 0x117, Extended: false }: true,
+
+	{Id: 0x10, Extended: false}: true,
+	{Id: 0x11, Extended: false}: true,
+	{Id: 0x12, Extended: false}: true,
+	{Id: 0x13, Extended: false}: true,
+	{Id: 0x14, Extended: false}: true,
+	{Id: 0x15, Extended: false}: true,
+	{Id: 0x18, Extended: false}: true,
+	{Id: 0x19, Extended: false}: true,
+	{Id: 0x1B, Extended: false}: true,
+	{Id: 0x40, Extended: false}: true,
+	{Id: 0x41, Extended: false}: true,
+	{Id: 0x42, Extended: false}: true,
+	{Id: 0x43, Extended: false}: true,
+	{Id: 0x44, Extended: false}: true,
+	{Id: 0x45, Extended: false}: true,
+	{Id: 0x46, Extended: false}: true,
+	{Id: 0x47, Extended: false}: true,
+	{Id: 0x48, Extended: false}: true,
+	{Id: 0x49, Extended: false}: true,
+	{Id: 0x4A, Extended: false}: true,
+	{Id: 0x4B, Extended: false}: true,
+	{Id: 0x4C, Extended: false}: true,
+	{Id: 0x4D, Extended: false}: true,
+	{Id: 0x4E, Extended: false}: true,
+	{Id: 0x4F, Extended: false}: true,
+	{Id: 0x50, Extended: false}: true,
+	{Id: 0x51, Extended: false}: true,
+	{Id: 0x52, Extended: false}: true,
+	{Id: 0x53, Extended: false}: true,
+	{Id: 0x54, Extended: false}: true,
+	{Id: 0x55, Extended: false}: true,
+	{Id: 0x56, Extended: false}: true,
+	{Id: 0x57, Extended: false}: true,
+	{Id: 0x58, Extended: false}: true,
+	{Id: 0x59, Extended: false}: true,
+	{Id: 0x5A, Extended: false}: true,
+	{Id: 0x5B, Extended: false}: true,
+	{Id: 0x5C, Extended: false}: true,
+	{Id: 0x5D, Extended: false}: true,
+	{Id: 0x5E, Extended: false}: true,
+	{Id: 0x5F, Extended: false}: true,
+	{Id: 0x60, Extended: false}: true,
+	{Id: 0x61, Extended: false}: true,
+	{Id: 0x62, Extended: false}: true,
+	{Id: 0x63, Extended: false}: true,
+
+	{Id: 0x75, Extended: false}:  true,
+	{Id: 0x38, Extended: false}:  true,
+	{Id: 0x37, Extended: false}:  true,
+	{Id: 0x290, Extended: false}: true,
+	{Id: 0x291, Extended: false}: true,
+	{Id: 0x292, Extended: false}: true,
+	{Id: 0x299, Extended: false}: true,
+	{Id: 0x29A, Extended: false}: true,
+	{Id: 0x29B, Extended: false}: true,
+	{Id: 0x29C, Extended: false}: true,
+	{Id: 0x29D, Extended: false}: true,
+	{Id: 0x19E, Extended: false}: true,
+	{Id: 0x19F, Extended: false}: true,
+	{Id: 0x119, Extended: false}: true,
+	{Id: 0x120, Extended: false}: true,
+	{Id: 0x2B0, Extended: false}: true,
+	{Id: 0x2B1, Extended: false}: true,
+	{Id: 0x2B2, Extended: false}: true,
+	{Id: 0x2B3, Extended: false}: true,
+	{Id: 0x2B4, Extended: false}: true,
+	{Id: 0x2B5, Extended: false}: true,
+	{Id: 0x610, Extended: false}: true,
+	{Id: 0x611, Extended: false}: true,
+	{Id: 0x612, Extended: false}: true,
+	{Id: 0x613, Extended: false}: true,
+	{Id: 0x614, Extended: false}: true,
+	{Id: 0x615, Extended: false}: true,
+
+	{Id: 0x19D, Extended: false}:     true,
+	{Id: 0x573, Extended: false}:     true,
+	{Id: 0x74, Extended: false}:      true,
+	{Id: 0x576, Extended: false}:     true,
+	{Id: 0x577, Extended: false}:     true,
+	{Id: 0x18E54024, Extended: true}: true,
+	{Id: 0x2B6, Extended: false}:     true,
+	{Id: 0x2B7, Extended: false}:     true,
+	{Id: 0x300, Extended: false}:     true,
+	{Id: 0x301, Extended: false}:     true,
+	{Id: 0x302, Extended: false}:     true,
+	{Id: 0x240, Extended: false}:     true,
+	{Id: 0x250, Extended: false}:     true,
+	{Id: 0x241, Extended: false}:     true,
+	{Id: 0x251, Extended: false}:     true,
+	{Id: 0x242, Extended: false}:     true,
+	{Id: 0x18EB2440, Extended: true}: true,
+	{Id: 0x600, Extended: false}:     true,
+	{Id: 0x601, Extended: false}:     true,
+	{Id: 0x602, Extended: false}:     true,
+	{Id: 0x603, Extended: false}:     true,
+	{Id: 0x604, Extended: false}:     true,
+	{Id: 0x605, Extended: false}:     true,
+
+	{Id: 0x121, Extended: false}: true,
+	{Id: 0x122, Extended: false}: true,
+	{Id: 0x123, Extended: false}: true,
+	{Id: 0x161, Extended: false}: true,
+	{Id: 0x162, Extended: false}: true,
+	{Id: 0x163, Extended: false}: true,
+	{Id: 0x16, Extended: false}:  true,
+	{Id: 0x17, Extended: false}:  true,
+	{Id: 0x1A, Extended: false}:  true,
+	{Id: 0x700, Extended: false}: true,
+	{Id: 0x140, Extended: false}: true,
+	{Id: 0x141, Extended: false}: true,
+	{Id: 0x142, Extended: false}: true,
+	{Id: 0x143, Extended: false}: true,
+	{Id: 0x144, Extended: false}: true,
+	{Id: 0x145, Extended: false}: true,
+	{Id: 0x146, Extended: false}: true,
+	{Id: 0x147, Extended: false}: true,
+	{Id: 0x148, Extended: false}: true,
+	{Id: 0x149, Extended: false}: true,
+	{Id: 0x14B, Extended: false}: true,
+	{Id: 0x14C, Extended: false}: true,
+	{Id: 0x14D, Extended: false}: true,
+	{Id: 0x14E, Extended: false}: true,
+	{Id: 0x157, Extended: false}: true,
+	{Id: 0x100, Extended: false}: true,
+	{Id: 0x101, Extended: false}: true,
+	{Id: 0x102, Extended: false}: true,
+	{Id: 0x103, Extended: false}: true,
+	{Id: 0x104, Extended: false}: true,
+	{Id: 0x105, Extended: false}: true,
+	{Id: 0x106, Extended: false}: true,
+	{Id: 0x107, Extended: false}: true,
+	{Id: 0x108, Extended: false}: true,
+	{Id: 0x109, Extended: false}: true,
+	{Id: 0x10B, Extended: false}: true,
+	{Id: 0x10C, Extended: false}: true,
+	{Id: 0x10E, Extended: false}: true,
+	{Id: 0x10D, Extended: false}: true,
+	{Id: 0x117, Extended: false}: true,
 }
 
 // FromCanFrame creates a Packet from a given CAN ID and data payload.
@@ -252,369 +252,369 @@ var idMap = map[can.CanID]bool{
 func FromCanFrame(f can.Frame) (Packet, error) {
 	id := f.Id
 	if !idMap[id] {
-		return nil, &UnknownIdError{ id.Id }
+		return nil, &UnknownIdError{id.Id}
 	}
 	switch id {
-	case can.CanID{ Id: 0x10, Extended: false }:
+	case can.CanID{Id: 0x10, Extended: false}:
 		var res = &BmsMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x11, Extended: false }:
+	case can.CanID{Id: 0x11, Extended: false}:
 		var res = &BatteryStatus{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x12, Extended: false }:
+	case can.CanID{Id: 0x12, Extended: false}:
 		var res = &BmsKillReason{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x13, Extended: false }:
+	case can.CanID{Id: 0x13, Extended: false}:
 		var res = &BmsModuleMinMax{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x14, Extended: false }:
+	case can.CanID{Id: 0x14, Extended: false}:
 		var res = &BmsSoc{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x15, Extended: false }:
+	case can.CanID{Id: 0x15, Extended: false}:
 		var res = &BmsCapacity{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x18, Extended: false }:
+	case can.CanID{Id: 0x18, Extended: false}:
 		var res = &BmsCurrentlimit{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x19, Extended: false }:
+	case can.CanID{Id: 0x19, Extended: false}:
 		var res = &BmsFanInfo{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x1B, Extended: false }:
+	case can.CanID{Id: 0x1B, Extended: false}:
 		var res = &BmsSetMinFanSpeed{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x40, Extended: false },can.CanID{ Id: 0x41, Extended: false },can.CanID{ Id: 0x42, Extended: false },can.CanID{ Id: 0x43, Extended: false },can.CanID{ Id: 0x44, Extended: false },can.CanID{ Id: 0x45, Extended: false },can.CanID{ Id: 0x46, Extended: false },can.CanID{ Id: 0x47, Extended: false },can.CanID{ Id: 0x48, Extended: false },can.CanID{ Id: 0x49, Extended: false },can.CanID{ Id: 0x4A, Extended: false },can.CanID{ Id: 0x4B, Extended: false },can.CanID{ Id: 0x4C, Extended: false },can.CanID{ Id: 0x4D, Extended: false },can.CanID{ Id: 0x4E, Extended: false },can.CanID{ Id: 0x4F, Extended: false },can.CanID{ Id: 0x50, Extended: false },can.CanID{ Id: 0x51, Extended: false },can.CanID{ Id: 0x52, Extended: false },can.CanID{ Id: 0x53, Extended: false },can.CanID{ Id: 0x54, Extended: false },can.CanID{ Id: 0x55, Extended: false },can.CanID{ Id: 0x56, Extended: false },can.CanID{ Id: 0x57, Extended: false },can.CanID{ Id: 0x58, Extended: false },can.CanID{ Id: 0x59, Extended: false },can.CanID{ Id: 0x5A, Extended: false },can.CanID{ Id: 0x5B, Extended: false },can.CanID{ Id: 0x5C, Extended: false },can.CanID{ Id: 0x5D, Extended: false },can.CanID{ Id: 0x5E, Extended: false },can.CanID{ Id: 0x5F, Extended: false },can.CanID{ Id: 0x60, Extended: false },can.CanID{ Id: 0x61, Extended: false },can.CanID{ Id: 0x62, Extended: false },can.CanID{ Id: 0x63, Extended: false }:
+	case can.CanID{Id: 0x40, Extended: false}, can.CanID{Id: 0x41, Extended: false}, can.CanID{Id: 0x42, Extended: false}, can.CanID{Id: 0x43, Extended: false}, can.CanID{Id: 0x44, Extended: false}, can.CanID{Id: 0x45, Extended: false}, can.CanID{Id: 0x46, Extended: false}, can.CanID{Id: 0x47, Extended: false}, can.CanID{Id: 0x48, Extended: false}, can.CanID{Id: 0x49, Extended: false}, can.CanID{Id: 0x4A, Extended: false}, can.CanID{Id: 0x4B, Extended: false}, can.CanID{Id: 0x4C, Extended: false}, can.CanID{Id: 0x4D, Extended: false}, can.CanID{Id: 0x4E, Extended: false}, can.CanID{Id: 0x4F, Extended: false}, can.CanID{Id: 0x50, Extended: false}, can.CanID{Id: 0x51, Extended: false}, can.CanID{Id: 0x52, Extended: false}, can.CanID{Id: 0x53, Extended: false}, can.CanID{Id: 0x54, Extended: false}, can.CanID{Id: 0x55, Extended: false}, can.CanID{Id: 0x56, Extended: false}, can.CanID{Id: 0x57, Extended: false}, can.CanID{Id: 0x58, Extended: false}, can.CanID{Id: 0x59, Extended: false}, can.CanID{Id: 0x5A, Extended: false}, can.CanID{Id: 0x5B, Extended: false}, can.CanID{Id: 0x5C, Extended: false}, can.CanID{Id: 0x5D, Extended: false}, can.CanID{Id: 0x5E, Extended: false}, can.CanID{Id: 0x5F, Extended: false}, can.CanID{Id: 0x60, Extended: false}, can.CanID{Id: 0x61, Extended: false}, can.CanID{Id: 0x62, Extended: false}, can.CanID{Id: 0x63, Extended: false}:
 		var res = &BmsModule{}
 		res.UnmarshalPacket(f.Data)
 		res.Idx = id.Id - 0x40
 		return res, nil
-	case can.CanID{ Id: 0x75, Extended: false }:
+	case can.CanID{Id: 0x75, Extended: false}:
 		var res = &BmsChargerResponse{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x38, Extended: false }:
+	case can.CanID{Id: 0x38, Extended: false}:
 		var res = &ChassisIsolationFault{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x37, Extended: false }:
+	case can.CanID{Id: 0x37, Extended: false}:
 		var res = &BmsImdInfo{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x290, Extended: false }:
+	case can.CanID{Id: 0x290, Extended: false}:
 		var res = &DashboardPedalPercentages{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x291, Extended: false }:
+	case can.CanID{Id: 0x291, Extended: false}:
 		var res = &CarState{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x292, Extended: false }:
+	case can.CanID{Id: 0x292, Extended: false}:
 		var res = &DashboardPedalFault{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x299, Extended: false }:
+	case can.CanID{Id: 0x299, Extended: false}:
 		var res = &DashboardSystemTimeoutTest{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x29A, Extended: false }:
+	case can.CanID{Id: 0x29A, Extended: false}:
 		var res = &CarSpeed{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x29B, Extended: false }:
+	case can.CanID{Id: 0x29B, Extended: false}:
 		var res = &FlightComputerLvBoardDisconnectCounts{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x29C, Extended: false }:
+	case can.CanID{Id: 0x29C, Extended: false}:
 		var res = &FlightComputerHvBoardDisconnectCounts{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x29D, Extended: false }:
+	case can.CanID{Id: 0x29D, Extended: false}:
 		var res = &FlightComputerInternalState{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x19E, Extended: false }:
+	case can.CanID{Id: 0x19E, Extended: false}:
 		var res = &PowerToDrive{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x19F, Extended: false }:
+	case can.CanID{Id: 0x19F, Extended: false}:
 		var res = &ArrayPower{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x119, Extended: false }:
+	case can.CanID{Id: 0x119, Extended: false}:
 		var res = &ArrayEnergy{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x120, Extended: false }:
+	case can.CanID{Id: 0x120, Extended: false}:
 		var res = &ArrayEnergyReset{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B0, Extended: false }:
+	case can.CanID{Id: 0x2B0, Extended: false}:
 		var res = &VisionTurnSignalsCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B1, Extended: false }:
+	case can.CanID{Id: 0x2B1, Extended: false}:
 		var res = &VisionBrakeLightsCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B2, Extended: false }:
+	case can.CanID{Id: 0x2B2, Extended: false}:
 		var res = &VisionHeadlightsCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B3, Extended: false }:
+	case can.CanID{Id: 0x2B3, Extended: false}:
 		var res = &VisionHornCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B4, Extended: false }:
+	case can.CanID{Id: 0x2B4, Extended: false}:
 		var res = &VisionArrayLatchesCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B5, Extended: false }:
+	case can.CanID{Id: 0x2B5, Extended: false}:
 		var res = &VisionRearviewCommand{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x610, Extended: false },can.CanID{ Id: 0x611, Extended: false },can.CanID{ Id: 0x612, Extended: false },can.CanID{ Id: 0x613, Extended: false },can.CanID{ Id: 0x614, Extended: false },can.CanID{ Id: 0x615, Extended: false }:
+	case can.CanID{Id: 0x610, Extended: false}, can.CanID{Id: 0x611, Extended: false}, can.CanID{Id: 0x612, Extended: false}, can.CanID{Id: 0x613, Extended: false}, can.CanID{Id: 0x614, Extended: false}, can.CanID{Id: 0x615, Extended: false}:
 		var res = &TrackerEnable{}
 		res.UnmarshalPacket(f.Data)
 		res.Idx = id.Id - 0x610
 		return res, nil
-	case can.CanID{ Id: 0x19D, Extended: false }:
+	case can.CanID{Id: 0x19D, Extended: false}:
 		var res = &DistanceTraveled{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x573, Extended: false }:
+	case can.CanID{Id: 0x573, Extended: false}:
 		var res = &ChargerState{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x74, Extended: false }:
+	case can.CanID{Id: 0x74, Extended: false}:
 		var res = &ChargerBmsRequest{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x576, Extended: false }:
+	case can.CanID{Id: 0x576, Extended: false}:
 		var res = &ChargerCurrentVoltage{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x577, Extended: false }:
+	case can.CanID{Id: 0x577, Extended: false}:
 		var res = &ChargerPower{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x18E54024, Extended: true }:
+	case can.CanID{Id: 0x18E54024, Extended: true}:
 		var res = &ThunderstruckControlMessage{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B6, Extended: false }:
+	case can.CanID{Id: 0x2B6, Extended: false}:
 		var res = &VisionStatusFront{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x2B7, Extended: false }:
+	case can.CanID{Id: 0x2B7, Extended: false}:
 		var res = &VisionStatusRear{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x300, Extended: false }:
+	case can.CanID{Id: 0x300, Extended: false}:
 		var res = &LightsFrontId{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x301, Extended: false }:
+	case can.CanID{Id: 0x301, Extended: false}:
 		var res = &LightsBackId{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x302, Extended: false }:
+	case can.CanID{Id: 0x302, Extended: false}:
 		var res = &VisionId{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x240, Extended: false }:
+	case can.CanID{Id: 0x240, Extended: false}:
 		var res = &SteeringPressCount1{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x250, Extended: false }:
+	case can.CanID{Id: 0x250, Extended: false}:
 		var res = &SteeringPressCount2{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x241, Extended: false }:
+	case can.CanID{Id: 0x241, Extended: false}:
 		var res = &SteeringButtonColors1{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x251, Extended: false }:
+	case can.CanID{Id: 0x251, Extended: false}:
 		var res = &SteeringButtonColors2{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x242, Extended: false }:
+	case can.CanID{Id: 0x242, Extended: false}:
 		var res = &SteeringHorn{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x18EB2440, Extended: true }:
+	case can.CanID{Id: 0x18EB2440, Extended: true}:
 		var res = &ThunderstruckStatusMessage{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x600, Extended: false },can.CanID{ Id: 0x601, Extended: false },can.CanID{ Id: 0x602, Extended: false },can.CanID{ Id: 0x603, Extended: false },can.CanID{ Id: 0x604, Extended: false },can.CanID{ Id: 0x605, Extended: false }:
+	case can.CanID{Id: 0x600, Extended: false}, can.CanID{Id: 0x601, Extended: false}, can.CanID{Id: 0x602, Extended: false}, can.CanID{Id: 0x603, Extended: false}, can.CanID{Id: 0x604, Extended: false}, can.CanID{Id: 0x605, Extended: false}:
 		var res = &TrackerData{}
 		res.UnmarshalPacket(f.Data)
 		res.Idx = id.Id - 0x600
 		return res, nil
-	case can.CanID{ Id: 0x121, Extended: false }:
+	case can.CanID{Id: 0x121, Extended: false}:
 		var res = &TritiumMotorDriveL{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x122, Extended: false }:
+	case can.CanID{Id: 0x122, Extended: false}:
 		var res = &TritiumMotorPowerL{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x123, Extended: false }:
+	case can.CanID{Id: 0x123, Extended: false}:
 		var res = &TritiumResetL{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x161, Extended: false }:
+	case can.CanID{Id: 0x161, Extended: false}:
 		var res = &TritiumMotorDriveR{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x162, Extended: false }:
+	case can.CanID{Id: 0x162, Extended: false}:
 		var res = &TritiumMotorPowerR{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x163, Extended: false }:
+	case can.CanID{Id: 0x163, Extended: false}:
 		var res = &TritiumResetR{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x16, Extended: false }:
+	case can.CanID{Id: 0x16, Extended: false}:
 		var res = &BmsAhSet{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x17, Extended: false }:
+	case can.CanID{Id: 0x17, Extended: false}:
 		var res = &BmsWhSet{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x1A, Extended: false }:
+	case can.CanID{Id: 0x1A, Extended: false}:
 		var res = &BmsKill{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x700, Extended: false }:
+	case can.CanID{Id: 0x700, Extended: false}:
 		var res = &TelemetryRtcReset{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x140, Extended: false }:
+	case can.CanID{Id: 0x140, Extended: false}:
 		var res = &WsrIdentification{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x141, Extended: false }:
+	case can.CanID{Id: 0x141, Extended: false}:
 		var res = &WsrStatusInformation{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x142, Extended: false }:
+	case can.CanID{Id: 0x142, Extended: false}:
 		var res = &WsrBusMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x143, Extended: false }:
+	case can.CanID{Id: 0x143, Extended: false}:
 		var res = &WsrVelocity{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x144, Extended: false }:
+	case can.CanID{Id: 0x144, Extended: false}:
 		var res = &WsrPhaseCurrent{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x145, Extended: false }:
+	case can.CanID{Id: 0x145, Extended: false}:
 		var res = &WsrMotorVoltageVector{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x146, Extended: false }:
+	case can.CanID{Id: 0x146, Extended: false}:
 		var res = &WsrMotorCurrentVector{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x147, Extended: false }:
+	case can.CanID{Id: 0x147, Extended: false}:
 		var res = &WsrMotorBackemf{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x148, Extended: false }:
+	case can.CanID{Id: 0x148, Extended: false}:
 		var res = &Wsr15165VoltageRail{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x149, Extended: false }:
+	case can.CanID{Id: 0x149, Extended: false}:
 		var res = &Wsr2512VoltageRail{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x14B, Extended: false }:
+	case can.CanID{Id: 0x14B, Extended: false}:
 		var res = &WsrHeatsinkMotorTemp{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x14C, Extended: false }:
+	case can.CanID{Id: 0x14C, Extended: false}:
 		var res = &WsrDspBoardTemp{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x14D, Extended: false }:
+	case can.CanID{Id: 0x14D, Extended: false}:
 		var res = &WsrReserved{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x14E, Extended: false }:
+	case can.CanID{Id: 0x14E, Extended: false}:
 		var res = &WsrOdometerBusAmphoursMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x157, Extended: false }:
+	case can.CanID{Id: 0x157, Extended: false}:
 		var res = &WsrSlipSpeedMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x100, Extended: false }:
+	case can.CanID{Id: 0x100, Extended: false}:
 		var res = &WslIdentification{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x101, Extended: false }:
+	case can.CanID{Id: 0x101, Extended: false}:
 		var res = &WslStatusInformation{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x102, Extended: false }:
+	case can.CanID{Id: 0x102, Extended: false}:
 		var res = &WslBusMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x103, Extended: false }:
+	case can.CanID{Id: 0x103, Extended: false}:
 		var res = &WslVelocity{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x104, Extended: false }:
+	case can.CanID{Id: 0x104, Extended: false}:
 		var res = &WslPhaseCurrent{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x105, Extended: false }:
+	case can.CanID{Id: 0x105, Extended: false}:
 		var res = &WslMotorVoltageVector{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x106, Extended: false }:
+	case can.CanID{Id: 0x106, Extended: false}:
 		var res = &WslMotorCurrentVector{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x107, Extended: false }:
+	case can.CanID{Id: 0x107, Extended: false}:
 		var res = &WslMotorBackemf{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x108, Extended: false }:
+	case can.CanID{Id: 0x108, Extended: false}:
 		var res = &Wsl15165VoltageRail{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x109, Extended: false }:
+	case can.CanID{Id: 0x109, Extended: false}:
 		var res = &Wsl2512VoltageRail{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x10B, Extended: false }:
+	case can.CanID{Id: 0x10B, Extended: false}:
 		var res = &WslHeatsinkMotorTemp{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x10C, Extended: false }:
+	case can.CanID{Id: 0x10C, Extended: false}:
 		var res = &WslDspBoardTemp{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x10E, Extended: false }:
+	case can.CanID{Id: 0x10E, Extended: false}:
 		var res = &WslOdometerBusAmphoursMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x10D, Extended: false }:
+	case can.CanID{Id: 0x10D, Extended: false}:
 		var res = &WslReserved{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
-	case can.CanID{ Id: 0x117, Extended: false }:
+	case can.CanID{Id: 0x117, Extended: false}:
 		var res = &WslSlipSpeedMeasurement{}
 		res.UnmarshalPacket(f.Data)
 		return res, nil
@@ -623,8 +623,7 @@ func FromCanFrame(f can.Frame) (Packet, error) {
 	panic("This should never happen. CAN ID didn't match but was in ID map")
 }
 
-
-func FromJson (name string, raw []byte) (Packet, error) {
+func FromJson(name string, raw []byte) (Packet, error) {
 	switch name {
 	case "bms_measurement":
 		var res = &BmsMeasurement{}
@@ -992,8 +991,6 @@ func FromJson (name string, raw []byte) (Packet, error) {
 
 }
 
-
-
 // BmsMeasurement is Voltages for main battery and aux pack
 type BmsMeasurement struct {
 	// 0.01 V
@@ -1038,15 +1035,14 @@ func (p *BmsMeasurement) String() string {
 	return "bms_measurement"
 }
 
-
 type BatteryStatusBatteryState struct {
-	Startup bool `json:"startup"`
-	Precharge bool `json:"precharge"`
-	Discharging bool `json:"discharging"`
-	LvOnly bool `json:"lv_only"`
-	Charging bool `json:"charging"`
+	Startup      bool `json:"startup"`
+	Precharge    bool `json:"precharge"`
+	Discharging  bool `json:"discharging"`
+	LvOnly       bool `json:"lv_only"`
+	Charging     bool `json:"charging"`
 	WallCharging bool `json:"wall_charging"`
-	Killed bool `json:"killed"`
+	Killed       bool `json:"killed"`
 }
 
 func (p *BatteryStatusBatteryState) MarshalByte() byte {
@@ -1086,14 +1082,14 @@ func (p *BatteryStatusBatteryState) UnmarshalByte(b byte) {
 }
 
 type BatteryStatusContactorState struct {
-	BatteryHighContactor bool `json:"battery_high_contactor"`
-	BatteryLowContactor bool `json:"battery_low_contactor"`
+	BatteryHighContactor  bool `json:"battery_high_contactor"`
+	BatteryLowContactor   bool `json:"battery_low_contactor"`
 	BatteryVicorContactor bool `json:"battery_vicor_contactor"`
-	BatteryPreContactor bool `json:"battery_pre_contactor"`
+	BatteryPreContactor   bool `json:"battery_pre_contactor"`
 	BatteryHigh2Contactor bool `json:"battery_high2_contactor"`
-	BatteryLow2Contactor bool `json:"battery_low2_contactor"`
-	ChargerHighContactor bool `json:"charger_high_contactor"`
-	ChargerPreContactor bool `json:"charger_pre_contactor"`
+	BatteryLow2Contactor  bool `json:"battery_low2_contactor"`
+	ChargerHighContactor  bool `json:"charger_high_contactor"`
+	ChargerPreContactor   bool `json:"charger_pre_contactor"`
 }
 
 func (p *BatteryStatusContactorState) MarshalByte() byte {
@@ -1137,11 +1133,11 @@ func (p *BatteryStatusContactorState) UnmarshalByte(b byte) {
 }
 
 type BatteryStatusLvChannelStatus struct {
-	AuxFault bool `json:"aux_fault"`
-	MainFault bool `json:"main_fault"`
-	AuxPowerValid bool `json:"aux_power_valid"`
-	MainPowerValid bool `json:"main_power_valid"`
-	AuxPowerActive bool `json:"aux_power_active"`
+	AuxFault        bool `json:"aux_fault"`
+	MainFault       bool `json:"main_fault"`
+	AuxPowerValid   bool `json:"aux_power_valid"`
+	MainPowerValid  bool `json:"main_power_valid"`
+	AuxPowerActive  bool `json:"aux_power_active"`
 	MainPowerActive bool `json:"main_power_active"`
 }
 
@@ -1178,14 +1174,14 @@ func (p *BatteryStatusLvChannelStatus) UnmarshalByte(b byte) {
 }
 
 type BatteryStatusLvControlStatus struct {
-	AuxVicorEnable bool `json:"aux_vicor_enable"`
-	BatVicorEnable bool `json:"bat_vicor_enable"`
-	AuxRelayHeld bool `json:"aux_relay_held"`
-	AuxRefEnable bool `json:"aux_ref_enable"`
+	AuxVicorEnable    bool `json:"aux_vicor_enable"`
+	BatVicorEnable    bool `json:"bat_vicor_enable"`
+	AuxRelayHeld      bool `json:"aux_relay_held"`
+	AuxRefEnable      bool `json:"aux_ref_enable"`
 	AuxChargingEnable bool `json:"aux_charging_enable"`
-	KillHv bool `json:"kill_hv"`
-	KillLv bool `json:"kill_lv"`
-	StartButton bool `json:"start_button"`
+	KillHv            bool `json:"kill_hv"`
+	KillLv            bool `json:"kill_lv"`
+	StartButton       bool `json:"start_button"`
 }
 
 func (p *BatteryStatusLvControlStatus) MarshalByte() byte {
@@ -1249,14 +1245,13 @@ func (p *BatteryStatusPackChoice) UnmarshalByte(b byte) {
 	p.SmallPack = (b & (1 << 1)) != 0
 }
 
-
 // BatteryStatus is Status bits for the battery
 type BatteryStatus struct {
-	BatteryState BatteryStatusBatteryState `json:"battery_state"`
-	ContactorState BatteryStatusContactorState `json:"contactor_state"`
+	BatteryState    BatteryStatusBatteryState    `json:"battery_state"`
+	ContactorState  BatteryStatusContactorState  `json:"contactor_state"`
 	LvChannelStatus BatteryStatusLvChannelStatus `json:"lv_channel_status"`
 	LvControlStatus BatteryStatusLvControlStatus `json:"lv_control_status"`
-	PackChoice BatteryStatusPackChoice `json:"pack_choice"`
+	PackChoice      BatteryStatusPackChoice      `json:"pack_choice"`
 }
 
 func (p *BatteryStatus) CanId() (can.CanID, error) {
@@ -1297,13 +1292,12 @@ func (p *BatteryStatus) String() string {
 	return "battery_status"
 }
 
-
 type BmsKillReasonReason1 struct {
-	OVERVOLT bool `json:"OVERVOLT"`
-	UNDERVOLT bool `json:"UNDERVOLT"`
-	OVERTEMP bool `json:"OVERTEMP"`
+	OVERVOLT       bool `json:"OVERVOLT"`
+	UNDERVOLT      bool `json:"UNDERVOLT"`
+	OVERTEMP       bool `json:"OVERTEMP"`
 	TEMPDISCONNECT bool `json:"TEMP_DISCONNECT"`
-	COMMFAIL bool `json:"COMM_FAIL"`
+	COMMFAIL       bool `json:"COMM_FAIL"`
 }
 
 func (p *BmsKillReasonReason1) MarshalByte() byte {
@@ -1335,13 +1329,13 @@ func (p *BmsKillReasonReason1) UnmarshalByte(b byte) {
 }
 
 type BmsKillReasonReason2 struct {
-	HARDWARE bool `json:"HARDWARE"`
-	KILLPACKET bool `json:"KILL_PACKET"`
-	UKNOWN bool `json:"UKNOWN"`
-	OVERCURRENT bool `json:"OVERCURRENT"`
+	HARDWARE      bool `json:"HARDWARE"`
+	KILLPACKET    bool `json:"KILL_PACKET"`
+	UKNOWN        bool `json:"UKNOWN"`
+	OVERCURRENT   bool `json:"OVERCURRENT"`
 	PRECHARGEFAIL bool `json:"PRECHARGE_FAIL"`
-	AUXOVERUNDER bool `json:"AUX_OVER_UNDER"`
-	AUXOVERTEMP bool `json:"AUX_OVERTEMP"`
+	AUXOVERUNDER  bool `json:"AUX_OVER_UNDER"`
+	AUXOVERTEMP   bool `json:"AUX_OVERTEMP"`
 }
 
 func (p *BmsKillReasonReason2) MarshalByte() byte {
@@ -1380,13 +1374,12 @@ func (p *BmsKillReasonReason2) UnmarshalByte(b byte) {
 	p.AUXOVERTEMP = (b & (1 << 6)) != 0
 }
 
-
 // BmsKillReason is Information for when the car kills
 type BmsKillReason struct {
 	Reason1 BmsKillReasonReason1 `json:"reason1"`
 	Reason2 BmsKillReasonReason2 `json:"reason2"`
-	Module uint16 `json:"module"`
-	Value float32 `json:"value"`
+	Module  uint16               `json:"module"`
+	Value   float32              `json:"value"`
 }
 
 func (p *BmsKillReason) CanId() (can.CanID, error) {
@@ -1424,8 +1417,6 @@ func (p *BmsKillReason) UnmarshalPacket(b []byte) error {
 func (p *BmsKillReason) String() string {
 	return "bms_kill_reason"
 }
-
-
 
 // BmsModuleMinMax is min and max cell voltages and temperatures
 type BmsModuleMinMax struct {
@@ -1475,8 +1466,6 @@ func (p *BmsModuleMinMax) String() string {
 	return "bms_module_min_max"
 }
 
-
-
 // BmsSoc is State of charge
 type BmsSoc struct {
 	Soc float32 `json:"soc"`
@@ -1511,8 +1500,6 @@ func (p *BmsSoc) UnmarshalPacket(b []byte) error {
 func (p *BmsSoc) String() string {
 	return "bms_soc"
 }
-
-
 
 // BmsCapacity is State of charge
 type BmsCapacity struct {
@@ -1551,8 +1538,6 @@ func (p *BmsCapacity) UnmarshalPacket(b []byte) error {
 func (p *BmsCapacity) String() string {
 	return "bms_capacity"
 }
-
-
 
 // BmsCurrentlimit is reports BP params for current
 type BmsCurrentlimit struct {
@@ -1593,8 +1578,6 @@ func (p *BmsCurrentlimit) UnmarshalPacket(b []byte) error {
 func (p *BmsCurrentlimit) String() string {
 	return "bms_currentlimit"
 }
-
-
 
 // BmsFanInfo is BP Fans
 type BmsFanInfo struct {
@@ -1644,8 +1627,6 @@ func (p *BmsFanInfo) String() string {
 	return "bms_fan_info"
 }
 
-
-
 // BmsSetMinFanSpeed is packet which sets a minimum fan speed of BMS for a specific time frame in seconds
 type BmsSetMinFanSpeed struct {
 	// 0 percent
@@ -1686,8 +1667,6 @@ func (p *BmsSetMinFanSpeed) String() string {
 	return "bms_set_min_fan_speed"
 }
 
-
-
 // BmsModule is Voltage and temperature for a single module
 type BmsModule struct {
 	// 1 V
@@ -1701,7 +1680,7 @@ type BmsModule struct {
 func (p *BmsModule) CanId() (can.CanID, error) {
 	c := can.CanID{Extended: false}
 	if p.Idx >= 36 {
-		return c, &UnknownIdError{ 0x40 }
+		return c, &UnknownIdError{0x40}
 	}
 	c.Id = 0x40 + p.Idx
 	return c, nil
@@ -1733,7 +1712,6 @@ func (p *BmsModule) String() string {
 	return "bms_module"
 }
 
-
 type BmsChargerResponseResponseFlags struct {
 	ChargingReady bool `json:"charging_ready"`
 }
@@ -1749,7 +1727,6 @@ func (p *BmsChargerResponseResponseFlags) MarshalByte() byte {
 func (p *BmsChargerResponseResponseFlags) UnmarshalByte(b byte) {
 	p.ChargingReady = (b & (1 << 0)) != 0
 }
-
 
 // BmsChargerResponse is Response packet from BMS for indicating whether BMS is ready for charging
 type BmsChargerResponse struct {
@@ -1786,7 +1763,6 @@ func (p *BmsChargerResponse) String() string {
 	return "bms_charger_response"
 }
 
-
 type ChassisIsolationFaultFaultDetected struct {
 	IsolationFault bool `json:"isolation_fault"`
 }
@@ -1802,7 +1778,6 @@ func (p *ChassisIsolationFaultFaultDetected) MarshalByte() byte {
 func (p *ChassisIsolationFaultFaultDetected) UnmarshalByte(b byte) {
 	p.IsolationFault = (b & (1 << 0)) != 0
 }
-
 
 // ChassisIsolationFault is chassiss is not isolated from the battery
 type ChassisIsolationFault struct {
@@ -1839,16 +1814,15 @@ func (p *ChassisIsolationFault) String() string {
 	return "chassis_isolation_fault"
 }
 
-
 type BmsImdInfoDImcStatus1 struct {
-	IsolationFault bool `json:"isolation_fault"`
-	ChassisFault bool `json:"chassis_fault"`
-	SystemFailure bool `json:"system_failure"`
+	IsolationFault     bool `json:"isolation_fault"`
+	ChassisFault       bool `json:"chassis_fault"`
+	SystemFailure      bool `json:"system_failure"`
 	CalibrationRunning bool `json:"calibration_running"`
-	SelfTestRunning bool `json:"self_test_running"`
-	IsolationWarning bool `json:"isolation_warning"`
-	Reserved bool `json:"reserved"`
-	Reserved2 bool `json:"reserved_2"`
+	SelfTestRunning    bool `json:"self_test_running"`
+	IsolationWarning   bool `json:"isolation_warning"`
+	Reserved           bool `json:"reserved"`
+	Reserved2          bool `json:"reserved_2"`
 }
 
 func (p *BmsImdInfoDImcStatus1) MarshalByte() byte {
@@ -1892,7 +1866,7 @@ func (p *BmsImdInfoDImcStatus1) UnmarshalByte(b byte) {
 }
 
 type BmsImdInfoDImcStatus2 struct {
-	Reserved bool `json:"reserved"`
+	Reserved  bool `json:"reserved"`
 	Reserved2 bool `json:"reserved_2"`
 	Reserved3 bool `json:"reserved_3"`
 	Reserved4 bool `json:"reserved_4"`
@@ -1943,14 +1917,14 @@ func (p *BmsImdInfoDImcStatus2) UnmarshalByte(b byte) {
 }
 
 type BmsImdInfoDVifcStatus1 struct {
-	InsulationMeasurment bool `json:"insulation_measurment"`
+	InsulationMeasurment          bool `json:"insulation_measurment"`
 	ImcConnectivityNotImplemented bool `json:"imc_connectivity_not_implemented"`
-	ImcAliveSatusDetection bool `json:"imc_alive_satus_detection"`
-	Reserved bool `json:"reserved"`
-	VifcCommandNotImplemented bool `json:"vifc_command_not_implemented"`
-	Reserved2 bool `json:"reserved_2"`
-	Reserved3 bool `json:"reserved_3"`
-	Reserved4 bool `json:"reserved_4"`
+	ImcAliveSatusDetection        bool `json:"imc_alive_satus_detection"`
+	Reserved                      bool `json:"reserved"`
+	VifcCommandNotImplemented     bool `json:"vifc_command_not_implemented"`
+	Reserved2                     bool `json:"reserved_2"`
+	Reserved3                     bool `json:"reserved_3"`
+	Reserved4                     bool `json:"reserved_4"`
 }
 
 func (p *BmsImdInfoDVifcStatus1) MarshalByte() byte {
@@ -1994,14 +1968,14 @@ func (p *BmsImdInfoDVifcStatus1) UnmarshalByte(b byte) {
 }
 
 type BmsImdInfoDVifcStatus2 struct {
-	InsulationResistanceValue bool `json:"insulation_resistance_value"`
-	Reserved bool `json:"reserved"`
-	Reserved2 bool `json:"reserved_2"`
-	Reserved3 bool `json:"reserved_3"`
-	ImcSelfTestOverAll bool `json:"imc_self_test_overAll"`
+	InsulationResistanceValue  bool `json:"insulation_resistance_value"`
+	Reserved                   bool `json:"reserved"`
+	Reserved2                  bool `json:"reserved_2"`
+	Reserved3                  bool `json:"reserved_3"`
+	ImcSelfTestOverAll         bool `json:"imc_self_test_overAll"`
 	ImcSelfTestParameterConfig bool `json:"imc_self_test_parameterConfig"`
-	Reserved4 bool `json:"reserved_4"`
-	Reserved5 bool `json:"reserved_5"`
+	Reserved4                  bool `json:"reserved_4"`
+	Reserved5                  bool `json:"reserved_5"`
 }
 
 func (p *BmsImdInfoDVifcStatus2) MarshalByte() byte {
@@ -2044,12 +2018,11 @@ func (p *BmsImdInfoDVifcStatus2) UnmarshalByte(b byte) {
 	p.Reserved5 = (b & (1 << 7)) != 0
 }
 
-
 // BmsImdInfo is information from chassis isolation
 type BmsImdInfo struct {
-	DImcRIso uint16 `json:"d_imc_r_iso"`
-	DImcStatus1 BmsImdInfoDImcStatus1 `json:"d_imc_status_1"`
-	DImcStatus2 BmsImdInfoDImcStatus2 `json:"d_imc_status_2"`
+	DImcRIso     uint16                 `json:"d_imc_r_iso"`
+	DImcStatus1  BmsImdInfoDImcStatus1  `json:"d_imc_status_1"`
+	DImcStatus2  BmsImdInfoDImcStatus2  `json:"d_imc_status_2"`
 	DVifcStatus1 BmsImdInfoDVifcStatus1 `json:"d_vifc_status_1"`
 	DVifcStatus2 BmsImdInfoDVifcStatus2 `json:"d_vifc_status_2"`
 }
@@ -2092,8 +2065,6 @@ func (p *BmsImdInfo) String() string {
 	return "bms_imd_info"
 }
 
-
-
 // DashboardPedalPercentages is ADC values from the brake and accelerator pedals.
 type DashboardPedalPercentages struct {
 	AccelPedalValue uint8 `json:"accel_pedal_value"`
@@ -2132,8 +2103,6 @@ func (p *DashboardPedalPercentages) String() string {
 	return "dashboard_pedal_percentages"
 }
 
-
-
 // CarState is Car gear. Forward, neutral, reverse, etc.
 type CarState struct {
 	State uint8 `json:"state"`
@@ -2168,8 +2137,6 @@ func (p *CarState) UnmarshalPacket(b []byte) error {
 func (p *CarState) String() string {
 	return "car_state"
 }
-
-
 
 // DashboardPedalFault is Target speed that the driver should maintain.
 type DashboardPedalFault struct {
@@ -2209,16 +2176,15 @@ func (p *DashboardPedalFault) String() string {
 	return "dashboard_pedal_fault"
 }
 
-
 type DashboardSystemTimeoutTestFlagSet0 struct {
-	SteeringDisconnected bool `json:"steering_disconnected"`
+	SteeringDisconnected    bool `json:"steering_disconnected"`
 	VisionFrontDisconnected bool `json:"vision_front_disconnected"`
-	VisionRearDisconnected bool `json:"vision_rear_disconnected"`
-	TelemetryDisconnected bool `json:"telemetry_disconnected"`
-	WslDisconnected bool `json:"wsl_disconnected"`
-	WsrDisconnected bool `json:"wsr_disconnected"`
-	FrontMpptDisconnected bool `json:"front_mppt_disconnected"`
-	RearMpptDisconnected bool `json:"rear_mppt_disconnected"`
+	VisionRearDisconnected  bool `json:"vision_rear_disconnected"`
+	TelemetryDisconnected   bool `json:"telemetry_disconnected"`
+	WslDisconnected         bool `json:"wsl_disconnected"`
+	WsrDisconnected         bool `json:"wsr_disconnected"`
+	FrontMpptDisconnected   bool `json:"front_mppt_disconnected"`
+	RearMpptDisconnected    bool `json:"rear_mppt_disconnected"`
 }
 
 func (p *DashboardSystemTimeoutTestFlagSet0) MarshalByte() byte {
@@ -2261,7 +2227,6 @@ func (p *DashboardSystemTimeoutTestFlagSet0) UnmarshalByte(b byte) {
 	p.RearMpptDisconnected = (b & (1 << 7)) != 0
 }
 
-
 // DashboardSystemTimeoutTest is Exposes whether each system that dashboard is supposed to listen for packets from has sent a packet. Used for testing.
 type DashboardSystemTimeoutTest struct {
 	FlagSet0 DashboardSystemTimeoutTestFlagSet0 `json:"flag_set_0"`
@@ -2296,8 +2261,6 @@ func (p *DashboardSystemTimeoutTest) UnmarshalPacket(b []byte) error {
 func (p *DashboardSystemTimeoutTest) String() string {
 	return "dashboard_system_timeout_test"
 }
-
-
 
 // CarSpeed is speed of car in meters per second
 type CarSpeed struct {
@@ -2334,14 +2297,12 @@ func (p *CarSpeed) String() string {
 	return "car_speed"
 }
 
-
-
 // FlightComputerLvBoardDisconnectCounts is Number of times a board hasn't been heard from within the allowed timeout.
 type FlightComputerLvBoardDisconnectCounts struct {
-	FrontLights uint8 `json:"front_lights"`
-	RearLights uint8 `json:"rear_lights"`
-	Steering uint8 `json:"steering"`
-	Vision uint8 `json:"vision"`
+	FrontLights   uint8 `json:"front_lights"`
+	RearLights    uint8 `json:"rear_lights"`
+	Steering      uint8 `json:"steering"`
+	Vision        uint8 `json:"vision"`
 	DriverDisplay uint8 `json:"driver_display"`
 	CenterConsole uint8 `json:"center_console"`
 }
@@ -2386,16 +2347,14 @@ func (p *FlightComputerLvBoardDisconnectCounts) String() string {
 	return "flight_computer_lv_board_disconnect_counts"
 }
 
-
-
 // FlightComputerHvBoardDisconnectCounts is Number of times a board hasn't been heard from within the allowed timeout.
 type FlightComputerHvBoardDisconnectCounts struct {
-	Bms uint8 `json:"bms"`
-	Charger uint8 `json:"charger"`
-	Wsl uint8 `json:"wsl"`
-	Wsr uint8 `json:"wsr"`
+	Bms       uint8 `json:"bms"`
+	Charger   uint8 `json:"charger"`
+	Wsl       uint8 `json:"wsl"`
+	Wsr       uint8 `json:"wsr"`
 	MpptFront uint8 `json:"mppt_front"`
-	MpptRear uint8 `json:"mppt_rear"`
+	MpptRear  uint8 `json:"mppt_rear"`
 }
 
 func (p *FlightComputerHvBoardDisconnectCounts) CanId() (can.CanID, error) {
@@ -2438,11 +2397,10 @@ func (p *FlightComputerHvBoardDisconnectCounts) String() string {
 	return "flight_computer_hv_board_disconnect_counts"
 }
 
-
 type FlightComputerInternalStateBms struct {
-	BatteryKill bool `json:"battery_kill"`
+	BatteryKill              bool `json:"battery_kill"`
 	CellsInChargingThreshold bool `json:"cells_in_charging_threshold"`
-	FirstPacketReceived bool `json:"first_packet_received"`
+	FirstPacketReceived      bool `json:"first_packet_received"`
 }
 
 func (p *FlightComputerInternalStateBms) MarshalByte() byte {
@@ -2499,7 +2457,7 @@ func (p *FlightComputerInternalStatePhoton3) UnmarshalByte(b byte) {
 
 type FlightComputerInternalStateWavesculptor struct {
 	SendingReset bool `json:"sending_reset"`
-	RegenEnable bool `json:"regen_enable"`
+	RegenEnable  bool `json:"regen_enable"`
 }
 
 func (p *FlightComputerInternalStateWavesculptor) MarshalByte() byte {
@@ -2539,14 +2497,13 @@ func (p *FlightComputerInternalStateInternal) UnmarshalByte(b byte) {
 	p.BrakePedalDisconnect = (b & (1 << 1)) != 0
 }
 
-
 // FlightComputerInternalState is internal bools
 type FlightComputerInternalState struct {
-	Bms FlightComputerInternalStateBms `json:"bms"`
-	Charger FlightComputerInternalStateCharger `json:"charger"`
-	Photon3 FlightComputerInternalStatePhoton3 `json:"photon3"`
+	Bms          FlightComputerInternalStateBms          `json:"bms"`
+	Charger      FlightComputerInternalStateCharger      `json:"charger"`
+	Photon3      FlightComputerInternalStatePhoton3      `json:"photon3"`
 	Wavesculptor FlightComputerInternalStateWavesculptor `json:"wavesculptor"`
-	Internal FlightComputerInternalStateInternal `json:"internal"`
+	Internal     FlightComputerInternalStateInternal     `json:"internal"`
 }
 
 func (p *FlightComputerInternalState) CanId() (can.CanID, error) {
@@ -2587,12 +2544,10 @@ func (p *FlightComputerInternalState) String() string {
 	return "flight_computer_internal_state"
 }
 
-
-
 // PowerToDrive is calculated power required to drive the vehicle
 type PowerToDrive struct {
 	MovingAverage100 int16 `json:"moving_average_100"`
-	MovingAverage1K int16 `json:"moving_average_1k"`
+	MovingAverage1K  int16 `json:"moving_average_1k"`
 	MovingAverage10K int16 `json:"moving_average_10k"`
 }
 
@@ -2630,14 +2585,12 @@ func (p *PowerToDrive) String() string {
 	return "power_to_drive"
 }
 
-
-
 // ArrayPower is array power calculated from current and voltage measurements
 type ArrayPower struct {
 	FrontArrayChannel0 uint16 `json:"front_array_channel_0"`
 	FrontArrayChannel1 uint16 `json:"front_array_channel_1"`
-	RearArrayChannel0 uint16 `json:"rear_array_channel_0"`
-	RearArrayChannel1 uint16 `json:"rear_array_channel_1"`
+	RearArrayChannel0  uint16 `json:"rear_array_channel_0"`
+	RearArrayChannel1  uint16 `json:"rear_array_channel_1"`
 }
 
 func (p *ArrayPower) CanId() (can.CanID, error) {
@@ -2676,8 +2629,6 @@ func (p *ArrayPower) String() string {
 	return "array_power"
 }
 
-
-
 // ArrayEnergy is cumulative energy received from the array
 type ArrayEnergy struct {
 	// 0 Joule
@@ -2713,8 +2664,6 @@ func (p *ArrayEnergy) UnmarshalPacket(b []byte) error {
 func (p *ArrayEnergy) String() string {
 	return "array_energy"
 }
-
-
 
 // ArrayEnergyReset is resets cumulative energy received from the array
 type ArrayEnergyReset struct {
@@ -2752,13 +2701,12 @@ func (p *ArrayEnergyReset) String() string {
 	return "array_energy_reset"
 }
 
-
 type VisionTurnSignalsCommandLights struct {
-	LeftTurnSignal bool `json:"left_turn_signal"`
+	LeftTurnSignal  bool `json:"left_turn_signal"`
 	RightTurnSignal bool `json:"right_turn_signal"`
-	Spare1 bool `json:"spare_1"`
-	Spare2 bool `json:"spare_2"`
-	Spare3 bool `json:"spare_3"`
+	Spare1          bool `json:"spare_1"`
+	Spare2          bool `json:"spare_2"`
+	Spare3          bool `json:"spare_3"`
 }
 
 func (p *VisionTurnSignalsCommandLights) MarshalByte() byte {
@@ -2788,7 +2736,6 @@ func (p *VisionTurnSignalsCommandLights) UnmarshalByte(b byte) {
 	p.Spare2 = (b & (1 << 3)) != 0
 	p.Spare3 = (b & (1 << 4)) != 0
 }
-
 
 // VisionTurnSignalsCommand is Command to have the vision board illuminate or turn off left, right, or both turn signals
 type VisionTurnSignalsCommand struct {
@@ -2825,12 +2772,11 @@ func (p *VisionTurnSignalsCommand) String() string {
 	return "vision_turn_signals_command"
 }
 
-
 type VisionBrakeLightsCommandLights struct {
 	BrakeLights bool `json:"brake_lights"`
-	Spare1 bool `json:"spare_1"`
-	Spare2 bool `json:"spare_2"`
-	Spare3 bool `json:"spare_3"`
+	Spare1      bool `json:"spare_1"`
+	Spare2      bool `json:"spare_2"`
+	Spare3      bool `json:"spare_3"`
 }
 
 func (p *VisionBrakeLightsCommandLights) MarshalByte() byte {
@@ -2856,7 +2802,6 @@ func (p *VisionBrakeLightsCommandLights) UnmarshalByte(b byte) {
 	p.Spare2 = (b & (1 << 2)) != 0
 	p.Spare3 = (b & (1 << 3)) != 0
 }
-
 
 // VisionBrakeLightsCommand is Command to have the vision board illuminate or turn off the brake lights
 type VisionBrakeLightsCommand struct {
@@ -2893,13 +2838,12 @@ func (p *VisionBrakeLightsCommand) String() string {
 	return "vision_brake_lights_command"
 }
 
-
 type VisionHeadlightsCommandLights struct {
 	Headlights bool `json:"headlights"`
-	HighBeams bool `json:"high_beams"`
-	Spare1 bool `json:"spare_1"`
-	Spare2 bool `json:"spare_2"`
-	Spare3 bool `json:"spare_3"`
+	HighBeams  bool `json:"high_beams"`
+	Spare1     bool `json:"spare_1"`
+	Spare2     bool `json:"spare_2"`
+	Spare3     bool `json:"spare_3"`
 }
 
 func (p *VisionHeadlightsCommandLights) MarshalByte() byte {
@@ -2930,11 +2874,10 @@ func (p *VisionHeadlightsCommandLights) UnmarshalByte(b byte) {
 	p.Spare3 = (b & (1 << 4)) != 0
 }
 
-
 // VisionHeadlightsCommand is Command to have the vision board illuminate or turn off the headlights and high beams
 type VisionHeadlightsCommand struct {
-	Lights VisionHeadlightsCommandLights `json:"lights"`
-	Brightness float32 `json:"brightness"`
+	Lights     VisionHeadlightsCommandLights `json:"lights"`
+	Brightness float32                       `json:"brightness"`
 }
 
 func (p *VisionHeadlightsCommand) CanId() (can.CanID, error) {
@@ -2969,9 +2912,8 @@ func (p *VisionHeadlightsCommand) String() string {
 	return "vision_headlights_command"
 }
 
-
 type VisionHornCommandHorn struct {
-	Horn bool `json:"horn"`
+	Horn  bool `json:"horn"`
 	Spare bool `json:"spare"`
 }
 
@@ -2990,7 +2932,6 @@ func (p *VisionHornCommandHorn) UnmarshalByte(b byte) {
 	p.Horn = (b & (1 << 0)) != 0
 	p.Spare = (b & (1 << 1)) != 0
 }
-
 
 // VisionHornCommand is Command the vision board honk the horn, must be repeatedly sent otherwise the vision board will stop honking after a bit. See high_power.h for details.
 type VisionHornCommand struct {
@@ -3027,10 +2968,9 @@ func (p *VisionHornCommand) String() string {
 	return "vision_horn_command"
 }
 
-
 type VisionArrayLatchesCommandArrayLatches struct {
 	ArrayFront bool `json:"array_front"`
-	ArrayRear bool `json:"array_rear"`
+	ArrayRear  bool `json:"array_rear"`
 }
 
 func (p *VisionArrayLatchesCommandArrayLatches) MarshalByte() byte {
@@ -3048,7 +2988,6 @@ func (p *VisionArrayLatchesCommandArrayLatches) UnmarshalByte(b byte) {
 	p.ArrayFront = (b & (1 << 0)) != 0
 	p.ArrayRear = (b & (1 << 1)) != 0
 }
-
 
 // VisionArrayLatchesCommand is Command the vision board to open the array latches
 type VisionArrayLatchesCommand struct {
@@ -3085,11 +3024,10 @@ func (p *VisionArrayLatchesCommand) String() string {
 	return "vision_array_latches_command"
 }
 
-
 type VisionRearviewCommandCameras struct {
-	Left bool `json:"left"`
+	Left  bool `json:"left"`
 	Right bool `json:"right"`
-	Rear bool `json:"rear"`
+	Rear  bool `json:"rear"`
 }
 
 func (p *VisionRearviewCommandCameras) MarshalByte() byte {
@@ -3111,7 +3049,6 @@ func (p *VisionRearviewCommandCameras) UnmarshalByte(b byte) {
 	p.Right = (b & (1 << 1)) != 0
 	p.Rear = (b & (1 << 2)) != 0
 }
-
 
 // VisionRearviewCommand is Command the vision board turn on the rear view cameras
 type VisionRearviewCommand struct {
@@ -3148,8 +3085,6 @@ func (p *VisionRearviewCommand) String() string {
 	return "vision_rearview_command"
 }
 
-
-
 // TrackerEnable is Enables/disables power trackers. Use 0x610 for the channel transmitting the data packet on 0x600, 0x611 for 0x601, et cetera. Sending 1 in the enable byte turns the tracker on; sending 0 turns it off.
 type TrackerEnable struct {
 	Enable uint8 `json:"enable"`
@@ -3160,7 +3095,7 @@ type TrackerEnable struct {
 func (p *TrackerEnable) CanId() (can.CanID, error) {
 	c := can.CanID{Extended: false}
 	if p.Idx >= 6 {
-		return c, &UnknownIdError{ 0x610 }
+		return c, &UnknownIdError{0x610}
 	}
 	c.Id = 0x610 + p.Idx
 	return c, nil
@@ -3189,8 +3124,6 @@ func (p *TrackerEnable) UnmarshalPacket(b []byte) error {
 func (p *TrackerEnable) String() string {
 	return "tracker_enable"
 }
-
-
 
 // DistanceTraveled is distance of wavesculptor odometer
 type DistanceTraveled struct {
@@ -3228,7 +3161,6 @@ func (p *DistanceTraveled) String() string {
 	return "distance_traveled"
 }
 
-
 type ChargerStateStateFlags struct {
 	ChargerPlugged bool `json:"charger_plugged"`
 }
@@ -3246,14 +3178,14 @@ func (p *ChargerStateStateFlags) UnmarshalByte(b byte) {
 }
 
 type ChargerStateFault struct {
-	CHARGEROVERVOLT bool `json:"CHARGER_OVERVOLT"`
-	CHARGEROVERTEMP bool `json:"CHARGER_OVERTEMP"`
-	CHARGERCANTIMEOUT bool `json:"CHARGER_CAN_TIMEOUT"`
-	BATTERYHVKILL bool `json:"BATTERY_HV_KILL"`
-	BATTERYUNDERVOLT bool `json:"BATTERY_UNDERVOLT"`
-	BATTERYOVERVOLT bool `json:"BATTERY_OVERVOLT"`
+	CHARGEROVERVOLT     bool `json:"CHARGER_OVERVOLT"`
+	CHARGEROVERTEMP     bool `json:"CHARGER_OVERTEMP"`
+	CHARGERCANTIMEOUT   bool `json:"CHARGER_CAN_TIMEOUT"`
+	BATTERYHVKILL       bool `json:"BATTERY_HV_KILL"`
+	BATTERYUNDERVOLT    bool `json:"BATTERY_UNDERVOLT"`
+	BATTERYOVERVOLT     bool `json:"BATTERY_OVERVOLT"`
 	BATTERYCELLOVERTEMP bool `json:"BATTERY_CELL_OVERTEMP"`
-	BATTERYCANTIMEOUT bool `json:"BATTERY_CAN_TIMEOUT"`
+	BATTERYCANTIMEOUT   bool `json:"BATTERY_CAN_TIMEOUT"`
 }
 
 func (p *ChargerStateFault) MarshalByte() byte {
@@ -3296,13 +3228,12 @@ func (p *ChargerStateFault) UnmarshalByte(b byte) {
 	p.BATTERYCANTIMEOUT = (b & (1 << 7)) != 0
 }
 
-
 // ChargerState is Notifies whether the J1772 cable is plugged.
 type ChargerState struct {
 	StateFlags ChargerStateStateFlags `json:"state_flags"`
 	// 0.001 C
-	ChargerMaxTemp uint16 `json:"charger_max_temp"`
-	Fault ChargerStateFault `json:"fault"`
+	ChargerMaxTemp uint16            `json:"charger_max_temp"`
+	Fault          ChargerStateFault `json:"fault"`
 	// 0 A
 	ChargingCurrent float32 `json:"charging_current"`
 }
@@ -3343,7 +3274,6 @@ func (p *ChargerState) String() string {
 	return "charger_state"
 }
 
-
 type ChargerBmsRequestRequestFlags struct {
 	ChargingRequested bool `json:"charging_requested"`
 }
@@ -3359,7 +3289,6 @@ func (p *ChargerBmsRequestRequestFlags) MarshalByte() byte {
 func (p *ChargerBmsRequestRequestFlags) UnmarshalByte(b byte) {
 	p.ChargingRequested = (b & (1 << 0)) != 0
 }
-
 
 // ChargerBmsRequest is Request packet for sending contactor commands from the charger to BP.
 type ChargerBmsRequest struct {
@@ -3395,8 +3324,6 @@ func (p *ChargerBmsRequest) UnmarshalPacket(b []byte) error {
 func (p *ChargerBmsRequest) String() string {
 	return "charger_bms_request"
 }
-
-
 
 // ChargerCurrentVoltage is Packet to request charging current/voltage set
 type ChargerCurrentVoltage struct {
@@ -3438,8 +3365,6 @@ func (p *ChargerCurrentVoltage) String() string {
 	return "charger_current_voltage"
 }
 
-
-
 // ChargerPower is Outputs the amount of power that the chargers are delivering.
 type ChargerPower struct {
 	// 0 W
@@ -3475,8 +3400,6 @@ func (p *ChargerPower) UnmarshalPacket(b []byte) error {
 func (p *ChargerPower) String() string {
 	return "charger_power"
 }
-
-
 
 // ThunderstruckControlMessage is Control packet for thunderstruck chargers
 type ThunderstruckControlMessage struct {
@@ -3530,16 +3453,15 @@ func (p *ThunderstruckControlMessage) String() string {
 	return "thunderstruck_control_message"
 }
 
-
 type VisionStatusFrontLights struct {
-	LeftTurnSignal bool `json:"left_turn_signal"`
+	LeftTurnSignal  bool `json:"left_turn_signal"`
 	RightTurnSignal bool `json:"right_turn_signal"`
-	BrakeLights bool `json:"brake_lights"`
-	Headlights bool `json:"headlights"`
-	HighBeams bool `json:"high_beams"`
-	Spare1 bool `json:"spare_1"`
-	Spare2 bool `json:"spare_2"`
-	Spare3 bool `json:"spare_3"`
+	BrakeLights     bool `json:"brake_lights"`
+	Headlights      bool `json:"headlights"`
+	HighBeams       bool `json:"high_beams"`
+	Spare1          bool `json:"spare_1"`
+	Spare2          bool `json:"spare_2"`
+	Spare3          bool `json:"spare_3"`
 }
 
 func (p *VisionStatusFrontLights) MarshalByte() byte {
@@ -3583,7 +3505,7 @@ func (p *VisionStatusFrontLights) UnmarshalByte(b byte) {
 }
 
 type VisionStatusFrontHorn struct {
-	Horn bool `json:"horn"`
+	Horn  bool `json:"horn"`
 	Spare bool `json:"spare"`
 }
 
@@ -3604,9 +3526,9 @@ func (p *VisionStatusFrontHorn) UnmarshalByte(b byte) {
 }
 
 type VisionStatusFrontCameras struct {
-	Left bool `json:"left"`
+	Left  bool `json:"left"`
 	Right bool `json:"right"`
-	Rear bool `json:"rear"`
+	Rear  bool `json:"rear"`
 }
 
 func (p *VisionStatusFrontCameras) MarshalByte() byte {
@@ -3632,8 +3554,8 @@ func (p *VisionStatusFrontCameras) UnmarshalByte(b byte) {
 type VisionStatusFrontArrayLatches struct {
 	ArrayFront0 bool `json:"array_front_0"`
 	ArrayFront1 bool `json:"array_front_1"`
-	ArrayRear0 bool `json:"array_rear_0"`
-	ArrayRear1 bool `json:"array_rear_1"`
+	ArrayRear0  bool `json:"array_rear_0"`
+	ArrayRear1  bool `json:"array_rear_1"`
 }
 
 func (p *VisionStatusFrontArrayLatches) MarshalByte() byte {
@@ -3660,12 +3582,11 @@ func (p *VisionStatusFrontArrayLatches) UnmarshalByte(b byte) {
 	p.ArrayRear1 = (b & (1 << 3)) != 0
 }
 
-
 // VisionStatusFront is Status of the front vision board outputs
 type VisionStatusFront struct {
-	Lights VisionStatusFrontLights `json:"lights"`
-	Horn VisionStatusFrontHorn `json:"horn"`
-	Cameras VisionStatusFrontCameras `json:"cameras"`
+	Lights       VisionStatusFrontLights       `json:"lights"`
+	Horn         VisionStatusFrontHorn         `json:"horn"`
+	Cameras      VisionStatusFrontCameras      `json:"cameras"`
 	ArrayLatches VisionStatusFrontArrayLatches `json:"array_latches"`
 }
 
@@ -3705,16 +3626,15 @@ func (p *VisionStatusFront) String() string {
 	return "vision_status_front"
 }
 
-
 type VisionStatusRearLights struct {
-	LeftTurnSignal bool `json:"left_turn_signal"`
+	LeftTurnSignal  bool `json:"left_turn_signal"`
 	RightTurnSignal bool `json:"right_turn_signal"`
-	BrakeLights bool `json:"brake_lights"`
-	Headlights bool `json:"headlights"`
-	HighBeams bool `json:"high_beams"`
-	Spare1 bool `json:"spare_1"`
-	Spare2 bool `json:"spare_2"`
-	Spare3 bool `json:"spare_3"`
+	BrakeLights     bool `json:"brake_lights"`
+	Headlights      bool `json:"headlights"`
+	HighBeams       bool `json:"high_beams"`
+	Spare1          bool `json:"spare_1"`
+	Spare2          bool `json:"spare_2"`
+	Spare3          bool `json:"spare_3"`
 }
 
 func (p *VisionStatusRearLights) MarshalByte() byte {
@@ -3758,7 +3678,7 @@ func (p *VisionStatusRearLights) UnmarshalByte(b byte) {
 }
 
 type VisionStatusRearHorn struct {
-	Horn bool `json:"horn"`
+	Horn  bool `json:"horn"`
 	Spare bool `json:"spare"`
 }
 
@@ -3779,9 +3699,9 @@ func (p *VisionStatusRearHorn) UnmarshalByte(b byte) {
 }
 
 type VisionStatusRearCameras struct {
-	Left bool `json:"left"`
+	Left  bool `json:"left"`
 	Right bool `json:"right"`
-	Rear bool `json:"rear"`
+	Rear  bool `json:"rear"`
 }
 
 func (p *VisionStatusRearCameras) MarshalByte() byte {
@@ -3807,8 +3727,8 @@ func (p *VisionStatusRearCameras) UnmarshalByte(b byte) {
 type VisionStatusRearArrayLatches struct {
 	ArrayFront0 bool `json:"array_front_0"`
 	ArrayFront1 bool `json:"array_front_1"`
-	ArrayRear0 bool `json:"array_rear_0"`
-	ArrayRear1 bool `json:"array_rear_1"`
+	ArrayRear0  bool `json:"array_rear_0"`
+	ArrayRear1  bool `json:"array_rear_1"`
 }
 
 func (p *VisionStatusRearArrayLatches) MarshalByte() byte {
@@ -3835,12 +3755,11 @@ func (p *VisionStatusRearArrayLatches) UnmarshalByte(b byte) {
 	p.ArrayRear1 = (b & (1 << 3)) != 0
 }
 
-
 // VisionStatusRear is Status of the rear vision board outputs
 type VisionStatusRear struct {
-	Lights VisionStatusRearLights `json:"lights"`
-	Horn VisionStatusRearHorn `json:"horn"`
-	Cameras VisionStatusRearCameras `json:"cameras"`
+	Lights       VisionStatusRearLights       `json:"lights"`
+	Horn         VisionStatusRearHorn         `json:"horn"`
+	Cameras      VisionStatusRearCameras      `json:"cameras"`
 	ArrayLatches VisionStatusRearArrayLatches `json:"array_latches"`
 }
 
@@ -3880,8 +3799,6 @@ func (p *VisionStatusRear) String() string {
 	return "vision_status_rear"
 }
 
-
-
 // LightsFrontId is Unique identification packet for front lights board
 type LightsFrontId struct {
 	BoardId uint16 `json:"board_id"`
@@ -3889,7 +3806,7 @@ type LightsFrontId struct {
 	McuTemp int16 `json:"mcu_temp"`
 	// 0.001 V
 	BusVoltage uint16 `json:"bus_voltage"`
-	FaultCode uint16 `json:"fault_code"`
+	FaultCode  uint16 `json:"fault_code"`
 }
 
 func (p *LightsFrontId) CanId() (can.CanID, error) {
@@ -3928,8 +3845,6 @@ func (p *LightsFrontId) String() string {
 	return "lights_front_id"
 }
 
-
-
 // LightsBackId is Unique identification packet for back lights board
 type LightsBackId struct {
 	BoardId uint16 `json:"board_id"`
@@ -3937,7 +3852,7 @@ type LightsBackId struct {
 	McuTemp int16 `json:"mcu_temp"`
 	// 0.001 V
 	BusVoltage uint16 `json:"bus_voltage"`
-	FaultCode uint16 `json:"fault_code"`
+	FaultCode  uint16 `json:"fault_code"`
 }
 
 func (p *LightsBackId) CanId() (can.CanID, error) {
@@ -3976,8 +3891,6 @@ func (p *LightsBackId) String() string {
 	return "lights_back_id"
 }
 
-
-
 // VisionId is Unique identification packet for vision
 type VisionId struct {
 	BoardId uint16 `json:"board_id"`
@@ -3985,7 +3898,7 @@ type VisionId struct {
 	McuTemp int16 `json:"mcu_temp"`
 	// 0.001 V
 	BusVoltage uint16 `json:"bus_voltage"`
-	FaultCode uint16 `json:"fault_code"`
+	FaultCode  uint16 `json:"fault_code"`
 }
 
 func (p *VisionId) CanId() (can.CanID, error) {
@@ -4023,8 +3936,6 @@ func (p *VisionId) UnmarshalPacket(b []byte) error {
 func (p *VisionId) String() string {
 	return "vision_id"
 }
-
-
 
 // SteeringPressCount1 is Shows whether each button has been toggled an even ("on") or odd ("off") number of times.
 type SteeringPressCount1 struct {
@@ -4079,13 +3990,11 @@ func (p *SteeringPressCount1) String() string {
 	return "steering_press_count_1"
 }
 
-
-
 // SteeringPressCount2 is Shows whether each button has been toggled an even ("on") or odd ("off") number of times.
 type SteeringPressCount2 struct {
-	Button7 uint8 `json:"button7"`
-	Button8 uint8 `json:"button8"`
-	Button9 uint8 `json:"button9"`
+	Button7  uint8 `json:"button7"`
+	Button8  uint8 `json:"button8"`
+	Button9  uint8 `json:"button9"`
 	Button10 uint8 `json:"button10"`
 }
 
@@ -4124,8 +4033,6 @@ func (p *SteeringPressCount2) UnmarshalPacket(b []byte) error {
 func (p *SteeringPressCount2) String() string {
 	return "steering_press_count_2"
 }
-
-
 
 // SteeringButtonColors1 is This packet controls each button's color. Each byte is a hex color code.
 type SteeringButtonColors1 struct {
@@ -4180,13 +4087,11 @@ func (p *SteeringButtonColors1) String() string {
 	return "steering_button_colors_1"
 }
 
-
-
 // SteeringButtonColors2 is This packet controls each button's color. Each byte is a hex color code.
 type SteeringButtonColors2 struct {
-	Button7 uint8 `json:"button7"`
-	Button8 uint8 `json:"button8"`
-	Button9 uint8 `json:"button9"`
+	Button7  uint8 `json:"button7"`
+	Button8  uint8 `json:"button8"`
+	Button9  uint8 `json:"button9"`
 	Button10 uint8 `json:"button10"`
 }
 
@@ -4226,8 +4131,6 @@ func (p *SteeringButtonColors2) String() string {
 	return "steering_button_colors_2"
 }
 
-
-
 // SteeringHorn is This packet controls the state of the horn.
 type SteeringHorn struct {
 	Horn uint8 `json:"horn"`
@@ -4262,8 +4165,6 @@ func (p *SteeringHorn) UnmarshalPacket(b []byte) error {
 func (p *SteeringHorn) String() string {
 	return "steering_horn"
 }
-
-
 
 // ThunderstruckStatusMessage is Status packet for thunderstruck chargers
 type ThunderstruckStatusMessage struct {
@@ -4321,8 +4222,6 @@ func (p *ThunderstruckStatusMessage) String() string {
 	return "thunderstruck_status_message"
 }
 
-
-
 // TrackerData is Tracker data. Each channel transmits on a specific ID, which should be specified along with the tracker, most likely 0x600-0x603.
 type TrackerData struct {
 	// 0.01 V
@@ -4340,7 +4239,7 @@ type TrackerData struct {
 func (p *TrackerData) CanId() (can.CanID, error) {
 	c := can.CanID{Extended: false}
 	if p.Idx >= 6 {
-		return c, &UnknownIdError{ 0x600 }
+		return c, &UnknownIdError{0x600}
 	}
 	c.Id = 0x600 + p.Idx
 	return c, nil
@@ -4376,12 +4275,10 @@ func (p *TrackerData) String() string {
 	return "tracker_data"
 }
 
-
-
 // TritiumMotorDriveL is Tritium Motor Drive Command
 type TritiumMotorDriveL struct {
 	MotorVelocity float32 `json:"motor_velocity"`
-	MotorCurrent float32 `json:"motor_current"`
+	MotorCurrent  float32 `json:"motor_current"`
 }
 
 func (p *TritiumMotorDriveL) CanId() (can.CanID, error) {
@@ -4416,11 +4313,9 @@ func (p *TritiumMotorDriveL) String() string {
 	return "tritium_motor_drive_l"
 }
 
-
-
 // TritiumMotorPowerL is Tritium Motor Power Command
 type TritiumMotorPowerL struct {
-	Reserved float32 `json:"reserved"`
+	Reserved   float32 `json:"reserved"`
 	BusCurrent float32 `json:"bus_current"`
 }
 
@@ -4455,8 +4350,6 @@ func (p *TritiumMotorPowerL) UnmarshalPacket(b []byte) error {
 func (p *TritiumMotorPowerL) String() string {
 	return "tritium_motor_power_l"
 }
-
-
 
 // TritiumResetL is Tritium Reset Command
 type TritiumResetL struct {
@@ -4496,12 +4389,10 @@ func (p *TritiumResetL) String() string {
 	return "tritium_reset_l"
 }
 
-
-
 // TritiumMotorDriveR is Tritium Motor Drive Command
 type TritiumMotorDriveR struct {
 	MotorVelocity float32 `json:"motor_velocity"`
-	MotorCurrent float32 `json:"motor_current"`
+	MotorCurrent  float32 `json:"motor_current"`
 }
 
 func (p *TritiumMotorDriveR) CanId() (can.CanID, error) {
@@ -4536,11 +4427,9 @@ func (p *TritiumMotorDriveR) String() string {
 	return "tritium_motor_drive_r"
 }
 
-
-
 // TritiumMotorPowerR is Tritium Motor Power Command
 type TritiumMotorPowerR struct {
-	Reserved float32 `json:"reserved"`
+	Reserved   float32 `json:"reserved"`
 	BusCurrent float32 `json:"bus_current"`
 }
 
@@ -4575,8 +4464,6 @@ func (p *TritiumMotorPowerR) UnmarshalPacket(b []byte) error {
 func (p *TritiumMotorPowerR) String() string {
 	return "tritium_motor_power_r"
 }
-
-
 
 // TritiumResetR is Tritium Reset Command
 type TritiumResetR struct {
@@ -4616,8 +4503,6 @@ func (p *TritiumResetR) String() string {
 	return "tritium_reset_r"
 }
 
-
-
 // BmsAhSet is write state of charge, use with caution
 type BmsAhSet struct {
 	Ah uint32 `json:"ah"`
@@ -4652,8 +4537,6 @@ func (p *BmsAhSet) UnmarshalPacket(b []byte) error {
 func (p *BmsAhSet) String() string {
 	return "bms_ah_set"
 }
-
-
 
 // BmsWhSet is write state of charge, use with caution
 type BmsWhSet struct {
@@ -4690,7 +4573,6 @@ func (p *BmsWhSet) String() string {
 	return "bms_wh_set"
 }
 
-
 type BmsKillKillType struct {
 	KILLHARD bool `json:"KILL_HARD"`
 }
@@ -4706,7 +4588,6 @@ func (p *BmsKillKillType) MarshalByte() byte {
 func (p *BmsKillKillType) UnmarshalByte(b byte) {
 	p.KILLHARD = (b & (1 << 0)) != 0
 }
-
 
 // BmsKill is packet to cause BMS kill
 type BmsKill struct {
@@ -4743,14 +4624,12 @@ func (p *BmsKill) String() string {
 	return "bms_kill"
 }
 
-
-
 // TelemetryRtcReset is Reset telemetry's real-time clock (RTC).
 type TelemetryRtcReset struct {
-	Year uint8 `json:"year"`
-	Month uint8 `json:"month"`
-	Day uint8 `json:"day"`
-	Hour uint8 `json:"hour"`
+	Year   uint8 `json:"year"`
+	Month  uint8 `json:"month"`
+	Day    uint8 `json:"day"`
+	Hour   uint8 `json:"hour"`
 	Minute uint8 `json:"minute"`
 	Second uint8 `json:"second"`
 }
@@ -4795,11 +4674,9 @@ func (p *TelemetryRtcReset) String() string {
 	return "telemetry_rtc_reset"
 }
 
-
-
 // WsrIdentification is WS RIGHT Identification Information
 type WsrIdentification struct {
-	TritiumId uint32 `json:"tritium_id"`
+	TritiumId    uint32 `json:"tritium_id"`
 	SerialNumber uint32 `json:"serial_number"`
 }
 
@@ -4835,16 +4712,15 @@ func (p *WsrIdentification) String() string {
 	return "wsr_identification"
 }
 
-
 type WsrStatusInformationLimitFlags struct {
-	OutputVoltagePwm bool `json:"output_voltage_pwm"`
-	MotorCurrent bool `json:"motor_current"`
-	Velocity bool `json:"velocity"`
-	BusCurrent bool `json:"bus_current"`
-	BusVoltageUpperLimit bool `json:"bus_voltage_upper_limit"`
-	BusVoltageLowerLimit bool `json:"bus_voltage_lower_limit"`
+	OutputVoltagePwm                 bool `json:"output_voltage_pwm"`
+	MotorCurrent                     bool `json:"motor_current"`
+	Velocity                         bool `json:"velocity"`
+	BusCurrent                       bool `json:"bus_current"`
+	BusVoltageUpperLimit             bool `json:"bus_voltage_upper_limit"`
+	BusVoltageLowerLimit             bool `json:"bus_voltage_lower_limit"`
 	IpmTemperatureOrMotorTemperature bool `json:"ipm_temperature_or_motor_temperature"`
-	Reserved bool `json:"reserved"`
+	Reserved                         bool `json:"reserved"`
 }
 
 func (p *WsrStatusInformationLimitFlags) MarshalByte() byte {
@@ -4888,14 +4764,14 @@ func (p *WsrStatusInformationLimitFlags) UnmarshalByte(b byte) {
 }
 
 type WsrStatusInformationErrorFlags0 struct {
-	HardwareOverCurrent bool `json:"hardware_over_current"`
-	SoftwareOverCurrent bool `json:"software_over_current"`
-	DcBusOverVoltage bool `json:"dc_bus_over_voltage"`
+	HardwareOverCurrent          bool `json:"hardware_over_current"`
+	SoftwareOverCurrent          bool `json:"software_over_current"`
+	DcBusOverVoltage             bool `json:"dc_bus_over_voltage"`
 	BadMotorPositionHallSequence bool `json:"bad_motor_position_hall_sequence"`
-	WatchdogCausedLastReset bool `json:"watchdog_caused_last_reset"`
-	ConfigReadError bool `json:"config_read_error"`
-	LvRailUnderVoltageLockOut bool `json:"lv_rail_under_voltage_lock_out"`
-	DesaturationFault bool `json:"desaturation_fault"`
+	WatchdogCausedLastReset      bool `json:"watchdog_caused_last_reset"`
+	ConfigReadError              bool `json:"config_read_error"`
+	LvRailUnderVoltageLockOut    bool `json:"lv_rail_under_voltage_lock_out"`
+	DesaturationFault            bool `json:"desaturation_fault"`
 }
 
 func (p *WsrStatusInformationErrorFlags0) MarshalByte() byte {
@@ -4940,13 +4816,13 @@ func (p *WsrStatusInformationErrorFlags0) UnmarshalByte(b byte) {
 
 type WsrStatusInformationErrorFlags1 struct {
 	MotorOverSpeed bool `json:"motor_over_speed"`
-	Reserved9 bool `json:"reserved_9"`
-	Reserved10 bool `json:"reserved_10"`
-	Reserved11 bool `json:"reserved_11"`
-	Reserved12 bool `json:"reserved_12"`
-	Reserved13 bool `json:"reserved_13"`
-	Reserved14 bool `json:"reserved_14"`
-	Reserved15 bool `json:"reserved_15"`
+	Reserved9      bool `json:"reserved_9"`
+	Reserved10     bool `json:"reserved_10"`
+	Reserved11     bool `json:"reserved_11"`
+	Reserved12     bool `json:"reserved_12"`
+	Reserved13     bool `json:"reserved_13"`
+	Reserved14     bool `json:"reserved_14"`
+	Reserved15     bool `json:"reserved_15"`
 }
 
 func (p *WsrStatusInformationErrorFlags1) MarshalByte() byte {
@@ -4989,15 +4865,14 @@ func (p *WsrStatusInformationErrorFlags1) UnmarshalByte(b byte) {
 	p.Reserved15 = (b & (1 << 7)) != 0
 }
 
-
 // WsrStatusInformation is WS RIGHT Status Information
 type WsrStatusInformation struct {
-	LimitFlags WsrStatusInformationLimitFlags `json:"limit_flags"`
-	LimitFlagsReserved uint8 `json:"limit_flags_reserved"`
-	ErrorFlags0 WsrStatusInformationErrorFlags0 `json:"error_flags_0"`
-	ErrorFlags1 WsrStatusInformationErrorFlags1 `json:"error_flags_1"`
-	ActiveMotor uint16 `json:"active_motor"`
-	Reserved uint16 `json:"reserved"`
+	LimitFlags         WsrStatusInformationLimitFlags  `json:"limit_flags"`
+	LimitFlagsReserved uint8                           `json:"limit_flags_reserved"`
+	ErrorFlags0        WsrStatusInformationErrorFlags0 `json:"error_flags_0"`
+	ErrorFlags1        WsrStatusInformationErrorFlags1 `json:"error_flags_1"`
+	ActiveMotor        uint16                          `json:"active_motor"`
+	Reserved           uint16                          `json:"reserved"`
 }
 
 func (p *WsrStatusInformation) CanId() (can.CanID, error) {
@@ -5040,8 +4915,6 @@ func (p *WsrStatusInformation) String() string {
 	return "wsr_status_information"
 }
 
-
-
 // WsrBusMeasurement is WS RIGHT Bus Measurement
 type WsrBusMeasurement struct {
 	// 0 V
@@ -5081,8 +4954,6 @@ func (p *WsrBusMeasurement) UnmarshalPacket(b []byte) error {
 func (p *WsrBusMeasurement) String() string {
 	return "wsr_bus_measurement"
 }
-
-
 
 // WsrVelocity is WS RIGHT Velocity Measurement
 type WsrVelocity struct {
@@ -5124,8 +4995,6 @@ func (p *WsrVelocity) String() string {
 	return "wsr_velocity"
 }
 
-
-
 // WsrPhaseCurrent is WS RIGHT Phase Current Measurement
 type WsrPhaseCurrent struct {
 	// 0 A rms
@@ -5165,8 +5034,6 @@ func (p *WsrPhaseCurrent) UnmarshalPacket(b []byte) error {
 func (p *WsrPhaseCurrent) String() string {
 	return "wsr_phase_current"
 }
-
-
 
 // WsrMotorVoltageVector is WS RIGHT Motor Voltage Vector Measurement
 type WsrMotorVoltageVector struct {
@@ -5208,8 +5075,6 @@ func (p *WsrMotorVoltageVector) String() string {
 	return "wsr_motor_voltage_vector"
 }
 
-
-
 // WsrMotorCurrentVector is WS RIGHT Motor Current Vector Measurement
 type WsrMotorCurrentVector struct {
 	// 0 A
@@ -5249,8 +5114,6 @@ func (p *WsrMotorCurrentVector) UnmarshalPacket(b []byte) error {
 func (p *WsrMotorCurrentVector) String() string {
 	return "wsr_motor_current_vector"
 }
-
-
 
 // WsrMotorBackemf is WS RIGHT Motor BackEMF Measurement / Prediction
 type WsrMotorBackemf struct {
@@ -5292,8 +5155,6 @@ func (p *WsrMotorBackemf) String() string {
 	return "wsr_motor_backemf"
 }
 
-
-
 // Wsr15165VoltageRail is WS RIGHT 15 and 1.65 Voltage Rail Measurement
 type Wsr15165VoltageRail struct {
 	// 0 V
@@ -5333,8 +5194,6 @@ func (p *Wsr15165VoltageRail) UnmarshalPacket(b []byte) error {
 func (p *Wsr15165VoltageRail) String() string {
 	return "wsr_15_165_voltage_rail"
 }
-
-
 
 // Wsr2512VoltageRail is WS RIGHT 2.5V and 1.2V Voltage Rail Measurement
 type Wsr2512VoltageRail struct {
@@ -5376,8 +5235,6 @@ func (p *Wsr2512VoltageRail) String() string {
 	return "wsr_25_12_voltage_rail"
 }
 
-
-
 // WsrHeatsinkMotorTemp is WS RIGHT Heat-sink & Motor Temperature Measurement
 type WsrHeatsinkMotorTemp struct {
 	// 0 C
@@ -5417,8 +5274,6 @@ func (p *WsrHeatsinkMotorTemp) UnmarshalPacket(b []byte) error {
 func (p *WsrHeatsinkMotorTemp) String() string {
 	return "wsr_heatsink_motor_temp"
 }
-
-
 
 // WsrDspBoardTemp is WS RIGHT DPS Board Temperature Measurement
 type WsrDspBoardTemp struct {
@@ -5460,8 +5315,6 @@ func (p *WsrDspBoardTemp) String() string {
 	return "wsr_dsp_board_temp"
 }
 
-
-
 // WsrReserved is WS RIGHT Reserved
 type WsrReserved struct {
 	Reserved0 float32 `json:"reserved0"`
@@ -5499,8 +5352,6 @@ func (p *WsrReserved) UnmarshalPacket(b []byte) error {
 func (p *WsrReserved) String() string {
 	return "wsr_reserved"
 }
-
-
 
 // WsrOdometerBusAmphoursMeasurement is WS RIGHT Odometer and Bus AmpHours Measurement
 type WsrOdometerBusAmphoursMeasurement struct {
@@ -5542,8 +5393,6 @@ func (p *WsrOdometerBusAmphoursMeasurement) String() string {
 	return "wsr_odometer_bus_amphours_measurement"
 }
 
-
-
 // WsrSlipSpeedMeasurement is WS RIGHT Slip Speed Measurement
 type WsrSlipSpeedMeasurement struct {
 	// 0 C
@@ -5584,11 +5433,9 @@ func (p *WsrSlipSpeedMeasurement) String() string {
 	return "wsr_slip_speed_measurement"
 }
 
-
-
 // WslIdentification is WS LEFT Identification Information
 type WslIdentification struct {
-	TritiumId uint32 `json:"tritium_id"`
+	TritiumId    uint32 `json:"tritium_id"`
 	SerialNumber uint32 `json:"serial_number"`
 }
 
@@ -5624,16 +5471,15 @@ func (p *WslIdentification) String() string {
 	return "wsl_identification"
 }
 
-
 type WslStatusInformationLimitFlags struct {
-	OutputVoltagePwm bool `json:"output_voltage_pwm"`
-	MotorCurrent bool `json:"motor_current"`
-	Velocity bool `json:"velocity"`
-	BusCurrent bool `json:"bus_current"`
-	BusVoltageUpperLimit bool `json:"bus_voltage_upper_limit"`
-	BusVoltageLowerLimit bool `json:"bus_voltage_lower_limit"`
+	OutputVoltagePwm                 bool `json:"output_voltage_pwm"`
+	MotorCurrent                     bool `json:"motor_current"`
+	Velocity                         bool `json:"velocity"`
+	BusCurrent                       bool `json:"bus_current"`
+	BusVoltageUpperLimit             bool `json:"bus_voltage_upper_limit"`
+	BusVoltageLowerLimit             bool `json:"bus_voltage_lower_limit"`
 	IpmTemperatureOrMotorTemperature bool `json:"ipm_temperature_or_motor_temperature"`
-	Reserved bool `json:"reserved"`
+	Reserved                         bool `json:"reserved"`
 }
 
 func (p *WslStatusInformationLimitFlags) MarshalByte() byte {
@@ -5677,14 +5523,14 @@ func (p *WslStatusInformationLimitFlags) UnmarshalByte(b byte) {
 }
 
 type WslStatusInformationErrorFlags0 struct {
-	HardwareOverCurrent bool `json:"hardware_over_current"`
-	SoftwareOverCurrent bool `json:"software_over_current"`
-	DcBusOverVoltage bool `json:"dc_bus_over_voltage"`
+	HardwareOverCurrent          bool `json:"hardware_over_current"`
+	SoftwareOverCurrent          bool `json:"software_over_current"`
+	DcBusOverVoltage             bool `json:"dc_bus_over_voltage"`
 	BadMotorPositionHallSequence bool `json:"bad_motor_position_hall_sequence"`
-	WatchdogCausedLastReset bool `json:"watchdog_caused_last_reset"`
-	ConfigReadError bool `json:"config_read_error"`
-	LvRailUnderVoltageLockOut bool `json:"lv_rail_under_voltage_lock_out"`
-	DesaturationFault bool `json:"desaturation_fault"`
+	WatchdogCausedLastReset      bool `json:"watchdog_caused_last_reset"`
+	ConfigReadError              bool `json:"config_read_error"`
+	LvRailUnderVoltageLockOut    bool `json:"lv_rail_under_voltage_lock_out"`
+	DesaturationFault            bool `json:"desaturation_fault"`
 }
 
 func (p *WslStatusInformationErrorFlags0) MarshalByte() byte {
@@ -5729,13 +5575,13 @@ func (p *WslStatusInformationErrorFlags0) UnmarshalByte(b byte) {
 
 type WslStatusInformationErrorFlags1 struct {
 	MotorOverSpeed bool `json:"motor_over_speed"`
-	Reserved9 bool `json:"reserved_9"`
-	Reserved10 bool `json:"reserved_10"`
-	Reserved11 bool `json:"reserved_11"`
-	Reserved12 bool `json:"reserved_12"`
-	Reserved13 bool `json:"reserved_13"`
-	Reserved14 bool `json:"reserved_14"`
-	Reserved15 bool `json:"reserved_15"`
+	Reserved9      bool `json:"reserved_9"`
+	Reserved10     bool `json:"reserved_10"`
+	Reserved11     bool `json:"reserved_11"`
+	Reserved12     bool `json:"reserved_12"`
+	Reserved13     bool `json:"reserved_13"`
+	Reserved14     bool `json:"reserved_14"`
+	Reserved15     bool `json:"reserved_15"`
 }
 
 func (p *WslStatusInformationErrorFlags1) MarshalByte() byte {
@@ -5778,15 +5624,14 @@ func (p *WslStatusInformationErrorFlags1) UnmarshalByte(b byte) {
 	p.Reserved15 = (b & (1 << 7)) != 0
 }
 
-
 // WslStatusInformation is WS LEFT Status Information
 type WslStatusInformation struct {
-	LimitFlags WslStatusInformationLimitFlags `json:"limit_flags"`
-	LimitFlagsReserved uint8 `json:"limit_flags_reserved"`
-	ErrorFlags0 WslStatusInformationErrorFlags0 `json:"error_flags_0"`
-	ErrorFlags1 WslStatusInformationErrorFlags1 `json:"error_flags_1"`
-	ActiveMotor uint16 `json:"active_motor"`
-	Reserved uint16 `json:"reserved"`
+	LimitFlags         WslStatusInformationLimitFlags  `json:"limit_flags"`
+	LimitFlagsReserved uint8                           `json:"limit_flags_reserved"`
+	ErrorFlags0        WslStatusInformationErrorFlags0 `json:"error_flags_0"`
+	ErrorFlags1        WslStatusInformationErrorFlags1 `json:"error_flags_1"`
+	ActiveMotor        uint16                          `json:"active_motor"`
+	Reserved           uint16                          `json:"reserved"`
 }
 
 func (p *WslStatusInformation) CanId() (can.CanID, error) {
@@ -5829,8 +5674,6 @@ func (p *WslStatusInformation) String() string {
 	return "wsl_status_information"
 }
 
-
-
 // WslBusMeasurement is WS LEFT Bus Measurement
 type WslBusMeasurement struct {
 	// 0 V
@@ -5870,8 +5713,6 @@ func (p *WslBusMeasurement) UnmarshalPacket(b []byte) error {
 func (p *WslBusMeasurement) String() string {
 	return "wsl_bus_measurement"
 }
-
-
 
 // WslVelocity is WS LEFT Velocity Measurement
 type WslVelocity struct {
@@ -5913,8 +5754,6 @@ func (p *WslVelocity) String() string {
 	return "wsl_velocity"
 }
 
-
-
 // WslPhaseCurrent is WS LEFT Phase Current Measurement
 type WslPhaseCurrent struct {
 	// 0 A rms
@@ -5954,8 +5793,6 @@ func (p *WslPhaseCurrent) UnmarshalPacket(b []byte) error {
 func (p *WslPhaseCurrent) String() string {
 	return "wsl_phase_current"
 }
-
-
 
 // WslMotorVoltageVector is WS LEFT Motor Voltage Vector Measurement
 type WslMotorVoltageVector struct {
@@ -5997,8 +5834,6 @@ func (p *WslMotorVoltageVector) String() string {
 	return "wsl_motor_voltage_vector"
 }
 
-
-
 // WslMotorCurrentVector is WS LEFT Motor Current Vector Measurement
 type WslMotorCurrentVector struct {
 	// 0 A
@@ -6038,8 +5873,6 @@ func (p *WslMotorCurrentVector) UnmarshalPacket(b []byte) error {
 func (p *WslMotorCurrentVector) String() string {
 	return "wsl_motor_current_vector"
 }
-
-
 
 // WslMotorBackemf is WS LEFT Motor BackEMF Measurement / Prediction
 type WslMotorBackemf struct {
@@ -6081,8 +5914,6 @@ func (p *WslMotorBackemf) String() string {
 	return "wsl_motor_backemf"
 }
 
-
-
 // Wsl15165VoltageRail is WS LEFT 15 and 1.65 Voltage Rail Measurement
 type Wsl15165VoltageRail struct {
 	// 0 V
@@ -6122,8 +5953,6 @@ func (p *Wsl15165VoltageRail) UnmarshalPacket(b []byte) error {
 func (p *Wsl15165VoltageRail) String() string {
 	return "wsl_15_165_voltage_rail"
 }
-
-
 
 // Wsl2512VoltageRail is WS LEFT 2.5V and 1.2V Voltage Rail Measurement
 type Wsl2512VoltageRail struct {
@@ -6165,8 +5994,6 @@ func (p *Wsl2512VoltageRail) String() string {
 	return "wsl_25_12_voltage_rail"
 }
 
-
-
 // WslHeatsinkMotorTemp is WS LEFT Heat-sink & Motor Temperature Measurement
 type WslHeatsinkMotorTemp struct {
 	// 0 C
@@ -6206,8 +6033,6 @@ func (p *WslHeatsinkMotorTemp) UnmarshalPacket(b []byte) error {
 func (p *WslHeatsinkMotorTemp) String() string {
 	return "wsl_heatsink_motor_temp"
 }
-
-
 
 // WslDspBoardTemp is WS LEFT DPS Board Temperature Measurement
 type WslDspBoardTemp struct {
@@ -6249,8 +6074,6 @@ func (p *WslDspBoardTemp) String() string {
 	return "wsl_dsp_board_temp"
 }
 
-
-
 // WslOdometerBusAmphoursMeasurement is WS LEFT Odometer and Bus AmpHours Measurement
 type WslOdometerBusAmphoursMeasurement struct {
 	// 0 m
@@ -6291,8 +6114,6 @@ func (p *WslOdometerBusAmphoursMeasurement) String() string {
 	return "wsl_odometer_bus_amphours_measurement"
 }
 
-
-
 // WslReserved is WS LEFT Reserved
 type WslReserved struct {
 	Reserved0 float32 `json:"reserved0"`
@@ -6330,8 +6151,6 @@ func (p *WslReserved) UnmarshalPacket(b []byte) error {
 func (p *WslReserved) String() string {
 	return "wsl_reserved"
 }
-
-
 
 // WslSlipSpeedMeasurement is WS LEFT Slip Speed Measurement
 type WslSlipSpeedMeasurement struct {
@@ -6372,8 +6191,6 @@ func (p *WslSlipSpeedMeasurement) UnmarshalPacket(b []byte) error {
 func (p *WslSlipSpeedMeasurement) String() string {
 	return "wsl_slip_speed_measurement"
 }
-
-
 
 // The json representation that was used to generate this data.
 // can be used to share the parsing data for i.e dynamic python gui.

@@ -159,7 +159,6 @@ func Test_parseTelemLogLine_errors(t *testing.T) {
 			name:  "utf8 corruption",
 			input: "1698180835.318 0619\xed\xa0\x80fsadfD805640X0EBE24",
 		},
-
 	}
 
 	for _, tt := range tests {

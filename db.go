@@ -321,7 +321,6 @@ func (e DocumentNotFoundError) Error() string {
 	return fmt.Sprintf("document could not find key: %s", string(e))
 }
 
-
 // UpdateDocument replaces the entire contents of a document matching
 // the given key. Note that the key is derived from the document,
 // and no checks are done to ensure that the new key is the same.
@@ -343,7 +342,6 @@ func (tdb *TelemDb) UpdateDocument(ctx context.Context, key string,
 	return err
 }
 
-
 // GetDocument gets the document matching the corresponding key.
 func (tdb *TelemDb) GetDocument(ctx context.Context, key string) (json.RawMessage, error) {
 	const get = `SELECT data FROM openmct_objects WHERE key IS ?`
@@ -363,7 +361,7 @@ func (tdb *TelemDb) GetDocument(ctx context.Context, key string) (json.RawMessag
 
 // GetAllDocuments returns all documents in the database.
 func (tdb *TelemDb) GetAllDocuments(ctx context.Context) ([]json.RawMessage, error) {
-	const getall = `SELECT data FROM openmct_objects`;
+	const getall = `SELECT data FROM openmct_objects`
 
 	rows, err := tdb.db.QueryxContext(ctx, getall)
 	if err != nil {

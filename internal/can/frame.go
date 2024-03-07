@@ -6,23 +6,22 @@
 // by writing "adapters" to various devices/formats (xbee, socketcan)
 package can
 
-
 type CanID struct {
-	Id uint32
+	Id       uint32
 	Extended bool // since the id itself is not enough.
 }
+
 // Frame represents a protocol-agnostic CAN frame. The Id can be standard or extended,
 // but if it is extended, the Kind should be EFF.
 type Frame struct {
-	Id CanID
+	Id   CanID
 	Data []byte
 	Kind Kind
 }
 
-
 // TODO: should this be replaced
 type CANFrame interface {
-	Id() 
+	Id()
 	Data() []byte
 	Type() Kind
 }
@@ -34,8 +33,8 @@ type Kind uint8
 
 const (
 	CanDataFrame Kind = iota // Standard ID Frame
-	CanRTRFrame             // Remote Transmission Request Frame
-	CanErrFrame             // Error Frame
+	CanRTRFrame              // Remote Transmission Request Frame
+	CanErrFrame              // Error Frame
 )
 
 // CanFilter is a basic filter for masking out data. It has an Inverted flag
