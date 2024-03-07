@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kschamplin/gotelem/internal/can"
+	"github.com/kschamplin/gotelem/skylab"
 )
 
 func Test_parseCanDumpLine(t *testing.T) {
@@ -166,6 +167,45 @@ func Test_parseTelemLogLine_errors(t *testing.T) {
 			f, ts, err := parseTelemLogLine(tt.input)
 			if err == nil {
 				t.Fatalf("parseTelemLogLine() expected error but instead got f = %v, ts = %v", f, ts)
+			}
+		})
+	}
+}
+
+func Test_parseSkylabifyLogLine(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    skylab.BusEvent
+		wantErr bool
+	}{
+		{
+			name: "basic test",
+			args: args{
+				input: `{"ts":1685141873612,"id":259,"name":"wsl_velocity","data":{"motor_velocity":89.97547,"vehicle_velocity":2.38853}}`},
+			want: skylab.BusEvent{
+				Timestamp: time.UnixMilli(1685141873612),
+				Name:      "wsl_velocity",
+				Data: &skylab.WslVelocity{
+					MotorVelocity:   89.97547,
+					VehicleVelocity: 2.38853,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseSkylabifyLogLine(tt.args.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseSkylabifyLogLine() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseSkylabifyLogLine() = %v, want %v", got, tt.want)
 			}
 		})
 	}

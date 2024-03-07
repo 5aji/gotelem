@@ -2,6 +2,7 @@ package logparsers
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -35,10 +36,10 @@ func NewFormatError(msg string, err error) error {
 	return &FormatError{msg: msg, err: err}
 }
 
-// type LineParserFunc is a function that takes a string
+// type CanFrameParser is a function that takes a string
 // and returns a can frame. This is useful for common
 // can dump formats.
-type LineParserFunc func(string) (can.Frame, time.Time, error)
+type CanFrameParser func(string) (can.Frame, time.Time, error)
 
 var candumpRegex = regexp.MustCompile(`^\((\d+)\.(\d{6})\) \w+ (\w+)#(\w+)$`)
 
@@ -157,20 +158,27 @@ func parseTelemLogLine(line string) (frame can.Frame, ts time.Time, err error) {
 
 }
 
-// BusParserFunc is a function that takes a string and returns a busevent.
-type BusParserFunc func(string) (skylab.BusEvent, error)
+// BusEventParser is a function that takes a string and returns a busevent.
+type BusEventParser func(string) (skylab.BusEvent, error)
 
-// parserBusEventMapper takes a line parser (that returns a can frame)
+// skylabify JSON parser.
+func parseSkylabifyLogLine(input string) (skylab.BusEvent, error) {
+	var b = skylab.BusEvent{}
+	err := json.Unmarshal([]byte(input), &b)
+	return b, err
+}
+
+// frameParseToBusEvent takes a line parser (that returns a can frame)
 // and makes it return a busEvent instead.
-func parserBusEventMapper(f LineParserFunc) BusParserFunc {
+func frameParseToBusEvent(fun CanFrameParser) BusEventParser {
 	return func(s string) (skylab.BusEvent, error) {
 		var b = skylab.BusEvent{}
-		f, ts, err := f(s)
+		frame, ts, err := fun(s)
 		if err != nil {
 			return b, err
 		}
 		b.Timestamp = ts
-		b.Data, err = skylab.FromCanFrame(f)
+		b.Data, err = skylab.FromCanFrame(frame)
 		if err != nil {
 			return b, err
 		}
@@ -179,7 +187,8 @@ func parserBusEventMapper(f LineParserFunc) BusParserFunc {
 	}
 }
 
-var ParsersMap = map[string]BusParserFunc{
-	"telem":   parserBusEventMapper(parseTelemLogLine),
-	"candump": parserBusEventMapper(parseCanDumpLine),
+var ParsersMap = map[string]BusEventParser{
+	"telem":   frameParseToBusEvent(parseTelemLogLine),
+	"candump": frameParseToBusEvent(parseCanDumpLine),
+	"json":    parseSkylabifyLogLine,
 }
