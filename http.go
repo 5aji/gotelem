@@ -186,7 +186,6 @@ func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.Ping(r.Context())
 		// closeread handles protocol/status messages,
 		// also handles clients closing the connection.
 		// we get a context to use from it.
