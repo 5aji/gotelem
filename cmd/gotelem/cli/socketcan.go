@@ -3,6 +3,8 @@
 package cli
 
 import (
+	"errors"
+	"io"
 	"time"
 
 	"github.com/kschamplin/gotelem/internal/can"
@@ -57,7 +59,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	broker := deps.Broker
 
 	if !cCtx.IsSet("can") {
-		logger.Info("no can device provided")
+		logger.Debug("no can device provided, skip")
 		return
 	}
 
@@ -82,6 +84,9 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	go func() {
 		for {
 			pkt, err := s.sock.Recv()
+			if errors.Is(err, io.EOF) {
+				return
+			}
 			if err != nil {
 				logger.Warn("error receiving CAN packet", "err", err)
 			}
@@ -95,13 +100,17 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 		case msg := <-rxCh:
 
 			frame, err = skylab.ToCanFrame(msg.Data)
+			if err != nil {
+				logger.Warn("error encoding can frame", "name", msg.Name, "err", err)
+				continue
+			}
 
 			s.sock.Send(&frame)
 
 		case msg := <-rxCan:
 			p, err := skylab.FromCanFrame(msg)
 			if err != nil {
-				logger.Warn("error parsing can packet", "id", msg.Id)
+				logger.Warn("error parsing can packet", "id", msg.Id, "err", err)
 				continue
 			}
 			cde := skylab.BusEvent{
@@ -111,6 +120,8 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 			}
 			broker.Publish("socketCAN", cde)
 		case <-cCtx.Done():
+			// close the socket.
+			s.sock.Close()
 			return
 		}
 	}

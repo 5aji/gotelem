@@ -52,7 +52,6 @@ var serveCmd = &cli.Command{
 type service interface {
 	fmt.Stringer
 	Start(cCtx *cli.Context, deps svcDeps) (err error)
-	Status()
 }
 
 type svcDeps struct {
@@ -111,17 +110,17 @@ func serve(cCtx *cli.Context) error {
 	}
 
 	for _, svc := range serveThings {
-		logger.Info("starting service", "svc", svc.String())
+		logger.Info("starting service", "service", svc.String())
 		wg.Add(1)
 		go func(mySvc service, baseLogger *slog.Logger) {
-			svcLogger := logger.With("svc", mySvc.String())
+			svcLogger := logger.With("service", mySvc.String())
 			s := deps
 			s.Logger = svcLogger
 			defer wg.Done()
 			// TODO: recover
 			err := mySvc.Start(cCtx, s)
 			if err != nil {
-				logger.Error("service stopped!", "err", err, "svc", mySvc.String())
+				logger.Error("service stopped!", "err", err, "service", mySvc.String())
 			}
 		}(svc, logger)
 	}

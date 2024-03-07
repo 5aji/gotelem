@@ -24,7 +24,10 @@ func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
 	bef := &BusEventFilter{}
 
 	v := r.URL.Query()
-	bef.Names = v["name"] // put all the names in.
+	if v.Has("name") {
+		bef.Names = v["name"]
+	}
+
 	if el := v.Get("start"); el != "" {
 		// parse the start time query.
 		t, err := time.Parse(time.RFC3339, el)
@@ -41,13 +44,16 @@ func extractBusEventFilter(r *http.Request) (*BusEventFilter, error) {
 		}
 		bef.EndTime = t
 	}
-	bef.Indexes = make([]int, 0)
-	for _, strIdx := range v["idx"] {
-		idx, err := strconv.ParseInt(strIdx, 10, 32)
-		if err != nil {
-			return nil, err
+	if v.Has("idx") {
+
+		bef.Indexes = make([]int, 0)
+		for _, strIdx := range v["idx"] {
+			idx, err := strconv.ParseInt(strIdx, 10, 32)
+			if err != nil {
+				return nil, err
+			}
+			bef.Indexes = append(bef.Indexes, int(idx))
 		}
-		bef.Indexes = append(bef.Indexes, int(idx))
 	}
 	return bef, nil
 }
@@ -141,17 +147,7 @@ func apiV1(broker *Broker, tdb *TelemDb) chi.Router {
 	})
 
 	// OpenMCT domain object storage. Basically an arbitrary JSON document store
-
-	r.Route("/openmct", func(r chi.Router) {
-		// key is a column on our json store, it's nested under identifier.key
-		r.Get("/{key}", func(w http.ResponseWriter, r *http.Request) {})
-		r.Put("/{key}", func(w http.ResponseWriter, r *http.Request) {})
-		r.Delete("/{key}", func(w http.ResponseWriter, r *http.Request) {})
-		// create a new object.
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
-		// subscribe to object updates.
-		r.Get("/subscribe", func(w http.ResponseWriter, r *http.Request) {})
-	})
+	r.Route("/openmct", apiV1OpenMCTStore(tdb))
 
 	// records are driving segments/runs.
 
@@ -289,4 +285,17 @@ func apiV1GetValues(db *TelemDb) http.HandlerFunc {
 		w.Write(b)
 	}
 
+}
+
+func apiV1OpenMCTStore(db *TelemDb) func(chi.Router) {
+	return func(r chi.Router) {
+		// key is a column on our json store, it's nested under identifier.key
+		r.Get("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		r.Put("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		r.Delete("/{key}", func(w http.ResponseWriter, r *http.Request) {})
+		// create a new object.
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {})
+		// subscribe to object updates.
+		r.Get("/subscribe", func(w http.ResponseWriter, r *http.Request) {})
+	}
 }
