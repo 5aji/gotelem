@@ -37,7 +37,7 @@ func (b *Broker) Subscribe(name string) (ch chan skylab.BusEvent, err error) {
 	if ok {
 		return nil, errors.New("name already in use")
 	}
-	b.logger.Info("new subscriber", "name", name)
+	b.logger.Info("subscribe", "name", name)
 	ch = make(chan skylab.BusEvent, b.bufsize)
 
 	b.subs[name] = ch
@@ -51,6 +51,7 @@ func (b *Broker) Unsubscribe(name string) {
 	// remove the channel from the map. We don't need to close it.
 	b.lock.Lock()
 	defer b.lock.Unlock()
+	b.logger.Debug("unsubscribe", "name", name)
 	delete(b.subs, name)
 }
 
@@ -59,6 +60,7 @@ func (b *Broker) Unsubscribe(name string) {
 func (b *Broker) Publish(sender string, message skylab.BusEvent) {
 	b.lock.RLock()
 	defer b.lock.RUnlock()
+	b.logger.Debug("publish", "sender", sender, "message", message)
 	for name, ch := range b.subs {
 		if name == sender {
 			continue
@@ -66,7 +68,6 @@ func (b *Broker) Publish(sender string, message skylab.BusEvent) {
 		// non blocking send.
 		select {
 		case ch <- message:
-			b.logger.Debug("sent message", "dest", name, "src", sender)
 		default:
 			b.logger.Warn("recipient buffer full", "dest", name)
 		}
