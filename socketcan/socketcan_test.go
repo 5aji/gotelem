@@ -29,7 +29,7 @@ func TestCanSocket(t *testing.T) {
 		}
 	})
 
-	t.Run("test name", func(t *testing.T) {
+	t.Run("test interface name", func(t *testing.T) {
 		sock, _ := NewCanSocket("vcan0")
 		defer sock.Close()
 

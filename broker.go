@@ -9,6 +9,8 @@ import (
 	"github.com/kschamplin/gotelem/skylab"
 )
 
+// Broker is a Bus Event broadcast system. You can subscribe to events,
+// and send events.
 type Broker struct {
 	subs map[string]chan skylab.BusEvent // contains the channel for each subsciber
 
@@ -17,6 +19,7 @@ type Broker struct {
 	bufsize int // size of chan buffer in elements.
 }
 
+// NewBroker creates a new broker with a given logger.
 func NewBroker(bufsize int, logger *slog.Logger) *Broker {
 	return &Broker{
 		subs:    make(map[string]chan skylab.BusEvent),
@@ -25,6 +28,7 @@ func NewBroker(bufsize int, logger *slog.Logger) *Broker {
 	}
 }
 
+// Subscribe joins the broker with the given name. The name must be unique.
 func (b *Broker) Subscribe(name string) (ch chan skylab.BusEvent, err error) {
 	// get rw lock.
 	b.lock.Lock()
@@ -40,6 +44,9 @@ func (b *Broker) Subscribe(name string) (ch chan skylab.BusEvent, err error) {
 	return
 }
 
+
+// Unsubscribe removes a subscriber matching the name. It doesn't do anything
+// if there's nobody subscribed with that name
 func (b *Broker) Unsubscribe(name string) {
 	// remove the channel from the map. We don't need to close it.
 	b.lock.Lock()
@@ -47,6 +54,8 @@ func (b *Broker) Unsubscribe(name string) {
 	delete(b.subs, name)
 }
 
+// Publish sends a bus event to all subscribers. It includes a sender
+// string which prevents loopback.
 func (b *Broker) Publish(sender string, message skylab.BusEvent) {
 	b.lock.RLock()
 	defer b.lock.RUnlock()
