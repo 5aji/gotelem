@@ -144,6 +144,8 @@ func (sck *CanSocket) Send(msg *can.Frame) error {
 		idToWrite |= unix.CAN_RTR_FLAG
 	case can.CanErrFrame:
 		return errors.New("you can't send error frames")
+	case can.CanDataFrame:
+
 	default:
 		return errors.New("unknown frame type")
 	}

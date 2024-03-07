@@ -51,7 +51,7 @@ func TestCanSocket(t *testing.T) {
 		err := sock.Send(testFrame)
 
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 	})
 
