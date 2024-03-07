@@ -1,9 +1,12 @@
+
 package skylab
 
 import (
-	"encoding/json"
 	"testing"
+	"reflect"
+	"encoding/json"
 )
+
 
 func TestMarshalUnmarshalBmsMeasurement(t *testing.T) {
 	v := &BmsMeasurement{}
@@ -37,7 +40,24 @@ func TestJSONBmsMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsMeasurement(t *testing.T) {
+	v := &BmsMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBatteryStatus(t *testing.T) {
 	v := &BatteryStatus{}
@@ -71,7 +91,24 @@ func TestJSONBatteryStatus(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBatteryStatus(t *testing.T) {
+	v := &BatteryStatus{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsKillReason(t *testing.T) {
 	v := &BmsKillReason{}
@@ -105,7 +142,24 @@ func TestJSONBmsKillReason(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsKillReason(t *testing.T) {
+	v := &BmsKillReason{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsModuleMinMax(t *testing.T) {
 	v := &BmsModuleMinMax{}
@@ -139,7 +193,24 @@ func TestJSONBmsModuleMinMax(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsModuleMinMax(t *testing.T) {
+	v := &BmsModuleMinMax{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsSoc(t *testing.T) {
 	v := &BmsSoc{}
@@ -173,7 +244,24 @@ func TestJSONBmsSoc(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsSoc(t *testing.T) {
+	v := &BmsSoc{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsCapacity(t *testing.T) {
 	v := &BmsCapacity{}
@@ -207,7 +295,24 @@ func TestJSONBmsCapacity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsCapacity(t *testing.T) {
+	v := &BmsCapacity{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsCurrentlimit(t *testing.T) {
 	v := &BmsCurrentlimit{}
@@ -241,7 +346,24 @@ func TestJSONBmsCurrentlimit(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsCurrentlimit(t *testing.T) {
+	v := &BmsCurrentlimit{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsFanInfo(t *testing.T) {
 	v := &BmsFanInfo{}
@@ -275,7 +397,24 @@ func TestJSONBmsFanInfo(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsFanInfo(t *testing.T) {
+	v := &BmsFanInfo{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsSetMinFanSpeed(t *testing.T) {
 	v := &BmsSetMinFanSpeed{}
@@ -309,7 +448,24 @@ func TestJSONBmsSetMinFanSpeed(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsSetMinFanSpeed(t *testing.T) {
+	v := &BmsSetMinFanSpeed{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsModule(t *testing.T) {
 	v := &BmsModule{}
@@ -343,7 +499,24 @@ func TestJSONBmsModule(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsModule(t *testing.T) {
+	v := &BmsModule{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsChargerResponse(t *testing.T) {
 	v := &BmsChargerResponse{}
@@ -377,7 +550,24 @@ func TestJSONBmsChargerResponse(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsChargerResponse(t *testing.T) {
+	v := &BmsChargerResponse{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalChassisIsolationFault(t *testing.T) {
 	v := &ChassisIsolationFault{}
@@ -411,7 +601,24 @@ func TestJSONChassisIsolationFault(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameChassisIsolationFault(t *testing.T) {
+	v := &ChassisIsolationFault{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsImdInfo(t *testing.T) {
 	v := &BmsImdInfo{}
@@ -445,7 +652,24 @@ func TestJSONBmsImdInfo(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsImdInfo(t *testing.T) {
+	v := &BmsImdInfo{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalDashboardPedalPercentages(t *testing.T) {
 	v := &DashboardPedalPercentages{}
@@ -479,7 +703,24 @@ func TestJSONDashboardPedalPercentages(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameDashboardPedalPercentages(t *testing.T) {
+	v := &DashboardPedalPercentages{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalCarState(t *testing.T) {
 	v := &CarState{}
@@ -513,7 +754,24 @@ func TestJSONCarState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameCarState(t *testing.T) {
+	v := &CarState{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalDashboardPedalFault(t *testing.T) {
 	v := &DashboardPedalFault{}
@@ -547,7 +805,24 @@ func TestJSONDashboardPedalFault(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameDashboardPedalFault(t *testing.T) {
+	v := &DashboardPedalFault{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalDashboardSystemTimeoutTest(t *testing.T) {
 	v := &DashboardSystemTimeoutTest{}
@@ -581,7 +856,24 @@ func TestJSONDashboardSystemTimeoutTest(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameDashboardSystemTimeoutTest(t *testing.T) {
+	v := &DashboardSystemTimeoutTest{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalCarSpeed(t *testing.T) {
 	v := &CarSpeed{}
@@ -615,7 +907,24 @@ func TestJSONCarSpeed(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameCarSpeed(t *testing.T) {
+	v := &CarSpeed{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalFlightComputerLvBoardDisconnectCounts(t *testing.T) {
 	v := &FlightComputerLvBoardDisconnectCounts{}
@@ -649,7 +958,24 @@ func TestJSONFlightComputerLvBoardDisconnectCounts(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameFlightComputerLvBoardDisconnectCounts(t *testing.T) {
+	v := &FlightComputerLvBoardDisconnectCounts{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalFlightComputerHvBoardDisconnectCounts(t *testing.T) {
 	v := &FlightComputerHvBoardDisconnectCounts{}
@@ -683,7 +1009,24 @@ func TestJSONFlightComputerHvBoardDisconnectCounts(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameFlightComputerHvBoardDisconnectCounts(t *testing.T) {
+	v := &FlightComputerHvBoardDisconnectCounts{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalFlightComputerInternalState(t *testing.T) {
 	v := &FlightComputerInternalState{}
@@ -717,7 +1060,24 @@ func TestJSONFlightComputerInternalState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameFlightComputerInternalState(t *testing.T) {
+	v := &FlightComputerInternalState{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalPowerToDrive(t *testing.T) {
 	v := &PowerToDrive{}
@@ -751,7 +1111,24 @@ func TestJSONPowerToDrive(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFramePowerToDrive(t *testing.T) {
+	v := &PowerToDrive{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalArrayPower(t *testing.T) {
 	v := &ArrayPower{}
@@ -785,7 +1162,24 @@ func TestJSONArrayPower(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameArrayPower(t *testing.T) {
+	v := &ArrayPower{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalArrayEnergy(t *testing.T) {
 	v := &ArrayEnergy{}
@@ -819,7 +1213,24 @@ func TestJSONArrayEnergy(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameArrayEnergy(t *testing.T) {
+	v := &ArrayEnergy{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalArrayEnergyReset(t *testing.T) {
 	v := &ArrayEnergyReset{}
@@ -853,7 +1264,24 @@ func TestJSONArrayEnergyReset(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameArrayEnergyReset(t *testing.T) {
+	v := &ArrayEnergyReset{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionTurnSignalsCommand(t *testing.T) {
 	v := &VisionTurnSignalsCommand{}
@@ -887,7 +1315,24 @@ func TestJSONVisionTurnSignalsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionTurnSignalsCommand(t *testing.T) {
+	v := &VisionTurnSignalsCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionBrakeLightsCommand(t *testing.T) {
 	v := &VisionBrakeLightsCommand{}
@@ -921,7 +1366,24 @@ func TestJSONVisionBrakeLightsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionBrakeLightsCommand(t *testing.T) {
+	v := &VisionBrakeLightsCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionHeadlightsCommand(t *testing.T) {
 	v := &VisionHeadlightsCommand{}
@@ -955,7 +1417,24 @@ func TestJSONVisionHeadlightsCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionHeadlightsCommand(t *testing.T) {
+	v := &VisionHeadlightsCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionHornCommand(t *testing.T) {
 	v := &VisionHornCommand{}
@@ -989,7 +1468,24 @@ func TestJSONVisionHornCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionHornCommand(t *testing.T) {
+	v := &VisionHornCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionArrayLatchesCommand(t *testing.T) {
 	v := &VisionArrayLatchesCommand{}
@@ -1023,7 +1519,24 @@ func TestJSONVisionArrayLatchesCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionArrayLatchesCommand(t *testing.T) {
+	v := &VisionArrayLatchesCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionRearviewCommand(t *testing.T) {
 	v := &VisionRearviewCommand{}
@@ -1057,7 +1570,24 @@ func TestJSONVisionRearviewCommand(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionRearviewCommand(t *testing.T) {
+	v := &VisionRearviewCommand{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTrackerEnable(t *testing.T) {
 	v := &TrackerEnable{}
@@ -1091,7 +1621,24 @@ func TestJSONTrackerEnable(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTrackerEnable(t *testing.T) {
+	v := &TrackerEnable{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalDistanceTraveled(t *testing.T) {
 	v := &DistanceTraveled{}
@@ -1125,7 +1672,24 @@ func TestJSONDistanceTraveled(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameDistanceTraveled(t *testing.T) {
+	v := &DistanceTraveled{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalChargerState(t *testing.T) {
 	v := &ChargerState{}
@@ -1159,7 +1723,24 @@ func TestJSONChargerState(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameChargerState(t *testing.T) {
+	v := &ChargerState{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalChargerBmsRequest(t *testing.T) {
 	v := &ChargerBmsRequest{}
@@ -1193,7 +1774,24 @@ func TestJSONChargerBmsRequest(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameChargerBmsRequest(t *testing.T) {
+	v := &ChargerBmsRequest{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalChargerCurrentVoltage(t *testing.T) {
 	v := &ChargerCurrentVoltage{}
@@ -1227,7 +1825,24 @@ func TestJSONChargerCurrentVoltage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameChargerCurrentVoltage(t *testing.T) {
+	v := &ChargerCurrentVoltage{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalChargerPower(t *testing.T) {
 	v := &ChargerPower{}
@@ -1261,7 +1876,24 @@ func TestJSONChargerPower(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameChargerPower(t *testing.T) {
+	v := &ChargerPower{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalThunderstruckControlMessage(t *testing.T) {
 	v := &ThunderstruckControlMessage{}
@@ -1295,7 +1927,24 @@ func TestJSONThunderstruckControlMessage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameThunderstruckControlMessage(t *testing.T) {
+	v := &ThunderstruckControlMessage{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionStatusFront(t *testing.T) {
 	v := &VisionStatusFront{}
@@ -1329,7 +1978,24 @@ func TestJSONVisionStatusFront(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionStatusFront(t *testing.T) {
+	v := &VisionStatusFront{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionStatusRear(t *testing.T) {
 	v := &VisionStatusRear{}
@@ -1363,7 +2029,24 @@ func TestJSONVisionStatusRear(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionStatusRear(t *testing.T) {
+	v := &VisionStatusRear{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalLightsFrontId(t *testing.T) {
 	v := &LightsFrontId{}
@@ -1397,7 +2080,24 @@ func TestJSONLightsFrontId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameLightsFrontId(t *testing.T) {
+	v := &LightsFrontId{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalLightsBackId(t *testing.T) {
 	v := &LightsBackId{}
@@ -1431,7 +2131,24 @@ func TestJSONLightsBackId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameLightsBackId(t *testing.T) {
+	v := &LightsBackId{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalVisionId(t *testing.T) {
 	v := &VisionId{}
@@ -1465,7 +2182,24 @@ func TestJSONVisionId(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameVisionId(t *testing.T) {
+	v := &VisionId{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalSteeringPressCount1(t *testing.T) {
 	v := &SteeringPressCount1{}
@@ -1499,7 +2233,24 @@ func TestJSONSteeringPressCount1(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameSteeringPressCount1(t *testing.T) {
+	v := &SteeringPressCount1{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalSteeringPressCount2(t *testing.T) {
 	v := &SteeringPressCount2{}
@@ -1533,7 +2284,24 @@ func TestJSONSteeringPressCount2(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameSteeringPressCount2(t *testing.T) {
+	v := &SteeringPressCount2{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalSteeringButtonColors1(t *testing.T) {
 	v := &SteeringButtonColors1{}
@@ -1567,7 +2335,24 @@ func TestJSONSteeringButtonColors1(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameSteeringButtonColors1(t *testing.T) {
+	v := &SteeringButtonColors1{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalSteeringButtonColors2(t *testing.T) {
 	v := &SteeringButtonColors2{}
@@ -1601,7 +2386,24 @@ func TestJSONSteeringButtonColors2(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameSteeringButtonColors2(t *testing.T) {
+	v := &SteeringButtonColors2{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalSteeringHorn(t *testing.T) {
 	v := &SteeringHorn{}
@@ -1635,7 +2437,24 @@ func TestJSONSteeringHorn(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameSteeringHorn(t *testing.T) {
+	v := &SteeringHorn{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalThunderstruckStatusMessage(t *testing.T) {
 	v := &ThunderstruckStatusMessage{}
@@ -1669,7 +2488,24 @@ func TestJSONThunderstruckStatusMessage(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameThunderstruckStatusMessage(t *testing.T) {
+	v := &ThunderstruckStatusMessage{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTrackerData(t *testing.T) {
 	v := &TrackerData{}
@@ -1703,7 +2539,24 @@ func TestJSONTrackerData(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTrackerData(t *testing.T) {
+	v := &TrackerData{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumMotorDriveL(t *testing.T) {
 	v := &TritiumMotorDriveL{}
@@ -1737,7 +2590,24 @@ func TestJSONTritiumMotorDriveL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumMotorDriveL(t *testing.T) {
+	v := &TritiumMotorDriveL{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumMotorPowerL(t *testing.T) {
 	v := &TritiumMotorPowerL{}
@@ -1771,7 +2641,24 @@ func TestJSONTritiumMotorPowerL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumMotorPowerL(t *testing.T) {
+	v := &TritiumMotorPowerL{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumResetL(t *testing.T) {
 	v := &TritiumResetL{}
@@ -1805,7 +2692,24 @@ func TestJSONTritiumResetL(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumResetL(t *testing.T) {
+	v := &TritiumResetL{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumMotorDriveR(t *testing.T) {
 	v := &TritiumMotorDriveR{}
@@ -1839,7 +2743,24 @@ func TestJSONTritiumMotorDriveR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumMotorDriveR(t *testing.T) {
+	v := &TritiumMotorDriveR{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumMotorPowerR(t *testing.T) {
 	v := &TritiumMotorPowerR{}
@@ -1873,7 +2794,24 @@ func TestJSONTritiumMotorPowerR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumMotorPowerR(t *testing.T) {
+	v := &TritiumMotorPowerR{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTritiumResetR(t *testing.T) {
 	v := &TritiumResetR{}
@@ -1907,7 +2845,24 @@ func TestJSONTritiumResetR(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTritiumResetR(t *testing.T) {
+	v := &TritiumResetR{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsAhSet(t *testing.T) {
 	v := &BmsAhSet{}
@@ -1941,7 +2896,24 @@ func TestJSONBmsAhSet(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsAhSet(t *testing.T) {
+	v := &BmsAhSet{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsWhSet(t *testing.T) {
 	v := &BmsWhSet{}
@@ -1975,7 +2947,24 @@ func TestJSONBmsWhSet(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsWhSet(t *testing.T) {
+	v := &BmsWhSet{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalBmsKill(t *testing.T) {
 	v := &BmsKill{}
@@ -2009,7 +2998,24 @@ func TestJSONBmsKill(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameBmsKill(t *testing.T) {
+	v := &BmsKill{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalTelemetryRtcReset(t *testing.T) {
 	v := &TelemetryRtcReset{}
@@ -2043,7 +3049,24 @@ func TestJSONTelemetryRtcReset(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameTelemetryRtcReset(t *testing.T) {
+	v := &TelemetryRtcReset{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrIdentification(t *testing.T) {
 	v := &WsrIdentification{}
@@ -2077,7 +3100,24 @@ func TestJSONWsrIdentification(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrIdentification(t *testing.T) {
+	v := &WsrIdentification{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrStatusInformation(t *testing.T) {
 	v := &WsrStatusInformation{}
@@ -2111,7 +3151,24 @@ func TestJSONWsrStatusInformation(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrStatusInformation(t *testing.T) {
+	v := &WsrStatusInformation{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrBusMeasurement(t *testing.T) {
 	v := &WsrBusMeasurement{}
@@ -2145,7 +3202,24 @@ func TestJSONWsrBusMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrBusMeasurement(t *testing.T) {
+	v := &WsrBusMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrVelocity(t *testing.T) {
 	v := &WsrVelocity{}
@@ -2179,7 +3253,24 @@ func TestJSONWsrVelocity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrVelocity(t *testing.T) {
+	v := &WsrVelocity{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrPhaseCurrent(t *testing.T) {
 	v := &WsrPhaseCurrent{}
@@ -2213,7 +3304,24 @@ func TestJSONWsrPhaseCurrent(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrPhaseCurrent(t *testing.T) {
+	v := &WsrPhaseCurrent{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrMotorVoltageVector(t *testing.T) {
 	v := &WsrMotorVoltageVector{}
@@ -2247,7 +3355,24 @@ func TestJSONWsrMotorVoltageVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrMotorVoltageVector(t *testing.T) {
+	v := &WsrMotorVoltageVector{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrMotorCurrentVector(t *testing.T) {
 	v := &WsrMotorCurrentVector{}
@@ -2281,7 +3406,24 @@ func TestJSONWsrMotorCurrentVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrMotorCurrentVector(t *testing.T) {
+	v := &WsrMotorCurrentVector{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrMotorBackemf(t *testing.T) {
 	v := &WsrMotorBackemf{}
@@ -2315,7 +3457,24 @@ func TestJSONWsrMotorBackemf(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrMotorBackemf(t *testing.T) {
+	v := &WsrMotorBackemf{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsr15165VoltageRail(t *testing.T) {
 	v := &Wsr15165VoltageRail{}
@@ -2349,7 +3508,24 @@ func TestJSONWsr15165VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsr15165VoltageRail(t *testing.T) {
+	v := &Wsr15165VoltageRail{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsr2512VoltageRail(t *testing.T) {
 	v := &Wsr2512VoltageRail{}
@@ -2383,7 +3559,24 @@ func TestJSONWsr2512VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsr2512VoltageRail(t *testing.T) {
+	v := &Wsr2512VoltageRail{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrHeatsinkMotorTemp(t *testing.T) {
 	v := &WsrHeatsinkMotorTemp{}
@@ -2417,7 +3610,24 @@ func TestJSONWsrHeatsinkMotorTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrHeatsinkMotorTemp(t *testing.T) {
+	v := &WsrHeatsinkMotorTemp{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrDspBoardTemp(t *testing.T) {
 	v := &WsrDspBoardTemp{}
@@ -2451,7 +3661,24 @@ func TestJSONWsrDspBoardTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrDspBoardTemp(t *testing.T) {
+	v := &WsrDspBoardTemp{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrReserved(t *testing.T) {
 	v := &WsrReserved{}
@@ -2485,7 +3712,24 @@ func TestJSONWsrReserved(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrReserved(t *testing.T) {
+	v := &WsrReserved{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrOdometerBusAmphoursMeasurement(t *testing.T) {
 	v := &WsrOdometerBusAmphoursMeasurement{}
@@ -2519,7 +3763,24 @@ func TestJSONWsrOdometerBusAmphoursMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrOdometerBusAmphoursMeasurement(t *testing.T) {
+	v := &WsrOdometerBusAmphoursMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsrSlipSpeedMeasurement(t *testing.T) {
 	v := &WsrSlipSpeedMeasurement{}
@@ -2553,7 +3814,24 @@ func TestJSONWsrSlipSpeedMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsrSlipSpeedMeasurement(t *testing.T) {
+	v := &WsrSlipSpeedMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslIdentification(t *testing.T) {
 	v := &WslIdentification{}
@@ -2587,7 +3865,24 @@ func TestJSONWslIdentification(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslIdentification(t *testing.T) {
+	v := &WslIdentification{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslStatusInformation(t *testing.T) {
 	v := &WslStatusInformation{}
@@ -2621,7 +3916,24 @@ func TestJSONWslStatusInformation(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslStatusInformation(t *testing.T) {
+	v := &WslStatusInformation{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslBusMeasurement(t *testing.T) {
 	v := &WslBusMeasurement{}
@@ -2655,7 +3967,24 @@ func TestJSONWslBusMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslBusMeasurement(t *testing.T) {
+	v := &WslBusMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslVelocity(t *testing.T) {
 	v := &WslVelocity{}
@@ -2689,7 +4018,24 @@ func TestJSONWslVelocity(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslVelocity(t *testing.T) {
+	v := &WslVelocity{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslPhaseCurrent(t *testing.T) {
 	v := &WslPhaseCurrent{}
@@ -2723,7 +4069,24 @@ func TestJSONWslPhaseCurrent(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslPhaseCurrent(t *testing.T) {
+	v := &WslPhaseCurrent{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslMotorVoltageVector(t *testing.T) {
 	v := &WslMotorVoltageVector{}
@@ -2757,7 +4120,24 @@ func TestJSONWslMotorVoltageVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslMotorVoltageVector(t *testing.T) {
+	v := &WslMotorVoltageVector{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslMotorCurrentVector(t *testing.T) {
 	v := &WslMotorCurrentVector{}
@@ -2791,7 +4171,24 @@ func TestJSONWslMotorCurrentVector(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslMotorCurrentVector(t *testing.T) {
+	v := &WslMotorCurrentVector{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslMotorBackemf(t *testing.T) {
 	v := &WslMotorBackemf{}
@@ -2825,7 +4222,24 @@ func TestJSONWslMotorBackemf(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslMotorBackemf(t *testing.T) {
+	v := &WslMotorBackemf{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsl15165VoltageRail(t *testing.T) {
 	v := &Wsl15165VoltageRail{}
@@ -2859,7 +4273,24 @@ func TestJSONWsl15165VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsl15165VoltageRail(t *testing.T) {
+	v := &Wsl15165VoltageRail{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWsl2512VoltageRail(t *testing.T) {
 	v := &Wsl2512VoltageRail{}
@@ -2893,7 +4324,24 @@ func TestJSONWsl2512VoltageRail(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWsl2512VoltageRail(t *testing.T) {
+	v := &Wsl2512VoltageRail{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslHeatsinkMotorTemp(t *testing.T) {
 	v := &WslHeatsinkMotorTemp{}
@@ -2927,7 +4375,24 @@ func TestJSONWslHeatsinkMotorTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslHeatsinkMotorTemp(t *testing.T) {
+	v := &WslHeatsinkMotorTemp{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslDspBoardTemp(t *testing.T) {
 	v := &WslDspBoardTemp{}
@@ -2961,7 +4426,24 @@ func TestJSONWslDspBoardTemp(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslDspBoardTemp(t *testing.T) {
+	v := &WslDspBoardTemp{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslOdometerBusAmphoursMeasurement(t *testing.T) {
 	v := &WslOdometerBusAmphoursMeasurement{}
@@ -2995,7 +4477,24 @@ func TestJSONWslOdometerBusAmphoursMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslOdometerBusAmphoursMeasurement(t *testing.T) {
+	v := &WslOdometerBusAmphoursMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslReserved(t *testing.T) {
 	v := &WslReserved{}
@@ -3029,7 +4528,24 @@ func TestJSONWslReserved(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslReserved(t *testing.T) {
+	v := &WslReserved{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 func TestMarshalUnmarshalWslSlipSpeedMeasurement(t *testing.T) {
 	v := &WslSlipSpeedMeasurement{}
@@ -3063,5 +4579,22 @@ func TestJSONWslSlipSpeedMeasurement(t *testing.T) {
 	default:
 		t.Fatalf("didn't match type: %T, %v", underlying, underlying)
 	}
+	
 
+}
+
+func TestCanFrameWslSlipSpeedMeasurement(t *testing.T) {
+	v := &WslSlipSpeedMeasurement{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }

@@ -3,6 +3,7 @@ package skylab
 
 import (
 	"testing"
+	"reflect"
 	"encoding/json"
 )
 
@@ -42,6 +43,22 @@ func TestJSON{{$structName}}(t *testing.T) {
 	}
 	
 
+}
+
+func TestCanFrame{{$structName}}(t *testing.T) {
+	v := &{{$structName}}{}
+	frame, err := ToCanFrame(v)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	retpkt, err := FromCanFrame(frame)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !reflect.DeepEqual(v, retpkt) {
+		t.Fatalf("decoded packet did not match sent %v got %v", v, retpkt)
+	}
 }
 
 {{- end }}
