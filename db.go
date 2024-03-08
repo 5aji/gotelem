@@ -195,7 +195,7 @@ func (tdb *TelemDb) GetPackets(ctx context.Context, filter BusEventFilter, lim *
 		sb.WriteString(strings.Join(whereFrags, " AND "))
 	}
 
-	sb.WriteString(" ORDER BY ts DESC")
+	sb.WriteString(" ORDER BY ts ASC")
 
 	// Augment our data further if there's i.e a limit modifier.
 	// TODO: factor this out maybe?
@@ -278,7 +278,7 @@ func (tdb *TelemDb) GetValues(ctx context.Context, filter BusEventFilter,
 	// join qstrings with AND
 	sb.WriteString(strings.Join(whereFrags, " AND "))
 
-	sb.WriteString(" ORDER BY ts DESC")
+	sb.WriteString(" ORDER BY ts ASC")
 
 	if lim != nil {
 		lim.ModifyStatement(&sb)

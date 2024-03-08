@@ -89,6 +89,22 @@ func SeedMockDatabase(tdb *TelemDb) {
 	}
 }
 
+func GetSeedEvents() []skylab.BusEvent {
+	evs := make([]skylab.BusEvent, 0)
+	scanner := bufio.NewScanner(strings.NewReader(exampleData))
+
+	for scanner.Scan() {
+		str := scanner.Text()
+
+		bev, err := logparsers.ParsersMap["telem"](str)
+		if err != nil {
+			panic(err)
+		}
+		evs = append(evs, bev)
+	}
+	return evs
+}
+
 func TestTelemDb(t *testing.T) {
 
 	t.Run("test opening database", func(t *testing.T) {

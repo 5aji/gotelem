@@ -1,6 +1,7 @@
 package gotelem
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/kschamplin/gotelem/skylab"
 )
 
 func Test_extractBusEventFilter(t *testing.T) {
@@ -146,17 +149,34 @@ func Test_extractLimitModifier(t *testing.T) {
 func Test_ApiV1GetPackets(t *testing.T) {
 	tdb := MakeMockDatabase(t.Name())
 	SeedMockDatabase(tdb)
+	evs := GetSeedEvents()
 	handler := apiV1GetPackets(tdb)
 
 	tests := []struct{
 		name string
 		req *http.Request
 		statusCode int
+		expectedResults []skylab.BusEvent
 	}{
 		{
-			name: "stationary test",
+			name: "get all packets test",
 			req: httptest.NewRequest(http.MethodGet, "http://localhost/", nil),
 			statusCode: http.StatusOK,
+			expectedResults: evs,
+		},
+		{
+			name: "filter name test",
+			req: httptest.NewRequest(http.MethodGet, "http://localhost/?name=bms_module", nil),
+			statusCode: http.StatusOK,
+			expectedResults: func() []skylab.BusEvent {
+				filtered := make([]skylab.BusEvent, 0)
+				for _, pkt := range evs {
+					if pkt.Name == "bms_module" {
+						filtered = append(filtered, pkt)
+					}
+				}
+				return filtered
+			}(),
 		},
 	}
 
@@ -170,6 +190,25 @@ func Test_ApiV1GetPackets(t *testing.T) {
 
 			if tt.statusCode != resp.StatusCode {
 				t.Errorf("incorrect status code: expected %d got %d", tt.statusCode, resp.StatusCode)
+			}
+
+			decoder := json.NewDecoder(resp.Body)
+			var resultEvents []skylab.BusEvent
+			err := decoder.Decode(&resultEvents)
+			if err != nil {
+				t.Fatalf("could not parse JSON response: %v", err)
+			}
+
+			if len(resultEvents) != len(tt.expectedResults) {
+				t.Fatalf("response length did not match, want %d got %d", len(tt.expectedResults), len(resultEvents))
+			}
+
+			for idx := range tt.expectedResults {
+				expected := tt.expectedResults[idx]
+				actual := resultEvents[idx]
+				if !expected.Equals(&actual) {
+					t.Errorf("packet did not match, want %v got %v", expected, actual)
+				}
 			}
 
 		})

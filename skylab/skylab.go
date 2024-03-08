@@ -3,6 +3,7 @@
 package skylab
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -94,9 +95,9 @@ type RawJsonEvent struct {
 
 // BusEvent is a timestamped Skylab packet - it contains
 type BusEvent struct {
-	Timestamp time.Time `json:"ts"`
-	Name      string    `json:"id"`
-	Data      Packet    `json:"data"`
+	Timestamp time.Time 
+	Name      string
+	Data      Packet
 }
 
 func (e BusEvent) MarshalJSON() (b []byte, err error) {
@@ -116,6 +117,9 @@ func (e BusEvent) MarshalJSON() (b []byte, err error) {
 
 }
 
+// UnmarshalJSON implements JSON unmarshalling. Note that this
+// uses RawJSON events, which are formatted differently.
+// also it uses int64 milliseconds instead of times.
 func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	j := &RawJsonEvent{}
 
@@ -130,6 +134,22 @@ func (e *BusEvent) UnmarshalJSON(b []byte) error {
 	e.Data, err = FromJson(j.Name, j.Data)
 
 	return err
+}
+
+// Equals compares two bus events deeply.
+func (e *BusEvent) Equals(other *BusEvent) bool {
+	if e.Name != other.Name {
+		return false
+	}
+	if !e.Timestamp.Equal(other.Timestamp) {
+		return false
+	}
+	pkt1, _ := e.Data.MarshalPacket()
+	pkt2, _ := e.Data.MarshalPacket()
+	if !bytes.Equal(pkt1, pkt2) {
+		return false
+	}
+	return true
 }
 
 // we need to be able to parse the JSON as well.  this is done using the

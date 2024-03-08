@@ -3,7 +3,6 @@ package gotelem
 import (
 	"log/slog"
 	"os"
-	"reflect"
 	"sync"
 	"testing"
 	"time"
@@ -45,11 +44,8 @@ func TestBroker(t *testing.T) {
 		var recvEvent skylab.BusEvent
 		select {
 		case recvEvent = <-sub:
-			if !reflect.DeepEqual(recvEvent.Data, testEvent.Data) {
-				t.Fatalf("mismatched data, want %v got %v", testEvent.Data, recvEvent.Data)
-			}
-			if !testEvent.Timestamp.Equal(recvEvent.Timestamp) {
-				t.Fatalf("mismatched timestamp, want %v got %v", testEvent.Timestamp, recvEvent.Timestamp)
+			if !testEvent.Equals(&recvEvent) {
+				t.Fatalf("events not equal, want %v got %v", testEvent, recvEvent)
 			}
 		case <-time.After(1 * time.Second):
 			t.Fatalf("timeout waiting for packet")
