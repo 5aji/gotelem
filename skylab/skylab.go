@@ -146,10 +146,7 @@ func (e *BusEvent) Equals(other *BusEvent) bool {
 	}
 	pkt1, _ := e.Data.MarshalPacket()
 	pkt2, _ := e.Data.MarshalPacket()
-	if !bytes.Equal(pkt1, pkt2) {
-		return false
-	}
-	return true
+	return bytes.Equal(pkt1, pkt2)
 }
 
 // we need to be able to parse the JSON as well.  this is done using the
