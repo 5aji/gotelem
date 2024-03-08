@@ -223,11 +223,9 @@ func apiV1GetPackets(tdb *TelemDb) http.HandlerFunc {
 		lim, err := extractLimitModifier(r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			fmt.Print(lim)
 			return
 		}
 
-		// TODO: is the following check needed?
 		var res []skylab.BusEvent
 		res, err = tdb.GetPackets(r.Context(), *bef, lim)
 		if err != nil {

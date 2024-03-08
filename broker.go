@@ -52,7 +52,10 @@ func (b *Broker) Unsubscribe(name string) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	b.logger.Debug("unsubscribe", "name", name)
-	delete(b.subs, name)
+	if _, ok := b.subs[name]; ok {
+		close(b.subs[name])
+		delete(b.subs, name)
+	}
 }
 
 // Publish sends a bus event to all subscribers. It includes a sender

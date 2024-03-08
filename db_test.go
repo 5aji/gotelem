@@ -68,6 +68,10 @@ func MakeMockDatabase(name string) *TelemDb {
 	if err != nil {
 		panic(err)
 	}
+	return tdb
+}
+
+func SeedMockDatabase(tdb *TelemDb) {
 	// seed the database now.
 	scanner := bufio.NewScanner(strings.NewReader(exampleData))
 
@@ -83,8 +87,6 @@ func MakeMockDatabase(name string) *TelemDb {
 			panic(err)
 		}
 	}
-
-	return tdb
 }
 
 func TestTelemDb(t *testing.T) {
@@ -139,6 +141,7 @@ func TestTelemDb(t *testing.T) {
 
 	t.Run("test getting packets", func(t *testing.T) {
 		tdb := MakeMockDatabase(t.Name())
+		SeedMockDatabase(tdb)
 
 		ctx := context.Background()
 		f := BusEventFilter{}
