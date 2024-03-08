@@ -5,6 +5,7 @@
     "checkJs": true,
     "allowJs": true,
     "moduleResolution": "nodenext",
+    "module": "nodenext",
     "allowSyntheticDefaultImports": true,
     "paths": {
       "openmct": ["./node_modules/openmct/dist/openmct.d.ts"]

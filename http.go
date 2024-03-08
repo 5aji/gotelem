@@ -181,7 +181,9 @@ func apiV1PacketSubscribe(broker *Broker) http.HandlerFunc {
 		defer broker.Unsubscribe(conn_id)
 
 		// setup websocket
-		c, err := websocket.Accept(w, r, nil)
+		c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

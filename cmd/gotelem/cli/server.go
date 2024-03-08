@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"math"
+	"time"
 	"os"
 	"sync"
 
@@ -34,6 +36,10 @@ var serveFlags = []cli.Flag{
 		Aliases:     []string{"d"},
 		DefaultText: "gotelem.db",
 		Usage:       "database to serve, if not specified will use memory",
+	},
+	&cli.BoolFlag{
+		Name: "demo",
+		Usage: "enable the demo packet stream",
 	},
 }
 
@@ -65,8 +71,8 @@ type svcDeps struct {
 // or if certain features are present (see cli/sqlite.go)
 var serveThings = []service{
 	&xBeeService{},
-	// &canLoggerService{},
 	&httpService{},
+	&DemoService{},
 }
 
 func serve(cCtx *cli.Context) error {
@@ -234,4 +240,60 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 		logger.ErrorContext(cCtx.Context, "Error listening", "err", err)
 	}
 	return
+}
+
+
+type DemoService struct {
+}
+
+func (d *DemoService) String() string {
+	return "demo service"
+}
+
+func (d *DemoService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
+	if !cCtx.Bool("demo") {
+		return 
+	}
+
+	broker := deps.Broker
+	bmsPkt := &skylab.BmsMeasurement{
+		Current: 1.23,
+		BatteryVoltage: 11111,
+		AuxVoltage: 22222,
+	}
+	wslPkt := &skylab.WslVelocity{
+		MotorVelocity: 0,
+		VehicleVelocity: 100.0,
+	}
+	var next skylab.Packet = bmsPkt
+	for {
+		select {
+		case <-cCtx.Done():
+			return
+		case <-time.After(100 * time.Millisecond):
+			// send the next packet.
+			if next == bmsPkt {
+				bmsPkt.Current = float32(math.Sin(float64(time.Now().UnixMilli()) / 2000.0))
+				ev := skylab.BusEvent{
+					Timestamp: time.Now(),
+					Name: next.String(),
+					Data: next,
+				}
+				broker.Publish("livestream", ev)
+				next = wslPkt
+			} else {
+				// send the wsl
+				ev := skylab.BusEvent{
+					Timestamp: time.Now(),
+					Name: next.String(),
+					Data: next,
+				}
+				broker.Publish("livestream", ev)
+				next = bmsPkt
+			}
+
+
+
+		}
+	}
 }

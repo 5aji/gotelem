@@ -142,11 +142,74 @@ const TelemHistoryProvider = {
             start: new Date(opt.start).toISOString(),
             end: new Date(opt.end).toISOString(),
         })
-        console.log((opt.end - opt.start)/opt.size)
+        console.log((opt.end - opt.start) / opt.size)
         return fetch(url + params).then((resp) => {
             return resp.json()
         })
 
+    }
+}
+
+
+
+function TelemRealtimeProvider() {
+
+
+    return function (openmct) {
+
+        const url = `${process.env.BASE_URL.replace(/^http/, 'ws')}/api/v1/packets/subscribe?`
+        // we put our websocket connection here.
+        let connection = new WebSocket(url)
+        // connections contains name: callback mapping
+        let callbacks = {}
+        // names contains a set of *packet names*
+        let names = new Set()
+
+        function handleMessage(event) {
+            const data = JSON.parse(event.data)
+            for (const [key, value] of Object.entries(data.data)) {
+                const id = `${data.name}.${key}`
+                if (id in callbacks) {
+                    // we should construct a telem point and make a callback.
+                    callbacks[id]({
+                        "ts": data.ts,
+                        "val": value
+                    })
+                }
+            }
+        }
+
+        function updateWebsocket() {
+            const params = new URLSearchParams({
+                name: Array.from(names)
+            })
+            connection = new WebSocket(url + params)
+
+            connection.onmessage = handleMessage
+        }
+
+        let provider = {
+            supportsSubscribe: function (dObj) {
+                return dObj.type === "umnsvp-datum"
+            },
+            subscribe: function (dObj, callback) {
+                console.log("subscribe called %s", JSON.stringify(dObj))
+                // identifier is packetname.fieldname. we add the packet name to the set.
+                const key = dObj.identifier.key
+                const [pktName, _] = key.split('.')
+                // add our callback to the dictionary,
+                // add the packet name to the set
+                callbacks[key] = callback
+                names.add(pktName)
+                // update the websocket URL with the new name.
+                updateWebsocket()
+                return function unsubscribe() {
+                    names.delete(pktName)
+                    delete callbacks[key]
+                }
+            }
+        }
+        openmct.telemetry.addProvider(provider)
     }
 }
 
@@ -170,5 +233,6 @@ function GotelemPlugin() {
 }
 
 openmct.install(GotelemPlugin())
+openmct.install(TelemRealtimeProvider())
 
 openmct.start();
