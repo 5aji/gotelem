@@ -203,9 +203,10 @@ func Test_ApiV1GetPackets(t *testing.T) {
 				t.Fatalf("response length did not match, want %d got %d", len(tt.expectedResults), len(resultEvents))
 			}
 
+			// Note, the results are flipped here. We return earliest first.
 			for idx := range tt.expectedResults {
 				expected := tt.expectedResults[idx]
-				actual := resultEvents[idx]
+				actual := resultEvents[len(resultEvents) - 1 - idx]
 				if !expected.Equals(&actual) {
 					t.Errorf("packet did not match, want %v got %v", expected, actual)
 				}
