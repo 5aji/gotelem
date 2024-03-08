@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    // "baseUrl": "./src",
+    "target": "es6",
+    "checkJs": true,
+    "allowJs": true,
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "openmct": ["./node_modules/openmct/dist/openmct.d.ts"]
+    },
+    "esModuleInterop": true,
+  },
+  "exclude": [
+    "./dist/**/*",
+    "webpack.*.js",
+    "eslint.config.js"
+  ]
+}
