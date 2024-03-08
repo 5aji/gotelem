@@ -57,6 +57,7 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 
 	logger := deps.Logger
 	broker := deps.Broker
+	tdb := deps.Db
 
 	if !cCtx.IsSet("can") {
 		logger.Debug("no can device provided, skip")
@@ -113,12 +114,13 @@ func (s *socketCANService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 				logger.Warn("error parsing can packet", "id", msg.Id, "err", err)
 				continue
 			}
-			cde := skylab.BusEvent{
+			event := skylab.BusEvent{
 				Timestamp: time.Now(),
 				Name:      p.String(),
 				Data:      p,
 			}
-			broker.Publish("socketCAN", cde)
+			broker.Publish("socketCAN", event)
+			tdb.AddEventsCtx(cCtx.Context, event)
 		case <-cCtx.Done():
 			// close the socket.
 			s.sock.Close()

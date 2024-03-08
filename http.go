@@ -128,15 +128,19 @@ func apiV1(broker *Broker, tdb *TelemDb) chi.Router {
 	})
 
 	r.Route("/packets", func(r chi.Router) {
-		r.Get("/subscribe", apiV1PacketSubscribe(broker, tdb))
+		r.Get("/subscribe", apiV1PacketSubscribe(broker))
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			var pkgs []skylab.BusEvent
+			var pkts []skylab.BusEvent
 			decoder := json.NewDecoder(r.Body)
-			if err := decoder.Decode(&pkgs); err != nil {
+			if err := decoder.Decode(&pkts); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			tdb.AddEvents(pkgs...)
+			conn_id := r.RemoteAddr + uuid.NewString()
+			for _, pkt := range pkts {
+				broker.Publish(conn_id, pkt)
+			}
+			tdb.AddEventsCtx(r.Context(), pkts...)
 		})
 		// general packet history get.
 		r.Get("/", apiV1GetPackets(tdb))
@@ -159,7 +163,7 @@ func apiV1(broker *Broker, tdb *TelemDb) chi.Router {
 }
 
 // this is a websocket stream.
-func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
+func apiV1PacketSubscribe(broker *Broker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// pull filter from url query params.
 		bef, err := extractBusEventFilter(r)
@@ -167,7 +171,7 @@ func apiV1PacketSubscribe(broker *Broker, db *TelemDb) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		// setup connection
-		conn_id := r.RemoteAddr + uuid.New().String()
+		conn_id := r.RemoteAddr + uuid.NewString()
 		sub, err := broker.Subscribe(conn_id)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

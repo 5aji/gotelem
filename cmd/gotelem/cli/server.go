@@ -66,7 +66,6 @@ type svcDeps struct {
 var serveThings = []service{
 	&xBeeService{},
 	// &canLoggerService{},
-	&dbWriterService{},
 	&httpService{},
 }
 
@@ -145,6 +144,7 @@ func (x *xBeeService) Status() {
 func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	logger := deps.Logger
 	broker := deps.Broker
+	tdb := deps.Db
 	if cCtx.String("xbee") == "" {
 		logger.Info("not using xbee")
 		return
@@ -172,8 +172,6 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 	xbeeTxer := json.NewEncoder(x.session)
 	xbeeRxer := json.NewDecoder(x.session)
 
-	// xbeePackets := make(chan skylab.BusEvent)
-	// background task to read json packets off of the xbee and send them to the
 	go func() {
 		for {
 			var p skylab.BusEvent
@@ -182,6 +180,7 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 				logger.Error("failed to decode xbee packet")
 			}
 			broker.Publish("xbee", p)
+			tdb.AddEventsCtx(cCtx.Context, p)
 		}
 	}()
 	for {
@@ -191,7 +190,7 @@ func (x *xBeeService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 			return
 		case msg := <-rxCh:
 			logger.Info("got msg", "msg", msg)
-			xbeeTxer.Encode(msg)
+			err := xbeeTxer.Encode(msg)
 			if err != nil {
 				logger.Warn("error writing to xbee", "err", err)
 			}
@@ -235,35 +234,4 @@ func (h *httpService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
 		logger.ErrorContext(cCtx.Context, "Error listening", "err", err)
 	}
 	return
-}
-
-// dbWriterService listens to the CAN packet broker and saves packets to the database.
-type dbWriterService struct {
-}
-
-func (d *dbWriterService) Status() {
-
-}
-
-func (d *dbWriterService) String() string {
-	return "db logger"
-}
-
-func (d *dbWriterService) Start(cCtx *cli.Context, deps svcDeps) (err error) {
-
-	// put CAN packets from the broker into the database.
-	tdb := deps.Db
-	rxCh, err := deps.Broker.Subscribe("dbWriter")
-	defer deps.Broker.Unsubscribe("dbWriter")
-
-	// TODO: add buffering + timeout/backpressure
-
-	for {
-		select {
-		case msg := <-rxCh:
-			tdb.AddEventsCtx(cCtx.Context, msg)
-		case <-cCtx.Done():
-			return
-		}
-	}
 }

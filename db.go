@@ -19,22 +19,14 @@ type TelemDb struct {
 	db *sqlx.DB
 }
 
-// TelemDbOption lets you customize the behavior of the sqlite database
-type TelemDbOption func(*TelemDb) error
 
 // this function is internal use. It actually opens the database, but uses
 // a raw path string instead of formatting one like the exported functions.
-func OpenRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err error) {
+func OpenRawDb(rawpath string) (tdb *TelemDb, err error) {
 	tdb = &TelemDb{}
 	tdb.db, err = sqlx.Connect("sqlite3", rawpath)
 	if err != nil {
 		return
-	}
-	for _, fn := range options {
-		err = fn(tdb)
-		if err != nil {
-			return
-		}
 	}
 
 	// perform any database migrations
@@ -56,9 +48,9 @@ func OpenRawDb(rawpath string, options ...TelemDbOption) (tdb *TelemDb, err erro
 const ProductionDbURI = "file:%s?_journal_mode=wal&mode=rwc&_txlock=immediate&_timeout=10000"
 
 // OpenTelemDb opens a new telemetry database at the given path.
-func OpenTelemDb(path string, options ...TelemDbOption) (*TelemDb, error) {
+func OpenTelemDb(path string) (*TelemDb, error) {
 	dbStr := fmt.Sprintf(ProductionDbURI, path)
-	return OpenRawDb(dbStr, options...)
+	return OpenRawDb(dbStr)
 }
 
 func (tdb *TelemDb) GetVersion() (int, error) {
