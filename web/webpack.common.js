@@ -1,10 +1,11 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyPlugin = require("copy-webpack-plugin");
-const Dotenv = require('dotenv-webpack');
+import path from 'path';
+import {fileURLToPath} from 'url';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import CopyPlugin from 'copy-webpack-plugin';
+import DotenvWebpackPlugin from 'dotenv-webpack';
 
-module.exports = {
-    entry: './src/app.js',
+const config = {
+    entry: './src/app.ts',
     module: {
         rules: [
             {
@@ -19,7 +20,7 @@ module.exports = {
             template: 'src/index.html',
             filename: 'index.html',
         }),
-        new Dotenv(),
+        new DotenvWebpackPlugin(),
         new CopyPlugin({
             patterns: [
                 { from: "**/*", to: "openmct/", context: "node_modules/openmct/dist"},
@@ -34,6 +35,8 @@ module.exports = {
     },
     output: {
         filename: 'main.js',
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'dist'),
     },
 };
+
+export default config

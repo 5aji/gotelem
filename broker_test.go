@@ -2,7 +2,6 @@ package gotelem
 
 import (
 	"log/slog"
-	"math"
 	"os"
 	"sync"
 	"testing"
@@ -25,53 +24,6 @@ func makeEvent() skylab.BusEvent {
 }
 
 
-// makeLiveSystem starts a process that is used to continuously stream
-// data into a Broker. Every 100ms it will send either a BmsMeasurement
-// or WslVelocity. The values will be static for WslVelocity (to
-// make comparison easier) but will be dynamic for BmsMeasurement.
-//
-func liveStream(done chan bool, broker *Broker) {
-	bmsPkt := &skylab.BmsMeasurement{
-		Current: 1.23,
-		BatteryVoltage: 11111,
-		AuxVoltage: 22222,
-	}
-	wslPkt := &skylab.WslVelocity{
-		MotorVelocity: 0,
-		VehicleVelocity: 100.0,
-	}
-	var next skylab.Packet = bmsPkt
-	for {
-		select {
-		case <-done:
-			return
-		case <-time.After(100 * time.Millisecond):
-			// send the next packet.
-			if next == bmsPkt {
-				bmsPkt.Current = float32(math.Sin(float64(time.Now().Unix()) / 2.0))
-				ev := skylab.BusEvent{
-					Timestamp: time.Now(),
-					Name: next.String(),
-					Data: next,
-				}
-				broker.Publish("livestream", ev)
-				next = wslPkt
-			} else {
-				// send the wsl
-				ev := skylab.BusEvent{
-					Timestamp: time.Now(),
-					Name: next.String(),
-					Data: next,
-				}
-				broker.Publish("livestream", ev)
-				next = bmsPkt
-			}
-
-
-
-		}
-	}
-}
 
 func TestBroker(t *testing.T) {
 	t.Parallel()
