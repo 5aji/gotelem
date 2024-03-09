@@ -3,10 +3,12 @@ name: Go
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - "**.go"
 
 jobs:
 
-  build:
+  build-gotelem:
     runs-on: ubuntu-latest
     strategy:
       matrix:
