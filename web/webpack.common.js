@@ -2,7 +2,6 @@ import path from 'path';
 import {fileURLToPath} from 'url';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import CopyPlugin from 'copy-webpack-plugin';
-import DotenvWebpackPlugin from 'dotenv-webpack';
 
 const config = {
     entry: './src/app.ts',
@@ -20,7 +19,6 @@ const config = {
             template: 'src/index.html',
             filename: 'index.html',
         }),
-        new DotenvWebpackPlugin(),
         new CopyPlugin({
             patterns: [
                 { from: "**/*", to: "openmct/", context: "node_modules/openmct/dist"},
