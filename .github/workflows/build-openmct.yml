@@ -6,7 +6,7 @@ on:
       - '*'
 
 jobs:
-  release-openmct:
+  release-full:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,17 +17,29 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
       - name: Install OpenMCT
-        run: npm install
+        run: npm ci
         working-directory: web/
       - name: Build OpenMCT bundle
         run: npm run build
         working-directory: web/
-      - name: Build Gotelem
-        run: go build -v -tags openmct ./cmd/gotelem
-      - name: Use Go Action
-        id: use-go-action
+      - name: Build
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: 1.22
+          dest: build
+          prefix: gotelem-full
+          targets: windows/amd64,linux/amd64,linux/arm64,linux/arm/v7,darwin/arm64,darwin/amd64
+          tags: openmct
+          v: true
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true
+      - name: Release binaries
         uses: https://gitea.com/actions/release-action@main
         with:
           files: |-
-            gotelem
+            build/**
           api_key: '${{secrets.RELEASE_TOKEN}}'
