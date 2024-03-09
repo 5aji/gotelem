@@ -280,7 +280,7 @@ function TelemRealtimeProvider() {
             subscribe: function (dObj, callback) {
                 // identifier is packetname.fieldname. we add the packet name to the set.
                 const key = dObj.identifier.key
-                const [pktName, _] = key.split('.')
+                const pktName = key.split('.')[0]
                 // add our callback to the dictionary,
                 // add the packet name to the set
                 callbacks[key] = callback
