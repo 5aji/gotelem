@@ -26,7 +26,7 @@ jobs:
         uses: crazy-max/ghaction-xgo@v3
         with:
           xgo_version: latest
-          go_version: 1.22
+          go_version: 1.21
           dest: build
           prefix: gotelem-full
           targets: windows/amd64,linux/amd64,linux/arm64,linux/arm/v7,darwin/arm64,darwin/amd64
