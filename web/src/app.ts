@@ -68,19 +68,39 @@ if (process.env.BASE_URL) {
     console.log("got a thing")
     console.log(process.env.BASE_URL)
 }
-interface Board {
+interface SkylabField {
     name: string
     type: string
     units?: string
     conversion?: number
+    bits?: {
+        name: string
+    }
+}
+interface SkylabPacket {
+    name: string
+    description?: string
+    id: number
+    endian?: string
+    is_extended: boolean
+    repeat?: number
+    offset?: number
+    data: [SkylabField]
 }
 
-interface Schema {
+interface SkylabBoard {
+    name: string
+    transmit: [string]
+    receive: [string]
+}
 
+interface SkylabSchema {
+    packets: [SkylabPacket]
+    boards: [SkylabBoard]
 }
 
 let schemaCached = null;
-function getSchema() {
+function getSchema(): Promise<SkylabSchema> {
     if (schemaCached === null) {
         return fetch(`${process.env.BASE_URL}/api/v1/schema`).then((resp) => {
             const res = resp.json()
@@ -141,7 +161,7 @@ const objectProvider = {
                 identifier: id,
                 name: fieldName,
                 type: 'umnsvp-datum',
-                // annotate a special index
+                conversion: schema.packets.find((x) => x.name === pktName).data.find((f) => f.name === fieldName).conversion,
                 telemetry: {
                     values: [
                         {
@@ -171,6 +191,11 @@ const objectProvider = {
     }
 }
 
+
+interface Datum {
+    ts: number
+    val: number
+}
 const TelemHistoryProvider = {
     supportsRequest: function (dObj) {
         return dObj.type === 'umnsvp-datum'
@@ -184,16 +209,30 @@ const TelemHistoryProvider = {
         })
         console.log((opt.end - opt.start) / opt.size)
         return fetch(url + params).then((resp) => {
-            return resp.json()
+            resp.json().then((result: [Datum]) => {
+
+                if (dObj.conversion && dObj.conversion != 0) {
+                    // apply conversion
+                    result.map((dat) => {
+                        dat.val = dat.val * dObj.conversion
+                        return dat
+                    })
+                }
+                return result
+            })
         })
 
     }
 }
 
-
+interface PacketData {
+    ts: number
+    name: string
+    data: object
+}
 
 function TelemRealtimeProvider() {
-    return function (openmct) {
+    return function (openmct: openmct.OpenMCT) {
 
         const simpleIndicator = openmct.indicators.simpleIndicator();
         openmct.indicators.add(simpleIndicator);
@@ -203,18 +242,21 @@ function TelemRealtimeProvider() {
         let connection = new WebSocket(url)
         // connections contains name: callback mapping
         const callbacks = {}
+
+        const conversions: Map<string, number> = new Map()
         // names contains a set of *packet names*
         const names = new Set()
 
         function handleMessage(event) {
-            const data = JSON.parse(event.data)
-            for (const [key, value] of Object.entries(data.data)) {
-                const id = `${data.name}.${key}`
+            const data: PacketData = JSON.parse(event.data)
+            for (const [key, value] of Object.entries(data.data)) { // for each of the fields in the data
+                const id = `${data.name}.${key}` // if we have a matching callback for that field.
                 if (id in callbacks) {
                     // we should construct a telem point and make a callback.
+                    // compute if we need to scale the value.
                     callbacks[id]({
                         "ts": data.ts,
-                        "val": value
+                        "val": value * conversions.get(id)
                     })
                 }
             }
@@ -242,6 +284,7 @@ function TelemRealtimeProvider() {
                 // add our callback to the dictionary,
                 // add the packet name to the set
                 callbacks[key] = callback
+                conversions.set(key, dObj.conversion || 1)
                 names.add(pktName)
                 // update the websocket URL with the new name.
                 updateWebsocket()
@@ -255,6 +298,7 @@ function TelemRealtimeProvider() {
                     }
 
                     delete callbacks[key]
+                    conversions.delete(key)
                 }
             }
         }
@@ -285,4 +329,4 @@ function GotelemPlugin() {
 openmct.install(GotelemPlugin())
 
 //@ts-expect-error openmct
-openmct.start();
+openmct.start()
